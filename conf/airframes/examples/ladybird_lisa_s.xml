@@ -212,6 +212,14 @@
         <!--define name="RADIO_TRANSMITTER_ID" value="1335259868"/--> <!-- Esden (1BitSquared) Dx6i: TX 1 -->
         <!--define name="RADIO_TRANSMITTER_CHAN" value="6"/-->
         <!--define name="RADIO_TRANSMITTER_PROTOCOL" value="0x01"/-->
+        
+        <!--TX 8 (DEVO-10) : 0xF7249ED7 -->
+        <!-- -->
+        <define name="RADIO_TRANSMITTER_ID" value="4146372311"/> 
+        <define name="RADIO_TRANSMITTER_PROTOCOL" value="0x01"/>
+        <define name="RADIO_TRANSMITTER_CHAN" value="7"/>
+        <!-- -->
+        
         <define name="RADIO_MODE" value="RADIO_FLAP"/>
         <define name="RADIO_KILL_SWITCH" value="RADIO_GEAR"/>
       </subsystem>
