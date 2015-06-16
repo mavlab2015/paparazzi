@@ -28,7 +28,6 @@
 
   <modules main_freq="512">
     <load name="send_imu_mag_current.xml"/>
-
   </modules>
 
   <commands>
