@@ -178,6 +178,26 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
     struct image_t img;
     v4l2_image_get(viewvideo.dev, &img);
 
+////////////////////////////////////////////////////////////////////////////////////////
+/////                                                                             //////
+/////                 TEST by Seong - IMAV2015    starts here..                   //////
+/////                                                                             //////
+////////////////////////////////////////////////////////////////////////////////////////
+	
+	// Filter the image by color - the arguments are: input & output image, min & max Y, min & max U, min & max V.
+	// ( Filtered area --> RED )
+	// ( Unfiltered area --> GREY )
+	uint16_t imgfiltering = image_yuv422_colorfilt(&img, &img, 170, 255, 0, 255, 0, 255);
+	
+	
+
+//////////////////////////////////////////////////f//////////////////////////////////////
+/////                                                                             //////
+/////                 TEST by Seong - IMAV2015    ends here..                     //////
+/////                                                                             //////
+////////////////////////////////////////////////////////////////////////////////////////
+
+
     // Check if we need to take a shot
     if (viewvideo.take_shot) {
       // Create a high quality image (99% JPEG encoded)
