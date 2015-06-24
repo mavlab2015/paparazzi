@@ -174,3 +174,6 @@ tests/results/*
 
 *.dSYM
 
+.kdev4/*
+*.kdev4
+
