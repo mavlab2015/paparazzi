@@ -187,8 +187,10 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
 	// Filter the image by color - the arguments are: input & output image, min & max Y, min & max U, min & max V.
 	// ( Filtered area --> RED )
 	// ( Unfiltered area --> GREY )
-	uint16_t imgfiltering = image_yuv422_colorfilt(&img, &img, 170, 255, 0, 255, 0, 255);
+	//uint16_t imgfiltering = image_yuv422_colorfilt(&img, &img, 170, 255, 0, 255, 0, 255);
 	
+	// Create a binary map after thresholding the Y value of the image.
+	uint16_t imgfiltering = image_Y_threshold(&img, &img, 150);
 	
 
 //////////////////////////////////////////////////f//////////////////////////////////////

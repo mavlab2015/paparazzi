@@ -80,4 +80,17 @@ void image_show_points(struct image_t *img, struct point_t *points, uint16_t poi
 void image_show_flow(struct image_t *img, struct flow_t *vectors, uint16_t points_cnt, uint8_t subpixel_factor);
 void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *to);
 
+/////////////////////////////////////
+/////                          //////
+/////  Seong Addition starts.. //////
+/////                          //////
+/////////////////////////////////////
+
+uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_t threshold);
+
+/////////////////////////////////////
+/////                          //////
+/////  Seong Addition ends..   //////
+/////                          //////
+/////////////////////////////////////
 #endif

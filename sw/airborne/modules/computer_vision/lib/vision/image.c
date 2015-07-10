@@ -530,3 +530,102 @@ void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *
     }
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//////////                                                                         /////////
+//////////                           Seong Addition below...                       /////////
+//////////                                                                         /////////
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Create a binary map using a threshold in Y value, and then mark the centroid of the binary map.
+ * @param[in] *input The input image
+ * @param[out] *output The output binary image
+ * @param[in] threshold The Y threshold value
+ * @return The amount of filtered pixels
+ */
+uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_t threshold)
+{
+  uint16_t cnt = 0;
+  uint8_t *source = input->buf;
+  uint8_t *dest = output->buf;
+  uint16_t x, y;
+  int bin[240][320] = {0};
+  int sum_row, moment_row_sum, sum_col, moment_col_sum, image_total = 0;
+  int x_centroid, y_centroid;
+  
+
+  // Copy the creation timestamp (stays the same)
+  memcpy(&output->ts, &input->ts, sizeof(struct timeval));
+
+  // Go trough all the pixels
+  for (y = 0; y < output->h; y++) 
+  {
+    for (x = 0; x < output->w; x+=2) 
+    {
+      // Check if the color is inside the specified values
+      if (dest[1] >= threshold)
+       {
+        // UYVY
+        dest[0] = 64;         // U 0
+        dest[1] = source[1];  // Y 255
+        dest[2] = 255;        // V 0
+        dest[3] = source[3];  // Y 255
+        bin[y][x] = 1;
+       } 
+      else {
+        // UYVY
+        dest[0] = source[0];  // U 
+        dest[1] = source[1];  // Y 
+        dest[2] = source[2];  // V 
+        dest[3] = source[3];  // Y 
+        bin[y][x] = 0;
+      }
+
+      // Go to the next 2 pixels
+      dest+=4;
+      source+=4;
+    }
+  }
+    
+    // Calculate the y-position of the centroid.
+    moment_row_sum = 0;
+    for (y = 0; y < 240; y++) 
+    {
+	    sum_row = 0;
+	    for (x = 0; x < 320; x++) 
+	    {
+	     sum_row = sum_row + bin[y][x];
+	    }
+	    image_total = image_total + sum_row;
+	    moment_row_sum = moment_row_sum + sum_row * y;
+    }
+
+    
+    if (image_total == 0) {y_centroid = 120;}
+    else { y_centroid = moment_row_sum/image_total;}
+    
+    // Calculate the x-position of the centroid.
+    moment_col_sum = 0;
+    for (x = 0; x < 320; x++) 
+    {
+    	    sum_col = 0;
+	    for (y = 0; y < 240; y++) 
+	    {
+	     sum_col = sum_col + bin[y][x];
+	    }
+	    moment_col_sum = moment_col_sum + sum_col * x;
+    }
+    
+    if (image_total == 0) {x_centroid = 160;}
+    else { x_centroid = moment_col_sum/image_total;}
+    
+
+    printf("y_centroid and x_centroid is %i and %i\n", y_centroid, x_centroid);
+
+
+  return cnt;
+}
+
+

@@ -70,7 +70,7 @@ void uart_transmit(struct uart_periph *periph, uint8_t data)
   uint16_t temp = (periph->tx_insert_idx + 1) % UART_TX_BUFFER_SIZE;
 
   if (temp == periph->tx_extract_idx) {
-    printf("uart tx queue full!\n");
+    // printf("uart tx queue full!\n");
     return;  // no room
   }
 
