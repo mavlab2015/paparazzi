@@ -86,7 +86,7 @@ void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *
 /////                          //////
 /////////////////////////////////////
 
-uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_t threshold);
+uint16_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, uint8_t v_M);
 
 /////////////////////////////////////
 /////                          //////

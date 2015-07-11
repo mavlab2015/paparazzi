@@ -545,9 +545,10 @@ void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *
  * @param[in] threshold The Y threshold value
  * @return The amount of filtered pixels
  */
-uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_t threshold)
+uint16_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m,
+                                uint8_t u_M, uint8_t v_m, uint8_t v_M)
 {
-  uint16_t cnt = 0;
+  uint16_t centroid[2];
   uint8_t *source = input->buf;
   uint8_t *dest = output->buf;
   uint16_t x, y;
@@ -565,7 +566,14 @@ uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_
     for (x = 0; x < output->w; x+=2) 
     {
       // Check if the color is inside the specified values
-      if (dest[1] >= threshold)
+      if (
+        (dest[1] >= y_m)
+        && (dest[1] <= y_M)
+        && (dest[0] >= u_m)
+        && (dest[0] <= u_M)
+        && (dest[2] >= v_m)
+        && (dest[2] <= v_M)
+         )
        {
         // UYVY
         dest[0] = 64;         // U 0
@@ -621,11 +629,12 @@ uint16_t image_Y_threshold(struct image_t *input, struct image_t *output, uint8_
     if (image_total == 0) {x_centroid = 160;}
     else { x_centroid = moment_col_sum/image_total;}
     
+    centroid[0] = x_centroid;
+    centroid[1] = y_centroid;
+    printf("x_centroid and y_centroid is %i and %i\n", centroid[0], centroid[1]);
+    
 
-    printf("y_centroid and x_centroid is %i and %i\n", y_centroid, x_centroid);
-
-
-  return cnt;
+  return centroid;
 }
 
 
