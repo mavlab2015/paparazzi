@@ -178,22 +178,23 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
     struct image_t img;
     v4l2_image_get(viewvideo.dev, &img);
 
-////////////////////////////////////////////////////////////////////////////////////////
-/////                                                                             //////
-/////                 TEST by Seong - IMAV2015    starts here..                   //////
-/////                                                                             //////
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+/////                                                 //////
+/////    TEST by Seong - IMAV2015    starts here..    //////
+/////                                                 //////
+////////////////////////////////////////////////////////////
 	
 	
 	// Find out the location of the centroid after generating the binary map via filtering the certain range of colors.
-	uint16_t centroid = image_centroid(&img, &img, 150, 255, 0, 255, 0, 255);
+	struct centroid_deviation_t centroid_deviation = image_centroid(&img, &img, 150, 255, 0, 255, 0, 255);
 	
+	printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
 
-//////////////////////////////////////////////////f//////////////////////////////////////
-/////                                                                             //////
-/////                 TEST by Seong - IMAV2015    ends here..                     //////
-/////                                                                             //////
-////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+/////                                                   /////
+/////   TEST by Seong - IMAV2015    ends here..         /////
+/////                                                   /////
+/////////////////////////////////////////////////////////////
 
 
     // Check if we need to take a shot

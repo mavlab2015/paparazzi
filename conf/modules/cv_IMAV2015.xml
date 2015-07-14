@@ -3,11 +3,23 @@
 <module name="cv_IMAV2015" dir="computer_vision">
   <doc>
     <description>
-        Hovers the drone above the detected object.
+        Hovers the drone above the detected image object.
+
+        Computes Pitch- and roll attide from downward looking camera looking at a textured floor.
+        - Sonar is required.
+        - Controller can hold position
     </description>
 
-    <!-- Optical flow calculation parameters -->
-    <section name="OPTICFLOW" prefix="OPTICFLOW_">
+    <!-- Satbilization parameters and gains -->
+    <section name="VISION" prefix="VISION_">
+      <define name="PHI_PGAIN" value="400" description="Optic flow proportional gain on the roll velocity error"/>
+      <define name="PHI_IGAIN" value="20" description="Optic flow integrated gain on the summed roll velocity error"/>
+      <define name="THETA_PGAIN" value="400" description="Optic flow proportional gain on the pitch velocity error"/>
+      <define name="THETA_IGAIN" value="20" description="Optic flow integrated gain on the summed pitch velocity error"/>
+    </section>
+
+    <!-- Vision Hover calculation parameters -->
+    <section name="VISIONHOVER" prefix="VISIONHOVER_">
       <define name="AGL_ID" value="ABI_SENDER_ID" description="ABI sender id for AGL message (sonar measurement) (default: ABI_BROADCAST)"/>
 
       <!-- Video device parameters -->
@@ -22,16 +34,17 @@
       <define name="FX" value="343.1211" description="Field in the x direction of the camera (Defaults are from an ARDrone 2)"/>
       <define name="FY" value="348.5053" description="Field in the y direction of the camera (Defaults are from an ARDrone 2)"/>
 
+    
     </section>
   </doc>
 
-
+ 
   <header>
-    <file name="opticflow_module.h"/>
+    <file name="IMAV2015_visionhover_module.h"/>
   </header>
 
-  <init fun="opticflow_module_init()"/>
-  <periodic fun="opticflow_module_run()" start="opticflow_module_start()" stop="opticflow_module_stop()" autorun="TRUE"/>
+  <init fun="visionhover_module_init()"/>
+  <periodic fun="visionhover_module_run()" start="visionhover_module_start()" stop="visionhover_module_stop()" autorun="TRUE"/>
 
   <makefile target="ap">
     <!-- Include the needed Computer Vision files -->
@@ -42,9 +55,9 @@
     <file name="v4l2.c" dir="modules/computer_vision/lib/v4l"/>
 
     <!-- The optical flow module (calculator+stabilization) -->
-    <file name="opticflow_module.c"/>
-    <file name="opticflow_calculator.c" dir="modules/computer_vision/opticflow"/>
-    <file name="stabilization_opticflow.c" dir="modules/computer_vision/opticflow"/>
+    <file name="IMAV2015_visionhover_module.c"/>
+    <file name="IMAV2015_vision.c" dir="modules/computer_vision/visionhover"/>
+    <file name="IMAV2015_stabilization.c" dir="modules/computer_vision/visionhover"/>
 
 
     <raw>

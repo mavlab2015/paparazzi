@@ -539,16 +539,23 @@ void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *
 
 
 /**
- * Create a binary map using a threshold in Y value, and then mark the centroid of the binary map.
- * @param[in] *input The input image
- * @param[out] *output The output binary image
- * @param[in] threshold The Y threshold value
- * @return The amount of filtered pixels
+ * Create a binary map after filtering colors in an YUV422 image, then calculate the centroid location wrt center.
+ * @param[in] *input The input image to filter
+ * @param[out] *output The filtered output image
+ * @param[in] y_m The Y minimum value
+ * @param[in] y_M The Y maximum value
+ * @param[in] u_m The U minimum value
+ * @param[in] u_M The U maximum value
+ * @param[in] v_m The V minimum value
+ * @param[in] v_M The V maximum value
+ * @return The location of the filtered image centroid.
  */
-uint16_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m,
+ 
+
+struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m,
                                 uint8_t u_M, uint8_t v_m, uint8_t v_M)
 {
-  uint16_t centroid[2];
+  struct centroid_deviation_t centroid_deviation;
   uint8_t *source = input->buf;
   uint8_t *dest = output->buf;
   uint16_t x, y;
@@ -629,12 +636,10 @@ uint16_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y
     if (image_total == 0) {x_centroid = 160;}
     else { x_centroid = moment_col_sum/image_total;}
     
-    centroid[0] = x_centroid;
-    centroid[1] = y_centroid;
-    printf("x_centroid and y_centroid is %i and %i\n", centroid[0], centroid[1]);
+   
+    centroid_deviation.x = x_centroid - (output->w)/2;
+    centroid_deviation.y = -y_centroid + (output->h)/2;
     
+    return centroid_deviation;
 
-  return centroid;
 }
-
-

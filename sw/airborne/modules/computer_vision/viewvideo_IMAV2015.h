@@ -47,6 +47,21 @@ struct viewvideo_t {
 };
 extern struct viewvideo_t viewvideo;
 
+/////////////////////////////////////
+/////                          //////
+/////  Seong Addition starts.. //////
+/////                          //////
+/////////////////////////////////////
+
+extern struct centroid_deviation_t centroid;
+
+/////////////////////////////////////
+/////                          //////
+/////  Seong Addition ends..   //////
+/////                          //////
+/////////////////////////////////////
+
+
 // Module functions
 extern void viewvideo_init(void);
 extern void viewvideo_periodic(void); ///< A dummy for now
