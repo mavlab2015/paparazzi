@@ -69,11 +69,11 @@ struct centroid_deviation_t centroid_deviation;
  * @param[in] *img The image frame to calculate the optical flow from
  * @param[out] *result The vision result
  */
-void visionhover_calc_frame(struct image_t *img, struct visionhover_result_t *result)
+void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *state, struct visionhover_result_t *result)
 {
   centroid_deviation = image_centroid(img, img, 150, 255, 0, 255, 0, 255);
-  result->deviation_x = centroid_deviation.x;
-  result->deviation_y = centroid_deviation.y;
+  result->deviation_x = centroid_deviation.x * state->agl;
+  result->deviation_y = centroid_deviation.y * state->agl;
 }
 
 

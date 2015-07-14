@@ -69,6 +69,7 @@ PRINT_CONFIG_VAR(VIEWVIDEO_DEVICE_BUFFERS)
 static struct visionhover_result_t visionhover_result; ///< The vision result
 static struct v4l2_device *visionhover_dev;          ///< The visionhover camera V4L2 device
 static struct visionhover_state_t visionhover_state;   ///< State of the drone to communicate with the opticflow
+static abi_event visionhover_agl_ev;                 ///< The altitude ABI event
 static pthread_t visionhover_calc_thread;            ///< The visionhover flow calculation thread
 static bool_t visionhover_got_result;                ///< When we have a vision calculation
 static pthread_mutex_t visionhover_mutex;            ///< Mutex lock fo thread safety
@@ -84,6 +85,10 @@ static void visionhover_agl_cb(uint8_t sender_id, float distance);  ///< Callbac
  */
 void visionhover_module_init(void)
 {
+
+  // Subscribe to the altitude above ground level ABI messages
+  AbiBindMsgAGL(VISIONHOVER_AGL_ID, &visionhover_agl_ev, visionhover_agl_cb);
+  
   // Initialize the visionhover calculation
   visionhover_got_result = FALSE;
   /* Try to initialize the video device */
@@ -101,6 +106,7 @@ void visionhover_module_run(void)
 {
   pthread_mutex_lock(&visionhover_mutex);
   stabilization_visionhover_update(&visionhover_result);
+  printf("Vision results are: %.0f, %.0f\n", visionhover_result.deviation_x, visionhover_result.deviation_y);
   pthread_mutex_unlock(&visionhover_mutex);
 }
 
@@ -157,11 +163,16 @@ static void *visionhover_module_calc(void *data __attribute__((unused)))
     struct image_t img;
     v4l2_image_get(visionhover_dev, &img);
 
- 
+     // Copy the state
+    pthread_mutex_lock(&visionhover_mutex);
+    struct visionhover_state_t temp_state;
+    memcpy(&temp_state, &visionhover_state, sizeof(struct visionhover_state_t));
+    pthread_mutex_unlock(&visionhover_mutex);
+    
     // Do the vision calculation
     struct visionhover_result_t temp_result;
-    visionhover_calc_frame(&img, &temp_result);
-    //printf("Vision results are: %.0f, %.0f\n", temp_result.deviation_x, temp_result.deviation_y);
+    visionhover_calc_frame(&img, &temp_state, &temp_result);
+    //printf("Altitude is: %f, Vision results are: %f, %f\n", temp_state.agl, temp_result.deviation_x, temp_result.deviation_y);
   
     
     // Copy the result if finished

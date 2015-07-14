@@ -37,6 +37,6 @@
 
 extern struct centroid_deviation_t centroid_deviation;
 
-void visionhover_calc_frame(struct image_t *img, struct visionhover_result_t *result);
+void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *state, struct visionhover_result_t *result);
 
 #endif /* VISIONHOVER_CALCULATOR_H */

@@ -128,7 +128,7 @@ void stabilization_visionhover_update(struct visionhover_result_t *result)
   err_y = result->deviation_y;
 
   //printf("Phi command = %f, Theta command = %f\n", result->deviation_x, result->deviation_y);
-  printf("blabla\n");
+  //printf("blabla\n");
   
   /* Calculate the integrated errors (TODO: bound??) */
   visionhover_stab.err_x_int += err_x;
