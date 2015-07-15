@@ -186,7 +186,7 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
 	
 	
 	// Find out the location of the centroid after generating the binary map via filtering the certain range of colors.
-	struct centroid_deviation_t centroid_deviation = image_centroid(&img, &img, 150, 255, 0, 255, 0, 255);
+	struct centroid_deviation_t centroid_deviation = image_centroid(&img, &img, 180, 255, 0, 255, 0, 255);
 	
 	printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
 

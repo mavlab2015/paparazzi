@@ -106,7 +106,7 @@ void visionhover_module_run(void)
 {
   pthread_mutex_lock(&visionhover_mutex);
   stabilization_visionhover_update(&visionhover_result);
-  printf("Vision results are: %.0f, %.0f\n", visionhover_result.deviation_x, visionhover_result.deviation_y);
+  //printf("Vision results are: %.0f, %.0f\n", visionhover_result.deviation_x, visionhover_result.deviation_y);
   pthread_mutex_unlock(&visionhover_mutex);
 }
 

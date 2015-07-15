@@ -71,7 +71,7 @@ struct centroid_deviation_t centroid_deviation;
  */
 void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *state, struct visionhover_result_t *result)
 {
-  centroid_deviation = image_centroid(img, img, 150, 255, 0, 255, 0, 255);
+  centroid_deviation = image_centroid(img, img, 160, 255, 0, 255, 0, 255);
   result->deviation_x = centroid_deviation.x * state->agl;
   result->deviation_y = centroid_deviation.y * state->agl;
 }

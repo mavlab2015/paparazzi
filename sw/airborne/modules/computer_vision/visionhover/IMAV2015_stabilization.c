@@ -40,22 +40,22 @@
 #define CMD_OF_SAT  1500 // 40 deg = 2859.1851
 
 #ifndef VISION_PHI_PGAIN
-#define VISION_PHI_PGAIN 400
+#define VISION_PHI_PGAIN 300
 #endif
 PRINT_CONFIG_VAR(VISION_PHI_PGAIN)
 
 #ifndef VISION_PHI_IGAIN
-#define VISION_PHI_IGAIN 20
+#define VISION_PHI_IGAIN 0
 #endif
 PRINT_CONFIG_VAR(VISION_PHI_IGAIN)
 
 #ifndef VISION_THETA_PGAIN
-#define VISION_THETA_PGAIN 400
+#define VISION_THETA_PGAIN 300
 #endif
 PRINT_CONFIG_VAR(VISION_THETA_PGAIN)
 
 #ifndef VISION_THETA_IGAIN
-#define VISION_THETA_IGAIN 20
+#define VISION_THETA_IGAIN 0
 #endif
 PRINT_CONFIG_VAR(VISION_THETA_IGAIN)
 
@@ -116,10 +116,12 @@ void guidance_h_module_run(bool_t in_flight)
  */
 void stabilization_visionhover_update(struct visionhover_result_t *result)
 {
+  
   /* Check if we are in the correct AP_MODE before setting commands */
   if (autopilot_mode != AP_MODE_MODULE) {
     return;
   }
+  
 
   /* Calculate the error if we have enough flow */
   float err_x;
@@ -140,6 +142,9 @@ void stabilization_visionhover_update(struct visionhover_result_t *result)
   visionhover_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y 
                                + visionhover_stab.theta_igain * visionhover_stab.err_y_int) / 100;
 
+
+
+  printf("Phi gain = %f, Theta gain = %f, Phi = %i, Theta = %i \n", visionhover_stab.phi_pgain, visionhover_stab.theta_pgain, visionhover_stab.cmd.phi, visionhover_stab.cmd.theta);
   
   /* Bound the roll and pitch commands */
   BoundAbs(visionhover_stab.cmd.phi, CMD_OF_SAT);

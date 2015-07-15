@@ -26,8 +26,8 @@
  * Sensors from vertical camera and IMU of Parrot AR.Drone 2.0
  */
 
-#ifndef VISIONHOVER_MODULE_H
-#define VISIONHOVER_MODULE_H
+#ifndef IMAV2015_VISIONHOVER_MODULE_H
+#define IMAV2015_VISIONHOVER_MODULE_H
 
 // Include opticflow calculator and stabilization loops
 #include "visionhover/IMAV2015_vision.h"
@@ -40,4 +40,4 @@ extern void visionhover_module_run(void);
 extern void visionhover_module_start(void);
 extern void visionhover_module_stop(void);
 
-#endif /* VISIONHOVER_MODULE_H */
+#endif /* IMAV2015_VISIONHOVER_MODULE_H */

@@ -12,10 +12,10 @@
 
     <!-- Satbilization parameters and gains -->
     <section name="VISION" prefix="VISION_">
-      <define name="PHI_PGAIN" value="400" description="Optic flow proportional gain on the roll velocity error"/>
-      <define name="PHI_IGAIN" value="20" description="Optic flow integrated gain on the summed roll velocity error"/>
-      <define name="THETA_PGAIN" value="400" description="Optic flow proportional gain on the pitch velocity error"/>
-      <define name="THETA_IGAIN" value="20" description="Optic flow integrated gain on the summed pitch velocity error"/>
+      <define name="PHI_PGAIN" value="300" description="Optic flow proportional gain on the roll velocity error"/>
+      <define name="PHI_IGAIN" value="0" description="Optic flow integrated gain on the summed roll velocity error"/>
+      <define name="THETA_PGAIN" value="300" description="Optic flow proportional gain on the pitch velocity error"/>
+      <define name="THETA_IGAIN" value="0" description="Optic flow integrated gain on the summed pitch velocity error"/>
     </section>
 
     <!-- Vision Hover calculation parameters -->
@@ -38,6 +38,18 @@
     </section>
   </doc>
 
+  <settings>
+	  <dl_settings NAME="Vision stabilization">
+      <!-- Satabilization loop parameters and gains -->
+	      <dl_settings name="vision_stab">
+			<dl_setting var="visionhover_stab.phi_pgain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="10000" shortname="kp_v_phi" param="VISION_PHI_PGAIN"/>
+			<dl_setting var="visionhover_stab.phi_igain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="1000" shortname="ki_v_phi" param="VISION_PHI_IGAIN"/>
+			<dl_setting var="visionhover_stab.theta_pgain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="10000" shortname="kp_v_theta" param="VISION_THETA_PGAIN"/>
+			<dl_setting var="visionhover_stab.theta_igain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="1000" shortname="ki_v_theta" param="VISION_THETA_IGAIN"/>
+			</dl_settings>
+          </dl_settings>
+  </settings>
+ 
  
   <header>
     <file name="IMAV2015_visionhover_module.h"/>
