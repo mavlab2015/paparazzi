@@ -68,7 +68,7 @@ PRINT_CONFIG_VAR(VIEWVIDEO_DEVICE_BUFFERS)
 
 static struct visionhover_result_t visionhover_result; ///< The vision result
 static struct v4l2_device *visionhover_dev;          ///< The visionhover camera V4L2 device
-static struct visionhover_state_t visionhover_state;   ///< State of the drone to communicate with the opticflow
+static struct visionhover_state_t visionhover_state;   ///< State of the drone to communicate with the visionhover
 static abi_event visionhover_agl_ev;                 ///< The altitude ABI event
 static pthread_t visionhover_calc_thread;            ///< The visionhover flow calculation thread
 static bool_t visionhover_got_result;                ///< When we have a vision calculation
@@ -78,7 +78,20 @@ static pthread_mutex_t visionhover_mutex;            ///< Mutex lock fo thread s
 static void *visionhover_module_calc(void *data);                   ///< The main vision calculation thread
 static void visionhover_agl_cb(uint8_t sender_id, float distance);  ///< Callback function of the ground altitude
 
-
+#if PERIODIC_TELEMETRY
+#include "subsystems/datalink/telemetry.h"
+/**
+ * Send thetelemetry information
+ * @param[in] *trans The transport structure to send the information over
+ * @param[in] *dev The link to send the data over
+ */
+static void visionhover_telem_send(struct transport_tx *trans, struct link_device *dev)
+{
+  pthread_mutex_lock(&visionhover_mutex);
+  pprz_msg_send_VISION_HOVER_EST(trans, dev, AC_ID, &visionhover_result.deviation_x,  &visionhover_result.deviation_y);
+  pthread_mutex_unlock(&visionhover_mutex);
+}
+#endif
 
 /**
  * Initialize the vision-based hover module for the bottom camera
@@ -96,6 +109,10 @@ void visionhover_module_init(void)
   if (visionhover_dev == NULL) {
     printf("[visionhover_module] Could not initialize the video device\n");
   }
+  
+  #if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, "VISION_HOVER_EST", visionhover_telem_send);
+  #endif
 }
 
 /**
@@ -251,5 +268,22 @@ it will not print it !! Note that if you add it in visionhover_calc_frame in IMA
 
 So for the time being, I have successfully verified that vision algorithm works, but I have not confirmed if the control commands are also correctly computed accordingly.....
 
+*/
+
+////////////////////////////////////////////////////////////////////
+/////////                                                 //////////
+/////////       Comment from Seong below... 17-07-2015    //////////
+/////////                                                 //////////
+////////////////////////////////////////////////////////////////////
+
+/*
+
+Answer to the previous comment: The reason why it didn't display the printf in the stabilization_visionhover_update function in IMAV_stabilization.c is because of this line:
+	  if (autopilot_mode != AP_MODE_MODULE) {
+	    return;
+	  }
+So the autopilot_mode MUST be AP_MODE_MODULE in order to proceed to the lines afterwards.
+And We MUST change the autopilot mode by clicking the button on the joystick !! 
+See the AUTOPILOT section in our airframe "ardrone2_raw_IMAV2015.xml" !!
 */
 

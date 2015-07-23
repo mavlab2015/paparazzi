@@ -1945,8 +1945,13 @@
     <field name="cmd_phi"     type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="cmd_theta"   type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
   </message>
-
-  <!--229 is free -->
+  
+<!-- Following part is added by Seong (IMAV2015)     -->
+  <message name="VISION_HOVER_EST" id="229">
+    <field name="deviation_x"         type="float"/>
+    <field name="deviation_y"  	      type="float"/>
+  </message>
+<!-- Seong Addition ends....           -->
 
   <message name="AHRS_ARDRONE2" id="230">
     <field name="state" type="uint32" />

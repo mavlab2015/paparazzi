@@ -22,6 +22,7 @@
       <message name="DATALINK_REPORT"        period="5.1"/>
       <message name="STATE_FILTER_STATUS"    period="3.2"/>
       <message name="OPTIC_FLOW_EST"         period="0.25"/>
+      <message name="VISION_HOVER_EST"         period="0.25"/>
     </mode>
 
     <mode name="ppm">
