@@ -35,7 +35,8 @@
 #include "lib/vision/image.h"
 #include "lib/v4l/v4l2.h"
 
-extern struct centroid_deviation_t centroid_deviation;
+extern struct centroid_deviation_t centroid_dev;
+extern struct marker_deviation_t marker_dev;
 
 void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *state, struct visionhover_result_t *result);
 

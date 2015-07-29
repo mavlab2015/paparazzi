@@ -94,6 +94,13 @@ struct centroid_deviation_t
 
 struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, uint8_t v_M);
 
+struct marker_deviation_t
+{
+	float x;
+	float y;
+};
+
+struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t IN);
 
 /////////////////////////////////////
 /////                          //////

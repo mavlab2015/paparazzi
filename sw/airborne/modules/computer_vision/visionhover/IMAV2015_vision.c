@@ -62,7 +62,7 @@ PRINT_CONFIG_VAR(OPTICFLOW_FY)
 
 
 struct centroid_deviation_t centroid_deviation;
-
+struct marker_deviation_t marker_deviation;
 
 /**
  * Run the vision algorithm on a new image frame
@@ -71,9 +71,12 @@ struct centroid_deviation_t centroid_deviation;
  */
 void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *state, struct visionhover_result_t *result)
 {
-  centroid_deviation = image_centroid(img, img, 160, 255, 0, 255, 0, 255);
-  result->deviation_x = centroid_deviation.x * state->agl;
-  result->deviation_y = centroid_deviation.y * state->agl;
+  //centroid_deviation = image_centroid(img, img, 160, 255, 0, 255, 0, 255);
+  //result->deviation_x = centroid_deviation.x * state->agl;
+  //result->deviation_y = centroid_deviation.y * state->agl;
+  marker_deviation = marker(&img, &img, 8, 3, 5, 3);
+  result->deviation_x = marker_deviation.x * state ->agl;
+  result->deviation_y = marker_deviation.y * state ->agl;
 }
 
 
