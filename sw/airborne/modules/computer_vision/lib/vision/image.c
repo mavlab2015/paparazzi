@@ -563,12 +563,14 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
   int bin[240][320];
   int sum_row, moment_row_sum, sum_col, moment_col_sum, image_total = 0;
   int x_centroid, y_centroid;
+  int counter;
   
 
   // Copy the creation timestamp (stays the same)
   memcpy(&output->ts, &input->ts, sizeof(struct timeval));
 
   // Go trough all the pixels
+  counter = 0;
   for (y = 0; y < output->h; y++) 
   {
     for (x = 0; x < output->w; x+=2) 
@@ -584,19 +586,19 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
          )
        {
         // UYVY
-        dest[0] = 64;         // U 0
-        dest[1] = source[1];  // Y 255
-        dest[2] = 255;        // V 0
-        dest[3] = source[3];  // Y 255
+        //dest[0] = 64;         // U 0
+        //dest[1] = source[1];  // Y 255
+        //dest[2] = 255;        // V 0
+        //dest[3] = source[3];  // Y 255
         bin[y][x] = 1;
         bin[y][x+1] = 1;
        } 
       else {
         // UYVY
-        dest[0] = source[0];  // U 
-        dest[1] = source[1];  // Y 
-        dest[2] = source[2];  // V 
-        dest[3] = source[3];  // Y 
+        //dest[0] = source[0];  // U 
+        //dest[1] = source[1];  // Y 
+        //dest[2] = source[2];  // V 
+        //dest[3] = source[3];  // Y 
         bin[y][x] = 0;
         bin[y][x+1] = 0;
       }
@@ -604,6 +606,7 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
       // Go to the next 2 pixels
       dest+=4;
       source+=4;
+      counter+=1;
     }
   }
     
@@ -643,6 +646,37 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
     centroid_deviation.x = x_centroid - (output->w)/2;
     centroid_deviation.y = -y_centroid + (output->h)/2;
     
+    
+    dest-=4*counter;
+    source-=4*counter;
+    for (y = 0; y < output->h; y++) 
+    {
+    	for (x = 0; x < output->w; x+=2) 
+    	{
+    		dest[1] = source[1]; //Y
+    		dest[3] = source[3]; //Y
+    		
+    		if ( y == (output->h)/2 || x == (output->w)/2)
+    		{
+	    		dest[0] = 200;       // U
+			dest[2] = 60;        // V
+      		}
+      		if (y == y_centroid || x == x_centroid)
+      		{
+	      		dest[0] = 60;       // U
+			dest[2] = 200;        // V
+      		}
+         	else
+      		{
+	      		dest[0] = source[0];    // U
+			dest[2] = source[2];    // V
+      		}
+        	
+      		dest+=4;
+      		source+=4;
+    	}
+    }
+    
     return centroid_deviation;
 
 }
@@ -680,15 +714,16 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   int image[240][320];
   int idx[2][200];
   int idx2[2][200];
-  int counter, counter2, inlier;
+  int counter1, counter2, counter3, inlier;
   int min1, max1, min2, max2, min3, max3, min4, max4;
-  int sum_row, sum_col;
+  int sum_row, sum_col, marker_x, marker_y;
   
 
   // Copy the creation timestamp (stays the same)
   memcpy(&output->ts, &input->ts, sizeof(struct timeval));
 
   // Go trough all the pixels
+  counter1 = 0;
   for (y = 0; y < output->h; y++) 
   {
 	  for (x = 0; x < output->w; x+=2) 
@@ -697,10 +732,11 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
 	  	image[y][x+1] = source[3];
 	  	// Go to the next 2 pixels
 	  	source+=4;
+	  	counter1+=1;
 	  } 
   }
   
-  counter = 0;
+  counter2 = 0;
   
   for (i = M; i < 240-M; i++)
   {
@@ -736,23 +772,23 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
 	
 			if ((image[i][j] > max1+t && image[i][j] < min2-t) || (image[i][j] > max2+t && image[i][j] < min1-t)  ||                         (image[i][j] > max3+t && image[i][j] < min4-t) || (image[i][j] > max4+t && image[i][j]<min3-t))
 			{
-				counter = counter + 1;
-				idx[1][counter] = i;
-				idx[2][counter] = j;
+				counter2 = counter2 + 1;
+				idx[1][counter2] = i;
+				idx[2][counter2] = j;
 			}    
 		}    
   	}
   }
   
     // 3rd stage: Outlier rejection:
-    counter2 = 0;
+    counter3 = 0;
     
-    if (counter > IN)
+    if (counter2 > IN)
     {
-    	for (l = 1; l < counter+1; l++)
+    	for (l = 1; l < counter2+1; l++)
     	{
     		inlier = 0;
-    		for (n = 1; n < counter+1; n++)
+    		for (n = 1; n < counter2+1; n++)
     		{
     			if (sqrt(pow((idx[1][l]-idx[1][n]), 2) + pow((idx[2][l]-idx[2][n]), 2)) < 10)
     			{
@@ -761,34 +797,67 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     		}
     		if (inlier > IN)
     		{	
-    			counter2 = counter2 + 1;
-    		  	idx2[1][counter2] = idx[1][l];
-    			idx2[2][counter2] = idx[2][l];
+    			counter3 = counter3 + 1;
+    		  	idx2[1][counter3] = idx[1][l];
+    			idx2[2][counter3] = idx[2][l];
     		}
     	}
         
         // Finally: Compute the centroid of the inliers.
-	if (counter2 > 0)
+	if (counter3 > 0)
 	{
 		sum_row = 0;
 		sum_col = 0;
-		for (o = 1; o < counter2+1; o++)
+		for (o = 1; o < counter3+1; o++)
 		{
 			sum_row = sum_row + idx2[1][o];
 			sum_col = sum_col + idx2[2][o];
 		}
-		marker_deviation.x = sum_col/(counter2) - (output->w)/2;; 
-    		marker_deviation.y = -sum_row/(counter2) + (output->h)/2;;
-
+		marker_x = sum_col/counter3;
+		marker_y = sum_row/counter3;
 	}
     }
     
-    if (counter2 == 0)
+    if (counter3 == 0)
     {
-    	marker_deviation.x = 0;
-    	marker_deviation.y = 0;
+    	marker_x = (output->w)/2;
+    	marker_y = (output->h)/2;
     }
     
+    marker_deviation.x = marker_x - (output->w)/2;
+    marker_deviation.y = -marker_y + (output->h)/2;
+    
+    // Display the marker location and center-lines.
+    source-=4*counter1;
+    for (y = 0; y < output->h; y++) 
+    {
+    	for (x = 0; x < output->w; x+=2) 
+    	{
+    		dest[1] = source[1]; //Y
+    		dest[3] = source[3]; //Y
+    		
+    		if ( y == (output->h)/2 || x == (output->w)/2)
+    		{
+	    		dest[0] = 200;       // U
+			dest[2] = 60;        // V
+      		}
+      		if (y == marker_y || x == marker_x)
+      		{
+	      		dest[0] = 60;       // U
+			dest[2] = 200;        // V
+      		}
+         	else
+      		{
+	      		dest[0] = source[0];    // U
+			dest[2] = source[2];    // V
+      		}
+        	
+      		dest+=4;
+      		source+=4;
+    	}
+    }
+    
+    printf("The number of inliers = %i\n", counter3);
     return marker_deviation;
 
 }
