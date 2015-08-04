@@ -98,6 +98,7 @@ struct marker_deviation_t
 {
 	float x;
 	float y;
+	int8_t inlier;
 };
 
 struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t IN);

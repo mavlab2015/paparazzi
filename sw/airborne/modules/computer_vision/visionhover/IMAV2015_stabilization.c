@@ -143,8 +143,6 @@ void stabilization_visionhover_update(struct visionhover_result_t *result)
                                + visionhover_stab.theta_igain * visionhover_stab.err_y_int) / 100;
 
 
-
-  printf("Phi gain = %f, Theta gain = %f, Phi = %i, Theta = %i \n", visionhover_stab.phi_pgain, visionhover_stab.theta_pgain, visionhover_stab.cmd.phi, visionhover_stab.cmd.theta);
   
   /* Bound the roll and pitch commands */
   BoundAbs(visionhover_stab.cmd.phi, CMD_OF_SAT);

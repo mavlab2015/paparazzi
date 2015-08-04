@@ -1950,6 +1950,7 @@
   <message name="VISION_HOVER_EST" id="229">
     <field name="deviation_x"         type="float"/>
     <field name="deviation_y"  	      type="float"/>
+    <field name="inlier"  	      type="int8"/>
   </message>
 <!-- Seong Addition ends....           -->
 

@@ -696,7 +696,7 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
 /**
  * Find the marker location.
  * @param[in] *input The input image to filter
- * @param[in] w The distance between the pixel of interest and farthest neighbor pixel [pixel]
+ * @param[in] M The distance between the pixel of interest and farthest neighbor pixel [pixel]
  * @param[in] m The safety margin around the pixel of interest [pixel]
  * @param[in] t Threshold for intensity difference
  * @param[in] IN The number of minimum inliers required
@@ -711,9 +711,9 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   uint8_t *source = input->buf;
   uint8_t *dest = output->buf;
   uint16_t x, y, i, j, k, l, n, o;
-  int image[240][320];
-  int idx[2][200];
-  int idx2[2][200];
+  int image[240][320] = {};
+  int idx[2][200] = {};
+  int idx2[2][200] = {};
   int counter1, counter2, counter3, inlier;
   int min1, max1, min2, max2, min3, max3, min4, max4;
   int sum_row, sum_col, marker_x, marker_y;
@@ -773,8 +773,8 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
 			if ((image[i][j] > max1+t && image[i][j] < min2-t) || (image[i][j] > max2+t && image[i][j] < min1-t)  ||                         (image[i][j] > max3+t && image[i][j] < min4-t) || (image[i][j] > max4+t && image[i][j]<min3-t))
 			{
 				counter2 = counter2 + 1;
-				idx[1][counter2] = i;
-				idx[2][counter2] = j;
+				idx[0][counter2] = i;
+				idx[1][counter2] = j;
 			}    
 		}    
   	}
@@ -790,7 +790,7 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     		inlier = 0;
     		for (n = 1; n < counter2+1; n++)
     		{
-    			if (sqrt(pow((idx[1][l]-idx[1][n]), 2) + pow((idx[2][l]-idx[2][n]), 2)) < 10)
+    			if (sqrt(pow((idx[0][l]-idx[0][n]), 2) + pow((idx[1][l]-idx[1][n]), 2)) < 10)
     			{
     				inlier = inlier + 1;
     			}
@@ -798,8 +798,8 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     		if (inlier > IN)
     		{	
     			counter3 = counter3 + 1;
-    		  	idx2[1][counter3] = idx[1][l];
-    			idx2[2][counter3] = idx[2][l];
+    		  	idx2[0][counter3] = idx[0][l];
+    			idx2[1][counter3] = idx[1][l];
     		}
     	}
         
@@ -810,8 +810,8 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
 		sum_col = 0;
 		for (o = 1; o < counter3+1; o++)
 		{
-			sum_row = sum_row + idx2[1][o];
-			sum_col = sum_col + idx2[2][o];
+			sum_row = sum_row + idx2[0][o];
+			sum_col = sum_col + idx2[1][o];
 		}
 		marker_x = sum_col/counter3;
 		marker_y = sum_row/counter3;
@@ -826,6 +826,7 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     
     marker_deviation.x = marker_x - (output->w)/2;
     marker_deviation.y = -marker_y + (output->h)/2;
+    marker_deviation.inlier = counter3;
     
     // Display the marker location and center-lines.
     source-=4*counter1;
@@ -833,31 +834,27 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     {
     	for (x = 0; x < output->w; x+=2) 
     	{
-    		dest[1] = source[1]; //Y
-    		dest[3] = source[3]; //Y
-    		
-    		if ( y == (output->h)/2 || x == (output->w)/2)
-    		{
-	    		dest[0] = 200;       // U
+	      	dest[0] = source[0]; 	    //U
+		dest[1] = source[1];        //Y
+		dest[2] = source[2];        //V
+		dest[3] = source[3];        //Y
+	 	
+	 	if ( y == (output->h)/2 || x == (output->w)/2)
+    		{	
+	    		dest[0] = 250;       // U
 			dest[2] = 60;        // V
       		}
       		if (y == marker_y || x == marker_x)
       		{
-	      		dest[0] = 60;       // U
-			dest[2] = 200;        // V
+	      		dest[0] = 65;        //U
+			dest[2] = 255;       //V
       		}
-         	else
-      		{
-	      		dest[0] = source[0];    // U
-			dest[2] = source[2];    // V
-      		}
-        	
       		dest+=4;
       		source+=4;
     	}
     }
     
-    printf("The number of inliers = %i\n", counter3);
+    //printf("The number of inliers = %i\n", counter3);
     return marker_deviation;
 
 }

@@ -64,8 +64,8 @@ PRINT_CONFIG_MSG("VISIONHOVER_DEVICE_SIZE = " _SIZE_HELPER(VISIONHOVER_DEVICE_SI
 #endif
 PRINT_CONFIG_VAR(VIEWVIDEO_DEVICE_BUFFERS)
 
-/* The main visionhover variables */
 
+/* The main visionhover variables */
 static struct visionhover_result_t visionhover_result; ///< The vision result
 static struct v4l2_device *visionhover_dev;          ///< The visionhover camera V4L2 device
 static struct visionhover_state_t visionhover_state;   ///< State of the drone to communicate with the visionhover
@@ -74,91 +74,44 @@ static pthread_t visionhover_calc_thread;            ///< The visionhover flow c
 static bool_t visionhover_got_result;                ///< When we have a vision calculation
 static pthread_mutex_t visionhover_mutex;            ///< Mutex lock fo thread safety
 
+
 /* Static functions */
 static void *visionhover_module_calc(void *data);                   ///< The main vision calculation thread
 static void visionhover_agl_cb(uint8_t sender_id, float distance);  ///< Callback function of the ground altitude
 
 #if PERIODIC_TELEMETRY
 #include "subsystems/datalink/telemetry.h"
-/**
- * Send thetelemetry information
- * @param[in] *trans The transport structure to send the information over
- * @param[in] *dev The link to send the data over
- */
+/**********************************************************************************
+ * Send thetelemetry information                                                  *
+ * @param[in] *trans The transport structure to send the information over         *
+ * @param[in] *dev The link to send the data over                                 *
+ **********************************************************************************/
 static void visionhover_telem_send(struct transport_tx *trans, struct link_device *dev)
 {
   pthread_mutex_lock(&visionhover_mutex);
-  pprz_msg_send_VISION_HOVER_EST(trans, dev, AC_ID, &visionhover_result.deviation_x,  &visionhover_result.deviation_y);
+  pprz_msg_send_VISION_HOVER_EST(trans, dev, AC_ID, &visionhover_result.deviation_x,  &visionhover_result.deviation_y, &visionhover_result.inlier);
   pthread_mutex_unlock(&visionhover_mutex);
 }
 #endif
 
-/**
- * Initialize the vision-based hover module for the bottom camera
- */
-void visionhover_module_init(void)
+/***********************************************************************************
+ * Get the altitude above ground of the drone                                      *
+ * @param[in] sender_id The id that send the ABI message (unused)                  *
+ * @param[in] distance The distance above ground level in meters                   *
+ ***********************************************************************************/
+static void visionhover_agl_cb(uint8_t sender_id __attribute__((unused)), float distance)
 {
-
-  // Subscribe to the altitude above ground level ABI messages
-  AbiBindMsgAGL(VISIONHOVER_AGL_ID, &visionhover_agl_ev, visionhover_agl_cb);
-  
-  // Initialize the visionhover calculation
-  visionhover_got_result = FALSE;
-  /* Try to initialize the video device */
-  visionhover_dev = v4l2_init(STRINGIFY(VISIONHOVER_DEVICE), VISIONHOVER_DEVICE_SIZE, VISIONHOVER_DEVICE_BUFFERS);
-  if (visionhover_dev == NULL) {
-    printf("[visionhover_module] Could not initialize the video device\n");
-  }
-  
-  #if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, "VISION_HOVER_EST", visionhover_telem_send);
-  #endif
-}
-
-/**
- * Update the vision state for the calculation thread
- * and update the stabilization loops with the newest result
- */
-void visionhover_module_run(void)
-{
-  pthread_mutex_lock(&visionhover_mutex);
-  stabilization_visionhover_update(&visionhover_result);
-  //printf("Vision results are: %.0f, %.0f\n", visionhover_result.deviation_x, visionhover_result.deviation_y);
-  pthread_mutex_unlock(&visionhover_mutex);
-}
-
-/**
- * Start the vision calculation
- */
-void visionhover_module_start(void)
-{
-  // Check if we are not already running
-  if (visionhover_calc_thread != 0) {
-    printf("[visionhover_module] VisionHover already started!\n");
-    return;
-  }
-
-  // Create the visionhover calculation thread
-  int rc = pthread_create(&visionhover_calc_thread, NULL, visionhover_module_calc, NULL);
-  if (rc) {
-    printf("[visionhover_module] Could not initialize visionhover thread (return code: %d)\n", rc);
+  // Update the distance if we got a valid measurement
+  if (distance > 0) {
+    visionhover_state.agl = distance;
   }
 }
 
-/**
- * Stop the visionhover calculation
- */
-void visionhover_module_stop(void)
-{
-  // Stop the capturing
-  v4l2_stop_capture(visionhover_dev);
-
-  // TODO: fix thread stop
-}
-
-/**
- * The main visionhover flow calculation thread
- */
+/**********************************************************
+ *                                                        *
+ * The main visionhover flow calculation thread           *
+ *                                                        *
+ **********************************************************/
 #include "errno.h"
 static void *visionhover_module_calc(void *data __attribute__((unused)))
 {
@@ -219,71 +172,83 @@ static void *visionhover_module_calc(void *data __attribute__((unused)))
 #endif
 }
 
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////                                                               /////
+////        visionhover_module_init, start, run, stop              /////
+////                                                               /////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+
 /**
- * Get the altitude above ground of the drone
- * @param[in] sender_id The id that send the ABI message (unused)
- * @param[in] distance The distance above ground level in meters
+ * Initialize the vision-based hover module for the bottom camera
  */
-static void visionhover_agl_cb(uint8_t sender_id __attribute__((unused)), float distance)
+void visionhover_module_init(void)
 {
-  // Update the distance if we got a valid measurement
-  if (distance > 0) {
-    visionhover_state.agl = distance;
+
+  // Subscribe to the altitude above ground level ABI messages
+  AbiBindMsgAGL(VISIONHOVER_AGL_ID, &visionhover_agl_ev, visionhover_agl_cb);
+  
+  // Initialize the visionhover calculation
+  visionhover_got_result = FALSE;
+  /* Try to initialize the video device */
+  visionhover_dev = v4l2_init(STRINGIFY(VISIONHOVER_DEVICE), VISIONHOVER_DEVICE_SIZE, VISIONHOVER_DEVICE_BUFFERS);
+  if (visionhover_dev == NULL) {
+    printf("[visionhover_module] Could not initialize the video device\n");
+  }
+  
+  #if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, "VISION_HOVER_EST", visionhover_telem_send);
+  #endif
+}
+
+
+/**
+ * Start the vision calculation
+ */
+void visionhover_module_start(void)
+{
+  // Check if we are not already running
+  if (visionhover_calc_thread != 0) {
+    printf("[visionhover_module] VisionHover already started!\n");
+    return;
+  }
+
+  // Create the visionhover calculation thread
+  int rc = pthread_create(&visionhover_calc_thread, NULL, visionhover_module_calc, NULL);
+  if (rc) {
+    printf("[visionhover_module] Could not initialize visionhover thread (return code: %d)\n", rc);
   }
 }
 
 
+/**
+ * Update the vision state for the calculation thread
+ * and update the stabilization loops with the newest result
+ */
+void visionhover_module_run(void)
+{
+  pthread_mutex_lock(&visionhover_mutex);
+  stabilization_visionhover_update(&visionhover_result);
+  //printf("Vision results are: %.0f, %.0f\n", visionhover_result.deviation_x, visionhover_result.deviation_y);
+  pthread_mutex_unlock(&visionhover_mutex);
+}
 
 
+/**
+ * Stop the visionhover calculation
+ */
+void visionhover_module_stop(void)
+{
+  // Stop the capturing
+  v4l2_stop_capture(visionhover_dev);
 
-
-
-
-
-////////////////////////////////////////////////////////////////////
-/////////                                                 //////////
-/////////       Comment from Seong below... 13-07-2015    //////////
-/////////                                                 //////////
-////////////////////////////////////////////////////////////////////
-
-/*
-
-I tried to printf the vision result using the following code:
-	static void *visionhover_module_calc(void *data __attribute__((unused)))
-	{
-	  ....
-	    struct visionhover_result_t temp_result;
-	    visionhover_calc_frame(&img, &temp_result);
-	    printf("Vision results are: %.0f, %.0f\n", temp_result.deviation_x, temp_result.deviation_y);
-	  ....
-        }
-        
-They worked perfectly fine. However, when I tried the similar thing with:
-   
-	stabilization_visionhover_update(&visionhover_result);
-	
-by adding an extra output parameter to the function, it doesn't printf correctly. 
-Funny thing is that even when I just add printf("blabla\n") in the stabilization_visionhover_update function in IMAV_stabilization.c,
-it will not print it !! Note that if you add it in visionhover_calc_frame in IMAV_vision.c, it prints !!
-
-So for the time being, I have successfully verified that vision algorithm works, but I have not confirmed if the control commands are also correctly computed accordingly.....
-
-*/
-
-////////////////////////////////////////////////////////////////////
-/////////                                                 //////////
-/////////       Comment from Seong below... 17-07-2015    //////////
-/////////                                                 //////////
-////////////////////////////////////////////////////////////////////
-
-/*
-
-Answer to the previous comment: The reason why it didn't display the printf in the stabilization_visionhover_update function in IMAV_stabilization.c is because of this line:
-	  if (autopilot_mode != AP_MODE_MODULE) {
-	    return;
-	  }
-So the autopilot_mode MUST be AP_MODE_MODULE in order to proceed to the lines afterwards.
-And We MUST change the autopilot mode by clicking the button on the joystick !! 
-See the AUTOPILOT section in our airframe "ardrone2_raw_IMAV2015.xml" !!
-*/
+  // TODO: fix thread stop
+}
 

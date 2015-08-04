@@ -12,10 +12,15 @@
 
     <!-- Satbilization parameters and gains -->
     <section name="VISION" prefix="VISION_">
-      <define name="PHI_PGAIN" value="300" description="Optic flow proportional gain on the roll velocity error"/>
-      <define name="PHI_IGAIN" value="0" description="Optic flow integrated gain on the summed roll velocity error"/>
-      <define name="THETA_PGAIN" value="300" description="Optic flow proportional gain on the pitch velocity error"/>
-      <define name="THETA_IGAIN" value="0" description="Optic flow integrated gain on the summed pitch velocity error"/>
+      <define name="PHI_PGAIN" value="300" description="Vision hover proportional gain on the roll velocity error"/>
+      <define name="PHI_IGAIN" value="0" description="Vision hover integrated gain on the summed roll velocity error"/>
+      <define name="THETA_PGAIN" value="300" description="Vision hover proportional gain on the pitch velocity error"/>
+      <define name="THETA_IGAIN" value="0" description="Vision hover integrated gain on the summed pitch velocity error"/>
+      
+      <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
+      <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
+      <define name="t" value="5" description="Threshold for intensity difference"/>
+      <define name="IN" value="3" description="The number of minimum inliers required"/>
     </section>
 
     <!-- Vision Hover calculation parameters -->
@@ -46,6 +51,11 @@
 			<dl_setting var="visionhover_stab.phi_igain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="1000" shortname="ki_v_phi" param="VISION_PHI_IGAIN"/>
 			<dl_setting var="visionhover_stab.theta_pgain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="10000" shortname="kp_v_theta" param="VISION_THETA_PGAIN"/>
 			<dl_setting var="visionhover_stab.theta_igain" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="1000" shortname="ki_v_theta" param="VISION_THETA_IGAIN"/>
+			
+			<dl_setting var="visionhover_param.M" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="100" shortname="M" param="VISION_M"/>
+			<dl_setting var="visionhover_param.m" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="10" shortname="m" param="VISION_m"/>
+			<dl_setting var="visionhover_param.t" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="50" shortname="t" param="VISION_t"/>
+			<dl_setting var="visionhover_param.IN" module="computer_vision/IMAV2015_visionhover_module" min="0" step="1" max="10" shortname="IN" param="VISION_IN"/>
 			</dl_settings>
           </dl_settings>
   </settings>

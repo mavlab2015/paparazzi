@@ -41,6 +41,7 @@ struct visionhover_state_t {
 struct visionhover_result_t {
   float deviation_x;      ///< Deviation of centroid from the center in x direction [pixel]
   float deviation_y;      ///< Deviation of centroid from the center in y direction [pixel]
+  int8_t inlier;            ///< The number of inliers
 };
 
 

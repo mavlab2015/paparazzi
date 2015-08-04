@@ -39,30 +39,39 @@
 // Computer Vision
 #include "lib/vision/image.h"
 
-// Camera parameters (defaults are from an ARDrone 2)
-#ifndef OPTICFLOW_FOV_W
-#define OPTICFLOW_FOV_W 0.89360857702
+// Vision algorithm input parameters
+#ifndef VISION_M
+#define VISION_M 8
 #endif
-PRINT_CONFIG_VAR(OPTICFLOW_FOV_W)
+PRINT_CONFIG_VAR(VISION_M)
 
-#ifndef OPTICFLOW_FOV_H
-#define OPTICFLOW_FOV_H 0.67020643276
+#ifndef VISION_m
+#define VISION_m 3
 #endif
-PRINT_CONFIG_VAR(OPTICFLOW_FOV_H)
+PRINT_CONFIG_VAR(VISION_m)
 
-#ifndef OPTICFLOW_FX
-#define OPTICFLOW_FX 343.1211
+#ifndef VISION_t
+#define VISION_t 15
 #endif
-PRINT_CONFIG_VAR(OPTICFLOW_FX)
+PRINT_CONFIG_VAR(VISION_t)
 
-#ifndef OPTICFLOW_FY
-#define OPTICFLOW_FY 348.5053
+#ifndef VISION_IN
+#define VISION_IN 3
 #endif
-PRINT_CONFIG_VAR(OPTICFLOW_FY)
+PRINT_CONFIG_VAR(VISION_IN)
 
 
 struct centroid_deviation_t centroid_deviation;
 struct marker_deviation_t marker_deviation;
+
+
+/* Initialize the default settings for the vision algorithm */
+struct visionhover_param_t visionhover_param = {
+  .M = VISION_M,
+  .m = VISION_m,
+  .t = VISION_t,
+  .IN = VISION_IN,
+};
 
 /**
  * Run the vision algorithm on a new image frame
@@ -74,9 +83,10 @@ void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *sta
   //centroid_deviation = image_centroid(img, img, 160, 255, 0, 255, 0, 255);
   //result->deviation_x = centroid_deviation.x * state->agl;
   //result->deviation_y = centroid_deviation.y * state->agl;
-  marker_deviation = marker(&img, &img, 8, 3, 5, 3);
+  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
   result->deviation_x = marker_deviation.x * state ->agl;
   result->deviation_y = marker_deviation.y * state ->agl;
+  result->inlier = marker_deviation.inlier;
 }
 
 

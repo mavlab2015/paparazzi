@@ -29,8 +29,18 @@
     <load name="gps_ubx_ucenter.xml"/>
     <load name="send_imu_mag_current.xml"/>
     <load name="logger_file.xml"/>
-    <!--load name="cv_IMAV2015.xml"/-->
-    <load name="video_rtp_stream_IMAV2015.xml">
+    <load name="cv_IMAV2015.xml">
+    	<define name="VISION_PHI_PGAIN" value="500"/>
+        <define name="VISION_PHI_IGAIN" value="0" />
+        <define name="VISION_THETA_PGAIN" value="300"/>
+        <define name="VISION_THETA_IGAIN" value="0"/>
+        
+        <define name="VISION_M" value="8"/>
+        <define name="VISION_m" value="3" />
+        <define name="VISION_t" value="15"/>
+        <define name="VISION_IN" value="3"/>
+    </load>
+    <!--load name="video_rtp_stream_IMAV2015.xml">
     	<define name="VIEWVIDEO_DEVICE" value="/dev/video2" />
    	<define name="VIEWVIDEO_DEVICE_SIZE" value="320,240" />
     	<define name="VIEWVIDEO_DEVICE_BUFFERS" value="10" />
@@ -39,7 +49,7 @@
 	<define name="VIEWVIDEO_FPS" value="4" />
 	<define name="VIEWVIDEO_SHOT_PATH" value="/data/video/images" />
 	<define name="VIEWVIDEO_USE_NETCAT" value="FALSE" />
-    </load>
+    </load-->
   </modules>
 
   <commands>

@@ -35,6 +35,16 @@
 #include "lib/vision/image.h"
 #include "lib/v4l/v4l2.h"
 
+/* The vision algorithm parameters */
+struct visionhover_param_t {
+  float M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
+  float m;        ///< The safety margin around the pixel of interest [pixel]
+  float t;      ///< Threshold for intensity difference
+  float IN;      ///< The number of minimum inliers required
+};
+extern struct visionhover_param_t visionhover_param;
+
+
 extern struct centroid_deviation_t centroid_dev;
 extern struct marker_deviation_t marker_dev;
 
