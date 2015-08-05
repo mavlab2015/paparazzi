@@ -33,6 +33,11 @@
 #define VIEW_VIDEO_H
 
 #include "std.h"
+#include "lib/vision/image.h"
+#include "lib/v4l/v4l2.h"
+
+#include "visionhover/IMAV2015_vision.h"
+
 
 // Main viewvideo structure
 struct viewvideo_t {
@@ -46,6 +51,16 @@ struct viewvideo_t {
   uint16_t shot_number;           ///< The last shot number
 };
 extern struct viewvideo_t viewvideo;
+
+/* The vision algorithm parameters */
+/*struct visionhover_param_t {
+  float M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
+  float m;        ///< The safety margin around the pixel of interest [pixel]
+  float t;      ///< Threshold for intensity difference
+  float IN;      ///< The number of minimum inliers required
+};*/
+struct visionhover_param_t visionhover_parameter;
+
 
 // Module functions
 extern void viewvideo_init(void);

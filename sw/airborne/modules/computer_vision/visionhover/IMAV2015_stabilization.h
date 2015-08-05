@@ -43,11 +43,16 @@ struct visionhover_stab_t {
   int32_t theta_igain;      ///< The pitch I gain on the err_vy_int*/
   float phi_pgain;        ///< The roll P gain on the err_vx
   float phi_igain;        ///< The roll I gain on the err_vx_int
+  float phi_dgain;        ///< The roll D gain on the err_vx_diff
   float theta_pgain;      ///< The pitch P gain on the err_vy
   float theta_igain;      ///< The pitch I gain on the err_vy_int
+  float theta_dgain;      ///< The pitch D gain on the err_vy_diff
 
   float err_x_int;         ///< The integrated velocity error in x direction (m/s)
   float err_y_int;         ///< The integrated velocity error in y direction (m/s)
+  
+  float err_x_diff;        ///< The difference in velocity error in x direction (m/s)
+  float err_y_diff;        ///< The difference in velocity error in y direction (m/s)
   struct Int32Eulers cmd;   ///< The commands that are send to the hover loop
 };
 extern struct visionhover_stab_t visionhover_stab;

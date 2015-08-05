@@ -109,9 +109,40 @@ PRINT_CONFIG_MSG("[viewvideo] Using netcat.")
 PRINT_CONFIG_MSG("[viewvideo] Using RTP/UDP stream.")
 #endif
 
+
+// Vision algorithm input parameters
+#ifndef VISION_M
+#define VISION_M 8
+#endif
+PRINT_CONFIG_VAR(VISION_M)
+
+#ifndef VISION_m
+#define VISION_m 3
+#endif
+PRINT_CONFIG_VAR(VISION_m)
+
+#ifndef VISION_t
+#define VISION_t 15
+#endif
+PRINT_CONFIG_VAR(VISION_t)
+
+#ifndef VISION_IN
+#define VISION_IN 3
+#endif
+PRINT_CONFIG_VAR(VISION_IN)
+
+
 /* These are defined with configure */
 PRINT_CONFIG_VAR(VIEWVIDEO_HOST)
 PRINT_CONFIG_VAR(VIEWVIDEO_PORT_OUT)
+
+/* Initialize the default settings for the vision algorithm */
+struct visionhover_param_t visionhover_param = {
+  .M = VISION_M,
+  .m = VISION_m,
+  .t = VISION_t,
+  .IN = VISION_IN,
+};
 
 // Main thread
 static void *viewvideo_thread(void *data);
@@ -190,9 +221,9 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
 	
 	//printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
 	
-	struct marker_deviation_t marker_deviation = marker(&img, &img, 8, 3, 20, 3);
+	struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
 	
-	//printf("x_deviation and y_deviation is %.0f and %.0f\n", marker_deviation.x, marker_deviation.y);
+	printf("Inliers = %i\n", marker_deviation.inlier);
 	
 /////////////////////////////////////////////////////////////
 /////                                                   /////
