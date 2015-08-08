@@ -27,34 +27,48 @@
  * Computes setpoint for the lower level attitude stabilization to control horizontal velocity.
  */
 
-#ifndef CV_STABILIZATION_OPTICFLOW_H_
-#define CV_STABILIZATION_OPTICFLOW_H_
+#ifndef CV_STABILIZATION_OPTICFLOW_IMAV2015_H_
+#define CV_STABILIZATION_OPTICFLOW_IMAV2015_H_
 
 #include "std.h"
 #include "lib/v4l/v4l2.h"
-#include "inter_thread_data.h"
+#include "inter_thread_data_IMAV2015.h"
 #include "math/pprz_algebra_int.h"
 
 /* The opticflow stabilization */
 struct opticflow_stab_t {
   int32_t phi_pgain;        ///< The roll P gain on the err_vx
   int32_t phi_igain;        ///< The roll I gain on the err_vx_int
-  int32_t phi_dgain;        ///< The roll D gain on the err_vx_diff
   int32_t theta_pgain;      ///< The pitch P gain on the err_vy
   int32_t theta_igain;      ///< The pitch I gain on the err_vy_int
-  int32_t theta_dgain;        ///< The pitch D gain on the err_vy_diff
   float desired_vx;         ///< The desired velocity in the x direction (cm/s)
   float desired_vy;         ///< The desired velocity in the y direction (cm/s)
 
   float err_vx_int;         ///< The integrated velocity error in x direction (m/s)
   float err_vy_int;         ///< The integrated velocity error in y direction (m/s)
-  
-  float err_vx_diff;        ///< The differential velocity error in x direction (m/s)
-  float err_vy_diff;        ///< The differential velocity error in y direction (m/s)
-  
   struct Int32Eulers cmd;   ///< The commands that are send to the hover loop
 };
 extern struct opticflow_stab_t opticflow_stab;
+
+struct visionhover_stab_t {
+  float phi_pgain;        ///< The roll P gain on the err_vx
+  float phi_igain;        ///< The roll I gain on the err_vx_int
+  float phi_dgain;        ///< The roll D gain on the err_vx_diff
+  float theta_pgain;      ///< The pitch P gain on the err_vy
+  float theta_igain;      ///< The pitch I gain on the err_vy_int
+  float theta_dgain;      ///< The pitch D gain on the err_vy_diff
+  
+  float err_x_int;         ///< The integrated velocity error in x direction (m/s)
+  float err_y_int;         ///< The integrated velocity error in y direction (m/s)
+  
+  float err_x_diff;        ///< The difference in velocity error in x direction (m/s)
+  float err_y_diff;        ///< The difference in velocity error in y direction (m/s)
+  
+  int8_t marker_detected;
+};
+
+extern struct visionhover_stab_t visionhover_stab;
+
 
 // Implement own Horizontal loops
 extern void guidance_h_module_enter(void);
@@ -62,6 +76,6 @@ extern void guidance_h_module_read_rc(void);
 extern void guidance_h_module_run(bool_t in_flight);
 
 // Update the stabiliztion commands based on a vision result
-void stabilization_opticflow_update(struct opticflow_result_t *vision);
+void stabilization_opticflow_update(struct opticflow_result_t *vision, struct opticflow_state_t *mystate);
 
 #endif /* CV_STABILIZATION_OPTICFLOW_H_ */

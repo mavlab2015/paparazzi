@@ -84,8 +84,8 @@ void visionhover_calc_frame(struct image_t *img, struct visionhover_state_t *sta
   //result->deviation_x = centroid_deviation.x * state->agl;
   //result->deviation_y = centroid_deviation.y * state->agl;
   marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
-  result->deviation_x = marker_deviation.x * state ->agl;
-  result->deviation_y = marker_deviation.y * state ->agl;
+  result->deviation_x = marker_deviation.x;
+  result->deviation_y = marker_deviation.y;
   result->inlier = marker_deviation.inlier;
 }
 

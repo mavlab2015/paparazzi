@@ -37,10 +37,16 @@
 #include "autopilot.h"
 #include "subsystems/datalink/downlink.h"
 
+
+
 // Timing
 #include <sys/time.h>
 
-#define CMD_OF_SAT  1500 // 40 deg = 2859.1851
+// Math
+#include <math.h>
+
+#define CMD_OF_SAT  500 // 40 deg = 2859.1851
+
 
 #ifndef VISION_PHI_PGAIN
 #define VISION_PHI_PGAIN 300
@@ -71,6 +77,17 @@ PRINT_CONFIG_VAR(VISION_THETA_IGAIN)
 #define VISION_THETA_DGAIN 0
 #endif
 PRINT_CONFIG_VAR(VISION_THETA_DGAIN)
+
+#ifndef FX
+#define FX 343.1211
+#endif
+PRINT_CONFIG_VAR(FX) // [px/rad]
+
+#ifndef FY
+#define FY 348.5053
+#endif
+PRINT_CONFIG_VAR(FX) // [px/rad]
+
 
 //////////////////////////////////////////////////
 ///////                                     //////
@@ -168,11 +185,15 @@ void guidance_h_module_run(bool_t in_flight)
   stabilization_attitude_run(in_flight);
 }
 
+
+
+
+
 /**
  * Update the controls based on a vision result
  * @param[in] *result The opticflow calculation result used for control
  */
-void stabilization_visionhover_update(struct visionhover_result_t *result)
+void stabilization_visionhover_update(struct visionhover_result_t *result, struct visionhover_state_t *mystate)
 {
   
   /* Check if we are in the correct AP_MODE before setting commands */
@@ -182,14 +203,25 @@ void stabilization_visionhover_update(struct visionhover_result_t *result)
   
 
 
-  /* Calculate the error if we have enough flow */
+  /* Calculate the distance error. */
+  // Don't forget to add the contribution from the body angle ! 
+  
   float err_x;
   float err_y;
-  err_x = result->deviation_x;
-  err_y = result->deviation_y;
-
-  //printf("Phi command = %f, Theta command = %f\n", result->deviation_x, result->deviation_y);
-  //printf("blabla\n");
+  
+  /*
+  float alpha;
+  float beta;
+  
+  alpha = result->deviation_x/FX;
+  beta = result->deviation_y/FY;
+  
+  err_x = mystate->agl * ( -sinf(mystate->phi) + sinf(alpha) / cosf(-mystate->phi + alpha) );
+  err_y = mystate->agl * ( sinf(mystate->theta) + sinf(beta) / cosf(mystate->theta + beta) );
+  */
+  
+  err_x = mystate->agl * result->deviation_x;
+  err_y = mystate->agl * result->deviation_y;
   
   /* Calculate the integrated errors (TODO: bound??) */
   visionhover_stab.err_x_int += err_x;
@@ -204,24 +236,21 @@ void stabilization_visionhover_update(struct visionhover_result_t *result)
   dt = (int32_t)(diffTime); // usec
     
     
-  visionhover_stab.err_x_diff = (err_x - pre_err_x)*1000/dt;
-  visionhover_stab.err_y_diff = (err_y - pre_err_y)*1000/dt;
+  visionhover_stab.err_x_diff = (err_x - pre_err_x)*10/dt;
+  visionhover_stab.err_y_diff = (err_y - pre_err_y)*10/dt;
   pre_err_x = err_x;
   pre_err_y = err_y;
-  //printf("dt = %i, x_diff = %f, y_diff = %f\n", dt, visionhover_stab.err_x_diff, visionhover_stab.err_y_diff);
   
   /* Calculate the commands */
-  visionhover_stab.cmd.phi   = (visionhover_stab.phi_pgain * err_x
-                             + visionhover_stab.phi_igain * visionhover_stab.err_x_int
-                             + visionhover_stab.phi_dgain * visionhover_stab.err_x_diff) / 100;
-  visionhover_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y 
-                               + visionhover_stab.theta_igain * visionhover_stab.err_y_int
-                               + visionhover_stab.theta_dgain * visionhover_stab.err_y_diff) / 100;
+	  visionhover_stab.cmd.phi   = (visionhover_stab.phi_pgain * err_x
+		                     + visionhover_stab.phi_igain * visionhover_stab.err_x_int
+		                     + visionhover_stab.phi_dgain * visionhover_stab.err_x_diff)/ 100;
+	  visionhover_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y 
+		                       + visionhover_stab.theta_igain * visionhover_stab.err_y_int
+		                       + visionhover_stab.theta_dgain * visionhover_stab.err_y_diff)/ 100;
 
-  
   /* Bound the roll and pitch commands */
   BoundAbs(visionhover_stab.cmd.phi, CMD_OF_SAT);
   BoundAbs(visionhover_stab.cmd.theta, CMD_OF_SAT);
-  
 
 }

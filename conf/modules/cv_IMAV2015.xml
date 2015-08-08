@@ -38,8 +38,8 @@
       <!-- Camera parameters -->
       <define name="FOV_W" value="0.89360857702" description="The field of view width of the bottom camera (Defaults are from an ARDrone 2)"/>
       <define name="FOV_H" value="0.67020643276" description="The field of view height of the bottom camera (Defaults are from an ARDrone 2)"/>
-      <define name="FX" value="343.1211" description="Field in the x direction of the camera (Defaults are from an ARDrone 2)"/>
-      <define name="FY" value="348.5053" description="Field in the y direction of the camera (Defaults are from an ARDrone 2)"/>
+      <define name="FX" value="343.1211" description="Field in the x direction of the camera [px/rad] (Defaults are from an ARDrone 2)"/>
+      <define name="FY" value="348.5053" description="Field in the y direction of the camera [px/rad] (Defaults are from an ARDrone 2)"/>
 
     
     </section>

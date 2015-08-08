@@ -36,7 +36,7 @@
 #include "autopilot.h"
 #include "subsystems/datalink/downlink.h"
 
-#define CMD_OF_SAT  1500 // 40 deg = 2859.1851
+#define CMD_OF_SAT  500 // 40 deg = 2859.1851
 
 #ifndef VISION_PHI_PGAIN
 #define VISION_PHI_PGAIN 400
@@ -45,6 +45,11 @@ PRINT_CONFIG_VAR(VISION_PHI_PGAIN)
 
 #ifndef VISION_PHI_IGAIN
 #define VISION_PHI_IGAIN 20
+#endif
+PRINT_CONFIG_VAR(VISION_PHI_IGAIN)
+
+#ifndef VISION_PHI_DGAIN
+#define VISION_PHI_DGAIN 0
 #endif
 PRINT_CONFIG_VAR(VISION_PHI_IGAIN)
 
@@ -57,6 +62,11 @@ PRINT_CONFIG_VAR(VISION_THETA_PGAIN)
 #define VISION_THETA_IGAIN 20
 #endif
 PRINT_CONFIG_VAR(VISION_THETA_IGAIN)
+
+#ifndef VISION_THETA_DGAIN
+#define VISION_THETA_DGAIN 0
+#endif
+PRINT_CONFIG_VAR(VISION_THETA_DGAIN)
 
 #ifndef VISION_DESIRED_VX
 #define VISION_DESIRED_VX 0
@@ -80,11 +90,25 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 struct opticflow_stab_t opticflow_stab = {
   .phi_pgain = VISION_PHI_PGAIN,
   .phi_igain = VISION_PHI_IGAIN,
+  .phi_dgain = VISION_PHI_DGAIN,
   .theta_pgain = VISION_THETA_PGAIN,
   .theta_igain = VISION_THETA_IGAIN,
+  .theta_dgain = VISION_THETA_DGAIN,
   .desired_vx = VISION_DESIRED_VX,
   .desired_vy = VISION_DESIRED_VY
 };
+
+
+///////////////////////////////////
+///// Seong Addition starts..  ////
+///////////////////////////////////
+
+float dt, pre_err_vx, pre_err_vy;
+
+///////////////////////////////////
+///// Seong Addition ends..    ////
+///////////////////////////////////
+
 
 /**
  * Horizontal guidance mode enter resets the errors
@@ -95,6 +119,18 @@ void guidance_h_module_enter(void)
   /* Reset the integrated errors */
   opticflow_stab.err_vx_int = 0;
   opticflow_stab.err_vy_int = 0;
+  
+	///////////////////////////////////
+	///// Seong Addition starts..  ////
+	///////////////////////////////////
+	
+  /*  Reset the differential errors*/
+  pre_err_vx = 0;
+  pre_err_vy = 0;
+  
+	///////////////////////////////////
+	///// Seong Addition ends..    ////
+	///////////////////////////////////
 
   /* Set rool/pitch to 0 degrees and psi to current heading */
   opticflow_stab.cmd.phi = 0;
@@ -143,14 +179,40 @@ void stabilization_opticflow_update(struct opticflow_result_t *result)
   }
 
   /* Calculate the integrated errors (TODO: bound??) */
-  opticflow_stab.err_vx_int += err_vx / 100;
-  opticflow_stab.err_vy_int += err_vy / 100;
+  opticflow_stab.err_vx_int += err_vx ;
+  opticflow_stab.err_vy_int += err_vy ;
+  
+  
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  ///////////                                                  /////////
+  ///////////    Seong addition/modification starts..          /////////
+  ///////////                                                  /////////
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  
+  /* Calculate the differential errors (TODO: bound??) */
+  dt = 1 / result->fps;  //sec
+  opticflow_stab.err_vx_diff = (err_vx - pre_err_vx)/dt;
+  opticflow_stab.err_vy_diff = (err_vy - pre_err_vy)/dt;
+  pre_err_vx = err_vx;
+  pre_err_vy = err_vy;
 
   /* Calculate the commands */
-  opticflow_stab.cmd.phi   = opticflow_stab.phi_pgain * err_vx / 100
-                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int;
-  opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy / 100
-                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int);
+  opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
+                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
+                             + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
+  opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
+                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
+                               + opticflow_stab.phi_dgain * opticflow_stab.err_vy_diff)/100;
+                               
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  ///////////                                                  /////////
+  ///////////    Seong addition/modification end..             /////////
+  ///////////                                                  /////////
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
 
   /* Bound the roll and pitch commands */
   BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);

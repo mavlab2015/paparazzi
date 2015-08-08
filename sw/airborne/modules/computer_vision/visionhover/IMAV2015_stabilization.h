@@ -35,6 +35,8 @@
 #include "IMAV2015_inter_thread_data.h"
 #include "math/pprz_algebra_int.h"
 
+
+
 /* The opticflow stabilization */
 struct visionhover_stab_t {
   /*int32_t phi_pgain;        ///< The roll P gain on the err_vx
@@ -63,7 +65,8 @@ extern void guidance_h_module_enter(void);
 extern void guidance_h_module_read_rc(void);
 extern void guidance_h_module_run(bool_t in_flight);
 
+
 // Update the stabiliztion commands based on a vision result
-void stabilization_visionhover_update(struct visionhover_result_t *vision);
+void stabilization_visionhover_update(struct visionhover_result_t *vision, struct visionhover_state_t *mystate);
 
 #endif /* IMAV2015_STABILIZATION_H_ */
