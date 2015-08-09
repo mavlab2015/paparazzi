@@ -36,6 +36,9 @@
 #include "autopilot.h"
 #include "subsystems/datalink/downlink.h"
 
+#include "subsystems/radio_control.h"
+
+
 #define CMD_OF_SAT  500 // 40 deg = 2859.1851
 
 #ifndef VISION_PHI_PGAIN
@@ -90,10 +93,8 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 struct opticflow_stab_t opticflow_stab = {
   .phi_pgain = VISION_PHI_PGAIN,
   .phi_igain = VISION_PHI_IGAIN,
-  .phi_dgain = VISION_PHI_DGAIN,
   .theta_pgain = VISION_THETA_PGAIN,
   .theta_igain = VISION_THETA_IGAIN,
-  .theta_dgain = VISION_THETA_DGAIN,
   .desired_vx = VISION_DESIRED_VX,
   .desired_vy = VISION_DESIRED_VY
 };
@@ -104,6 +105,9 @@ struct opticflow_stab_t opticflow_stab = {
 ///////////////////////////////////
 
 float dt, pre_err_vx, pre_err_vy;
+int32_t guidance_v_delta_t;
+int testcount;
+int v_control;
 
 ///////////////////////////////////
 ///// Seong Addition ends..    ////
@@ -127,6 +131,11 @@ void guidance_h_module_enter(void)
   /*  Reset the differential errors*/
   pre_err_vx = 0;
   pre_err_vy = 0;
+  testcount = 0;
+  
+  opticflow_stab.alt_reached = 0;
+  
+  v_control = 1;
   
 	///////////////////////////////////
 	///// Seong Addition ends..    ////
@@ -159,17 +168,53 @@ void guidance_h_module_run(bool_t in_flight)
   stabilization_attitude_run(in_flight);
 }
 
+
+
 /**
  * Update the controls based on a vision result
  * @param[in] *result The opticflow calculation result used for control
  */
-void stabilization_opticflow_update(struct opticflow_result_t *result)
+void stabilization_opticflow_update(struct opticflow_result_t *result, struct opticflow_state_t *mystate)
 {
   /* Check if we are in the correct AP_MODE before setting commands */
   if (autopilot_mode != AP_MODE_MODULE) {
     return;
   }
 
+  if (mystate->agl > 1)
+  {
+  	opticflow_stab.alt_reached = 1;
+  }
+  
+  if (opticflow_stab.alt_reached < 1)
+  {
+  	return;
+  }
+  
+  testcount += 1;
+
+  if (testcount < 5) 
+  {
+    	opticflow_stab.err_vx_int = 0 ;
+  	opticflow_stab.err_vy_int = 0 ;
+  	opticflow_stab.cmd.phi = 0;
+  	opticflow_stab.cmd.theta = 0;
+  	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
+  	return;
+  }
+  
+  if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
+  	v_control = 1;
+  
+  if (opticflow_stab.desired_vx ==0 && opticflow_stab.desired_vy == 0 && v_control == 1)
+  {
+  	opticflow_stab.err_vx_int = 0 ;
+  	opticflow_stab.err_vy_int = 0 ;
+  	v_control = 0;
+  }
+
+  
+  
   /* Calculate the error if we have enough flow */
   float err_vx = 0;
   float err_vy = 0;
@@ -191,20 +236,12 @@ void stabilization_opticflow_update(struct opticflow_result_t *result)
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
   
-  /* Calculate the differential errors (TODO: bound??) */
-  dt = 1 / result->fps;  //sec
-  opticflow_stab.err_vx_diff = (err_vx - pre_err_vx)/dt;
-  opticflow_stab.err_vy_diff = (err_vy - pre_err_vy)/dt;
-  pre_err_vx = err_vx;
-  pre_err_vy = err_vy;
 
   /* Calculate the commands */
   opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
-                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
-                             + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
+                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int)/100;
   opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
-                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
-                               + opticflow_stab.phi_dgain * opticflow_stab.err_vy_diff)/100;
+                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int)/100;
                                
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////

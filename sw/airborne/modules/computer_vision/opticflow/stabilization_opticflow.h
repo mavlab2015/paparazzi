@@ -53,6 +53,8 @@ struct opticflow_stab_t {
   float err_vy_diff;        ///< The differential velocity error in y direction (m/s)
   
   struct Int32Eulers cmd;   ///< The commands that are send to the hover loop
+  
+  int8_t alt_reached;
 };
 extern struct opticflow_stab_t opticflow_stab;
 
@@ -61,7 +63,10 @@ extern void guidance_h_module_enter(void);
 extern void guidance_h_module_read_rc(void);
 extern void guidance_h_module_run(bool_t in_flight);
 
+extern void guidance_v_module_enter(void);
+extern void guidance_v_module_run(bool_t in_flight);
+
 // Update the stabiliztion commands based on a vision result
-void stabilization_opticflow_update(struct opticflow_result_t *vision);
+void stabilization_opticflow_update(struct opticflow_result_t *vision, struct opticflow_state_t *mystate);
 
 #endif /* CV_STABILIZATION_OPTICFLOW_H_ */

@@ -56,14 +56,14 @@
 	  <dl_settings NAME="Vision stabilization">
       <!-- Satabilization loop parameters and gains -->
       <dl_settings name="vision_stab">
-        <dl_setting var="opticflow_stab.phi_pgain" module="computer_vision/opticflow_module" min="0" step="1" max="500" shortname="kp_v_phi" param="VISION_PHI_PGAIN"/>
+        <dl_setting var="opticflow_stab.phi_pgain" module="computer_vision/opticflow_module" min="0" step="1" max="10000" shortname="kp_v_phi" param="VISION_PHI_PGAIN"/>
         <dl_setting var="opticflow_stab.phi_igain" module="computer_vision/opticflow_module" min="0" step="1" max="100" shortname="ki_v_phi" param="VISION_PHI_IGAIN"/>
         <dl_setting var="opticflow_stab.phi_dgain" module="computer_vision/opticflow_module" min="0" step="1" max="300" shortname="kd_v_phi" param="VISION_PHI_DGAIN"/>
-        <dl_setting var="opticflow_stab.theta_pgain" module="computer_vision/opticflow_module" min="0" step="1" max="500" shortname="kp_v_theta" param="VISION_THETA_PGAIN"/>
+        <dl_setting var="opticflow_stab.theta_pgain" module="computer_vision/opticflow_module" min="0" step="1" max="10000" shortname="kp_v_theta" param="VISION_THETA_PGAIN"/>
         <dl_setting var="opticflow_stab.theta_igain" module="computer_vision/opticflow_module" min="0" step="1" max="100" shortname="ki_v_theta" param="VISION_THETA_IGAIN"/>
         <dl_setting var="opticflow_stab.theta_dgain" module="computer_vision/opticflow_module" min="0" step="1" max="300" shortname="kd_v_theta" param="VISION_THETA_DGAIN"/>
-        <dl_setting var="opticflow_stab.desired_vx" module="computer_vision/opticflow_module" min="-5" step="0.01" max="5" shortname="desired_vx" param="VISION_DESIRED_VX"/>
-        <dl_setting var="opticflow_stab.desired_vy" module="computer_vision/opticflow_module" min="-5" step="0.01" max="5" shortname="desired_vy" param="VISION_DESIRED_VY"/>
+        <dl_setting var="opticflow_stab.desired_vx" module="computer_vision/opticflow_module" min="-100" step="1" max="100" shortname="desired_vx" param="VISION_DESIRED_VX"/>
+        <dl_setting var="opticflow_stab.desired_vy" module="computer_vision/opticflow_module" min="-100" step="1" max="100" shortname="desired_vy" param="VISION_DESIRED_VY"/>
       </dl_settings>
 
       <!-- Optical flow calculations parameters for Lucas Kanade and FAST9 -->
@@ -117,7 +117,7 @@
         ap.CFLAGS += $(VIEWVID_CFLAGS) -DVIEWVIDEO_USE_NC
       endif
 
-      ap.CFLAGS += -DGUIDANCE_V_MODE_MODULE_SETTING=GUIDANCE_V_MODE_HOVER
+      ap.CFLAGS += -DGUIDANCE_V_MODE_MODULE_SETTING=GUIDANCE_V_MODE_MODULE
       ap.CFLAGS += -DGUIDANCE_H_MODE_MODULE_SETTING=GUIDANCE_H_MODE_MODULE
     </raw>
   </makefile>

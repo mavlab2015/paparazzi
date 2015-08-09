@@ -150,7 +150,7 @@ void opticflow_module_run(void)
 
   // Update the stabilization loops on the current calculation
   if (opticflow_got_result) {
-    stabilization_opticflow_update(&opticflow_result);
+    stabilization_opticflow_update(&opticflow_result, &opticflow_state);
     opticflow_got_result = FALSE;
   }
   pthread_mutex_unlock(&opticflow_mutex);

@@ -130,6 +130,19 @@ int32_t guidance_v_z_sum_err;
 int32_t guidance_v_thrust_coeff;
 
 
+
+//////////////////////////////////////////////
+//////    Seong Addition starts ...    ///////
+//////////////////////////////////////////////
+
+int8_t alt_reached;
+
+//////////////////////////////////////////////
+//////    Seong Addition ends ...      ///////
+//////////////////////////////////////////////
+
+
+
 #define GuidanceVSetRef(_pos, _speed, _accel) { \
     gv_set_ref(_pos, _speed, _accel);        \
     guidance_v_z_ref = _pos;             \
@@ -240,7 +253,17 @@ void guidance_v_mode_changed(uint8_t new_mode)
 
 #if GUIDANCE_V_MODE_MODULE_SETTING == GUIDANCE_V_MODE_MODULE
     case GUIDANCE_V_MODE_MODULE:
-      guidance_v_module_enter();
+      //guidance_v_module_enter();     // Default
+      
+      //////////////////////////////////////////////////
+      /////////     Seong addition starts     //////////
+      //////////////////////////////////////////////////
+      
+      alt_reached = 0;
+      
+      //////////////////////////////////////////////////
+      /////////     Seong addition starts     //////////
+      //////////////////////////////////////////////////
       break;
 #endif
 
@@ -316,7 +339,37 @@ void guidance_v_run(bool_t in_flight)
 
 #if GUIDANCE_V_MODE_MODULE_SETTING == GUIDANCE_V_MODE_MODULE
     case GUIDANCE_V_MODE_MODULE:
-      guidance_v_module_run(in_flight);
+      //guidance_v_module_run(in_flight);    // Default
+      
+      //////////////////////////////////////////////////
+      /////////     Seong addition starts     //////////
+      //////////////////////////////////////////////////
+
+	if (stateGetPositionNed_i()->z < -350)  // 256 means 1m
+	{
+		alt_reached = 1;
+	}
+	
+        guidance_v_z_sp = -350; // set current altitude as setpoint
+      	guidance_v_z_sum_err = 0;
+      	GuidanceVSetRef(guidance_v_z_sp, 0, 0);
+      		
+      	guidance_v_zd_sp = 0;
+      	gv_update_ref_from_z_sp(guidance_v_z_sp);
+	run_hover_loop(in_flight);
+	
+	if (alt_reached == 1)
+	{
+		stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
+	}
+	else
+	stabilization_cmd[COMMAND_THRUST] = 8000;	
+        
+        	
+        
+      //////////////////////////////////////////////////
+      /////////     Seong addition ends..     //////////
+      //////////////////////////////////////////////////
       break;
 #endif
 

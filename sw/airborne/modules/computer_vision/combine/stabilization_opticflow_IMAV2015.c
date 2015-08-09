@@ -278,6 +278,6 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	  BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
 	  BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
 	  
-	  printf("marker detected = %i\n", visionhover_stab.marker_detected);
+	  //printf("marker detected = %i\n", visionhover_stab.marker_detected);
   }
 }

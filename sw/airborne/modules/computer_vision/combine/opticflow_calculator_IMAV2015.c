@@ -283,7 +283,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   /////////////////////////////////////////////////////////////////////////////////////////////////
   
   
-  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+  marker_deviation = marker2(img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
   result->deviation_x = marker_deviation.x;
   result->deviation_y = marker_deviation.y;
   result->inlier = marker_deviation.inlier;

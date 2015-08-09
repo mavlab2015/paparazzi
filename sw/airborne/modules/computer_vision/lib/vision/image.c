@@ -858,3 +858,144 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
     return marker_deviation;
 
 }
+
+
+
+
+/**
+ * Find the marker location without streaming..
+ * @param[in] *input The input image to filter
+ * @param[in] M The distance between the pixel of interest and farthest neighbor pixel [pixel]
+ * @param[in] m The safety margin around the pixel of interest [pixel]
+ * @param[in] t Threshold for intensity difference
+ * @param[in] IN The number of minimum inliers required
+ * @return The deviation of the marker location wrt the center.
+ */
+ 
+
+struct marker_deviation_t marker2(struct image_t *input, uint8_t M, uint8_t m, uint8_t t, uint8_t IN)
+{
+  struct marker_deviation_t marker_deviation;
+  
+  uint8_t *source = input->buf;
+  uint16_t x, y, i, j, k, l, n, o;
+  int image[240][320] = {};
+  int idx[2][200] = {};
+  int idx2[2][200] = {};
+  int counter1, counter2, counter3, inlier;
+  int min1, max1, min2, max2, min3, max3, min4, max4;
+  int sum_row, sum_col, marker_x, marker_y;
+  
+
+
+  // Go trough all the pixels
+  counter1 = 0;
+  for (y = 0; y < input->h; y++) 
+  {
+	  for (x = 0; x < input->w; x+=2) 
+	  {
+	  	image[y][x] = source[1];
+	  	image[y][x+1] = source[3];
+	  	// Go to the next 2 pixels
+	  	source+=4;
+	  	counter1+=1;
+	  } 
+  }
+  
+  counter2 = 0;
+  
+  for (i = M; i < 240-M; i++)
+  {
+  	for (j = M; j < 320-M; j++)
+  	{
+  		
+  	   // 1st stage: FAST-like check	
+  	   if ((image[i][j]<image[i-M][j]-t && image[i][j]<image[i+M][j]-t && image[i][j]>image[i][j-M]+t && image[i][j]>image[i][j+M]+t) ||             (image[i][j]<image[i][j-M]-t && image[i][j]<image[i][j+M]-t && image[i][j]>image[i-M][j]+t && image[i][j]>image[i+M][j]+t) || (image[i][j]<image[i-M][j-M]-t && image[i][j]<image[i+M][j+M]-t && image[i][j]>image[i-M][j+M]+t && image[i][j]>image[i+M][j-M]+t)      || (image[i][j]<image[i-M][j+M]-t && image[i][j]<image[i+M][j-M]-t && image[i][j]>image[i-M][j-M]+t && image[i][j]>image[i+M][j+M]+t))
+		{	
+			min1=999; max1=-1; min2=999; max2=-1; min3=999; max3=-1; min4=999; max4=-1;
+			
+			// 2nd stage: max & min comparison between different neighbor groups.
+			for (k = m; k < M+1; k++)
+			{
+				if (image[i+k][j] < min1) {min1 = image[i+k][j];}
+				if (image[i+k][j] > max1) {max1 = image[i+k][j];}
+				if (image[i][j+k] < min2) {min2 = image[i][j+k];}
+				if (image[i][j+k] > max2) {max2 = image[i][j+k];}
+				if (image[i+k][j+k] < min3) {min3 = image[i+k][j+k];}
+				if (image[i+k][j+k] > max3) {max3 = image[i+k][j+k];}
+				if (image[i+k][j-k] < min4) {min4 = image[i+k][j-k];}
+				if (image[i+k][j-k] > max4) {max4 = image[i+k][j-k];}
+				
+				if (image[i-k][j] < min1) {min1 = image[i-k][j];}
+				if (image[i-k][j] > max1) {max1 = image[i-k][j];}
+				if (image[i][j-k] < min2) {min2 = image[i][j-k];}
+				if (image[i][j-k] > max2) {max2 = image[i][j-k];}
+				if (image[i-k][j-k] < min3) {min3 = image[i-k][j-k];}
+				if (image[i-k][j-k] > max3) {max3 = image[i-k][j-k];}
+				if (image[i-k][j+k] < min4) {min4 = image[i-k][j+k];}
+				if (image[i-k][j+k] > max4) {max4 = image[i-k][j+k];}
+			}
+	
+			if ((image[i][j] > max1+t && image[i][j] < min2-t) || (image[i][j] > max2+t && image[i][j] < min1-t)  ||                         (image[i][j] > max3+t && image[i][j] < min4-t) || (image[i][j] > max4+t && image[i][j]<min3-t))
+			{
+				counter2 = counter2 + 1;
+				idx[0][counter2] = i;
+				idx[1][counter2] = j;
+			}    
+		}    
+  	}
+  }
+  
+    // 3rd stage: Outlier rejection:
+    counter3 = 0;
+    
+    if (counter2 > IN)
+    {
+    	for (l = 1; l < counter2+1; l++)
+    	{
+    		inlier = 0;
+    		for (n = 1; n < counter2+1; n++)
+    		{
+    			if (sqrt(pow((idx[0][l]-idx[0][n]), 2) + pow((idx[1][l]-idx[1][n]), 2)) < 10)
+    			{
+    				inlier = inlier + 1;
+    			}
+    		}
+    		if (inlier > IN)
+    		{	
+    			counter3 = counter3 + 1;
+    		  	idx2[0][counter3] = idx[0][l];
+    			idx2[1][counter3] = idx[1][l];
+    		}
+    	}
+        
+        // Finally: Compute the centroid of the inliers.
+	if (counter3 > 0)
+	{
+		sum_row = 0;
+		sum_col = 0;
+		for (o = 1; o < counter3+1; o++)
+		{
+			sum_row = sum_row + idx2[0][o];
+			sum_col = sum_col + idx2[1][o];
+		}
+		marker_x = sum_col/counter3;
+		marker_y = sum_row/counter3;
+	}
+    }
+    
+    if (counter3 == 0)
+    {
+    	marker_x = (input->w)/2;
+    	marker_y = (input->h)/2;
+    }
+    
+    marker_deviation.x = marker_x - (input->w)/2;
+    marker_deviation.y = -marker_y + (input->h)/2;
+    marker_deviation.inlier = counter3;
+    
+    
+    //printf("The number of inliers = %i\n", counter3);
+    return marker_deviation;
+
+}

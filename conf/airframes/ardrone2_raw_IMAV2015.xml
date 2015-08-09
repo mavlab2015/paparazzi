@@ -29,7 +29,7 @@
     <load name="gps_ubx_ucenter.xml"/>
     <load name="send_imu_mag_current.xml"/>
     <!--load name="logger_file.xml"/-->
-    <!--load name = "cv_opticflow.xml">
+    <load name = "cv_opticflow.xml">
         <define name="VISION_PHI_PGAIN" value="400"/>
         <define name="VISION_PHI_IGAIN" value="20" />
         <define name="VISION_PHI_DGAIN" value="0" />
@@ -38,7 +38,7 @@
         <define name="VISION_THETA_DGAIN" value="0" />
         <define name="VISION_DESIRED_VX" value="0"/>
         <define name="VISION_DESIRED_VY" value="0"/>
-    </load-->
+    </load>
     <!--load name="cv_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="350"/>
         <define name="VISION_PHI_IGAIN" value="0" />
@@ -52,7 +52,7 @@
         <define name="VISION_t" value="12"/>
         <define name="VISION_IN" value="3"/>
     </load-->
-    <load name="cv_combine_IMAV2015.xml">
+    <!--load name="cv_combine_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="400"/>
         <define name="VISION_PHI_IGAIN" value="50" />
         <define name="VISION_THETA_PGAIN" value="400"/>
@@ -71,7 +71,7 @@
         <define name="VH_m" value="3" />
         <define name="VH_t" value="15"/>
         <define name="VH_IN" value="3"/>
-    </load>
+    </load-->
     <!--load name="video_rtp_stream_IMAV2015.xml">
     	<define name="VIEWVIDEO_DEVICE" value="/dev/video2" />
    	<define name="VIEWVIDEO_DEVICE_SIZE" value="320,240" />
