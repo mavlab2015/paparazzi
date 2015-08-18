@@ -36,9 +36,6 @@
 #include "autopilot.h"
 #include "subsystems/datalink/downlink.h"
 
-// Timing
-#include <sys/time.h>
-
 // Math
 #include <math.h>
 
@@ -75,45 +72,7 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VX)
 PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 
 
-//////////////////////////////////////////////////
-///////                                     //////
-///////          Timing stuff               //////
-///////                                     //////
-//////////////////////////////////////////////////
 
-#include <sys/time.h>
-
-#define USEC_PER_MS 1000
-#define USEC_PER_SEC 1000000
-#define millisleep 1
-
-long diffTime;
-int32_t dt = 0;
-int32_t test_count = 0;
-struct timeval start_time;
-struct timeval end_time;
-
-volatile long time_elapsed (struct timeval *t1, struct timeval *t2);
-volatile long time_elapsed (struct timeval *t1, struct timeval *t2)
-{
-	long sec, usec;
-	sec = t2->tv_sec - t1->tv_sec;
-	usec = t2->tv_usec - t1->tv_usec;
-	if (usec < 0) {
-	--sec;
-	usec = usec + USEC_PER_SEC;
-	}
-	return sec*USEC_PER_SEC + usec;
-}
-void start_timer(void);
-void start_timer(void) {
-	gettimeofday(&start_time, NULL);
-}
-long end_timer(void);
-long end_timer(void) {
-	gettimeofday(&end_time, NULL);
-	return time_elapsed(&start_time, &end_time);
-}
 
 
 
@@ -130,10 +89,12 @@ long end_timer(void) {
 struct opticflow_stab_t opticflow_stab = {
   .phi_pgain = VISION_PHI_PGAIN,
   .phi_igain = VISION_PHI_IGAIN,
+  .phi_dgain = VISION_PHI_DGAIN,
   .theta_pgain = VISION_THETA_PGAIN,
   .theta_igain = VISION_THETA_IGAIN,
+  .theta_dgain = VISION_THETA_DGAIN,
   .desired_vx = VISION_DESIRED_VX,
-  .desired_vy = VISION_DESIRED_VY,
+  .desired_vy = VISION_DESIRED_VY
 };
 
 /* Initialize the default gains and settings */
@@ -149,6 +110,10 @@ struct visionhover_stab_t visionhover_stab = {
 float pre_err_x, pre_err_y;
 float des_vx, des_vy;
 
+float pre_err_vx, pre_err_vy;
+int32_t guidance_v_delta_t;
+int testcount, v_control;
+
 /**
  * Horizontal guidance mode enter resets the errors
  * and starts the controller.
@@ -160,6 +125,15 @@ void guidance_h_module_enter(void)
   opticflow_stab.err_vy_int = 0;
   visionhover_stab.err_x_int = 0;
   visionhover_stab.err_y_int = 0;
+  
+  /*  Reset the differential errors*/
+  pre_err_vx = 0;
+  pre_err_vy = 0;
+  testcount = 0;
+  
+  opticflow_stab.alt_reached = 0;
+  
+  v_control = 1;
   
   /*Initialize the boolean to check if marker is detected*/
   visionhover_stab.marker_detected = 0;
@@ -203,57 +177,58 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   if (autopilot_mode != AP_MODE_MODULE) {
     return;
   }
-   
-  if (result->inlier > 0)
+  
+  if (mystate->agl > 1)
   {
-  	/* Calculate the distance error. */
-	  // Don't forget to add the contribution from the body angle ! 
-	  
-	  float err_x;
-	  float err_y;
-	  
-	  err_x = mystate->agl * result->deviation_x;
-	  err_y = mystate->agl * result->deviation_y;
-	  
-	  /* Calculate the integrated errors (TODO: bound??) */
-	  visionhover_stab.err_x_int += err_x;
-	  visionhover_stab.err_y_int += err_y;
-	  
-	  /* Calculate the differential errors (TODO: bound??) */
-	  // Measure the time interval
-	  usleep(1000* millisleep);
-	  diffTime = end_timer();
-	  start_timer();
-	  dt = (int32_t)(diffTime); // usec
-	    
-	  visionhover_stab.err_x_diff = (err_x - pre_err_x)*1000/dt;
-	  visionhover_stab.err_y_diff = (err_y - pre_err_y)*1000/dt;
-	  pre_err_x = err_x;
-	  pre_err_y = err_y;
-	  	
-	  /* Calculate the commands */
-	  opticflow_stab.cmd.phi   = (visionhover_stab.phi_pgain * err_x
-				        + visionhover_stab.phi_igain * visionhover_stab.err_x_int
-				        + visionhover_stab.phi_dgain * visionhover_stab.err_x_diff)/ 100;
-          opticflow_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y 
-				        + visionhover_stab.theta_igain * visionhover_stab.err_y_int
-				        + visionhover_stab.theta_dgain * visionhover_stab.err_y_diff)/ 100;
-
-	  /* Bound the roll and pitch commands */
-	  BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
-	  BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
-	  
-	  visionhover_stab.marker_detected = 1;
+  	opticflow_stab.alt_reached = 1;
   }
-  else
+  
+  if (opticflow_stab.alt_reached < 1)
   {
-	  /* Calculate the error if we have enough flow */
-	  float err_vx = 0;
-	  float err_vy = 0;
-	  
-	  if (result->tracked_cnt > 0) 
-	  {
-	  	if (visionhover_stab.marker_detected > 0)
+  	return;
+  }
+  
+  testcount += 1;
+
+  if (testcount < 5) 
+  {
+    	opticflow_stab.err_vx_int = 0 ;
+  	opticflow_stab.err_vy_int = 0 ;
+  	opticflow_stab.cmd.phi = 0;
+  	opticflow_stab.cmd.theta = 0;
+  	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
+  	return;
+  }
+  
+  if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
+  	v_control = 1;
+  
+  if (opticflow_stab.desired_vx ==0 && opticflow_stab.desired_vy == 0 && v_control == 1)
+  {
+  	opticflow_stab.err_vx_int = 0 ;
+  	opticflow_stab.err_vy_int = 0 ;
+  	v_control = 0;
+  }
+  
+  
+  	/* Calculate the vision hover error if we have enough inliers */
+  	float err_x = 0;
+	float err_y = 0;
+	
+	if (result->inlier > 0)
+	{
+		visionhover_stab.marker_detected = 1;
+		err_x = mystate->agl * result->deviation_x;
+		err_y = mystate->agl * result->deviation_y;
+	}
+	   
+	/* Calculate the error if we have enough flow */
+	float err_vx = 0;
+	float err_vy = 0;
+		  
+	if (result->tracked_cnt > 0) 
+	{
+		if (visionhover_stab.marker_detected > 0)
 		{
 			err_vx = 0 - result->vel_x;
 			err_vy = 0 - result->vel_y;
@@ -263,21 +238,32 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 			err_vx = opticflow_stab.desired_vx - result->vel_x;
 			err_vy = opticflow_stab.desired_vy - result->vel_y;
 		}
-	  }
-	  /* Calculate the integrated errors (TODO: bound??) */
-	  opticflow_stab.err_vx_int += err_vx;
-	  opticflow_stab.err_vy_int += err_vy;
-
-	  /* Calculate the commands */
-	  opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
-		                     + opticflow_stab.phi_igain * opticflow_stab.err_vx_int)/100;
-	  opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
-		                       + opticflow_stab.theta_igain * opticflow_stab.err_vy_int)/100;
-
-	  /* Bound the roll and pitch commands */
-	  BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
-	  BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
+	}
+	/* Calculate the integrated errors (TODO: bound??) */
+	opticflow_stab.err_vx_int += err_vx;
+	opticflow_stab.err_vy_int += err_vy;
 	  
-	  //printf("marker detected = %i\n", visionhover_stab.marker_detected);
-  }
+	/* Calculate the differential errors (TODO: bound??) */
+
+	opticflow_stab.err_vx_diff = (err_vx - pre_err_vx);
+	opticflow_stab.err_vy_diff = (err_vy - pre_err_vy);
+	pre_err_vx = err_vx;
+	pre_err_vy = err_vy;
+  
+
+	/* Calculate the commands */
+	opticflow_stab.cmd.phi   = (visionhover_stab.phi_pgain * err_x
+	  			     + opticflow_stab.phi_pgain * err_vx
+		                     + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
+		                     + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
+	opticflow_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y
+	  			       +opticflow_stab.theta_pgain * err_vy
+		                       + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
+		                       + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
+
+	/* Bound the roll and pitch commands */
+	BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
+	BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
+	  
+	//printf("marker detected = %i\n", visionhover_stab.marker_detected);
 }

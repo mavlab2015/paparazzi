@@ -39,14 +39,20 @@
 struct opticflow_stab_t {
   int32_t phi_pgain;        ///< The roll P gain on the err_vx
   int32_t phi_igain;        ///< The roll I gain on the err_vx_int
+  int32_t phi_dgain;
   int32_t theta_pgain;      ///< The pitch P gain on the err_vy
   int32_t theta_igain;      ///< The pitch I gain on the err_vy_int
+  int32_t theta_dgain;
   float desired_vx;         ///< The desired velocity in the x direction (cm/s)
   float desired_vy;         ///< The desired velocity in the y direction (cm/s)
 
   float err_vx_int;         ///< The integrated velocity error in x direction (m/s)
   float err_vy_int;         ///< The integrated velocity error in y direction (m/s)
+  float err_vx_diff;
+  float err_vy_diff;
   struct Int32Eulers cmd;   ///< The commands that are send to the hover loop
+  
+  int8_t alt_reached;
 };
 extern struct opticflow_stab_t opticflow_stab;
 

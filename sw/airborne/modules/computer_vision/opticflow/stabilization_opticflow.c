@@ -93,8 +93,10 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 struct opticflow_stab_t opticflow_stab = {
   .phi_pgain = VISION_PHI_PGAIN,
   .phi_igain = VISION_PHI_IGAIN,
+  .phi_dgain = VISION_PHI_DGAIN,
   .theta_pgain = VISION_THETA_PGAIN,
   .theta_igain = VISION_THETA_IGAIN,
+  .theta_dgain = VISION_THETA_DGAIN,
   .desired_vx = VISION_DESIRED_VX,
   .desired_vy = VISION_DESIRED_VY
 };
@@ -104,7 +106,7 @@ struct opticflow_stab_t opticflow_stab = {
 ///// Seong Addition starts..  ////
 ///////////////////////////////////
 
-float dt, pre_err_vx, pre_err_vy;
+float pre_err_vx, pre_err_vy;
 int32_t guidance_v_delta_t;
 int testcount;
 int v_control;
@@ -235,13 +237,22 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   ///////////                                                  /////////
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
+
+    
+    
+  opticflow_stab.err_vx_diff = (err_vx - pre_err_vx);
+  opticflow_stab.err_vy_diff = (err_vy - pre_err_vy);
+  pre_err_vx = err_vx;
+  pre_err_vy = err_vy;
   
 
   /* Calculate the commands */
   opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
-                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int)/100;
+                             + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
+                             + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
   opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
-                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int)/100;
+                               + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
+                               + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
                                
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////

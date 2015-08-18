@@ -136,6 +136,7 @@ int32_t guidance_v_thrust_coeff;
 //////////////////////////////////////////////
 
 int8_t alt_reached;
+int8_t init_done;
 
 //////////////////////////////////////////////
 //////    Seong Addition ends ...      ///////
@@ -260,6 +261,7 @@ void guidance_v_mode_changed(uint8_t new_mode)
       //////////////////////////////////////////////////
       
       alt_reached = 0;
+      init_done = 0;
       
       //////////////////////////////////////////////////
       /////////     Seong addition starts     //////////
@@ -345,25 +347,41 @@ void guidance_v_run(bool_t in_flight)
       /////////     Seong addition starts     //////////
       //////////////////////////////////////////////////
 
-	if (stateGetPositionNed_i()->z < -350)  // 256 means 1m
+	if (init_done == 0)
 	{
-		alt_reached = 1;
-	}
-	
-        guidance_v_z_sp = -350; // set current altitude as setpoint
-      	guidance_v_z_sum_err = 0;
-      	GuidanceVSetRef(guidance_v_z_sp, 0, 0);
-      		
-      	guidance_v_zd_sp = 0;
-      	gv_update_ref_from_z_sp(guidance_v_z_sp);
-	run_hover_loop(in_flight);
-	
-	if (alt_reached == 1)
-	{
-		stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
+		if (stabilization_cmd[COMMAND_THRUST] < 3000)
+		{
+			stabilization_cmd[COMMAND_THRUST] += 1;
+		} 
+		else
+		init_done = 1;
 	}
 	else
-	stabilization_cmd[COMMAND_THRUST] = 8000;	
+	{
+		if (stateGetPositionNed_i()->z < -350)  // 256 means 1m
+		{
+		alt_reached = 1;
+		}
+	
+        	guidance_v_z_sp = -350; // set current altitude as setpoint
+      		guidance_v_z_sum_err = 0;
+      		GuidanceVSetRef(guidance_v_z_sp, 0, 0);
+      		
+	      	guidance_v_zd_sp = 0;
+	      	gv_update_ref_from_z_sp(guidance_v_z_sp);
+		run_hover_loop(in_flight);
+	
+		if (alt_reached == 1)
+		{
+			stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
+		}
+		else
+		stabilization_cmd[COMMAND_THRUST] = 8000;
+	}
+
+
+
+	
         
         	
         
