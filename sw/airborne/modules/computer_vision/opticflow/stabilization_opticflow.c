@@ -39,7 +39,7 @@
 #include "subsystems/radio_control.h"
 
 
-#define CMD_OF_SAT  500 // 40 deg = 2859.1851
+#define CMD_OF_SAT  800 // 40 deg = 2859.1851
 
 #ifndef VISION_PHI_PGAIN
 #define VISION_PHI_PGAIN 400
@@ -122,9 +122,11 @@ int v_control;
  */
 void guidance_h_module_enter(void)
 {
-  /* Reset the integrated errors */
+  /* Reset the integrated & differential errors */
   opticflow_stab.err_vx_int = 0;
   opticflow_stab.err_vy_int = 0;
+  opticflow_stab.err_vx_diff = 0;
+  opticflow_stab.err_vy_diff = 0;
   
 	///////////////////////////////////
 	///// Seong Addition starts..  ////
@@ -193,10 +195,12 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	return;
   }
   
-  testcount += 1;
+  
+  
 
   if (testcount < 5) 
   {
+  	testcount += 1;
     	opticflow_stab.err_vx_int = 0 ;
   	opticflow_stab.err_vy_int = 0 ;
   	opticflow_stab.cmd.phi = 0;
@@ -249,10 +253,10 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   /* Calculate the commands */
   opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
                              + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
-                             + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
+                             + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff*10)/100;
   opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
                                + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
-                               + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
+                               + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff*10)/100;
                                
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////

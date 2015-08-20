@@ -93,7 +93,7 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
                                &opticflow_result.flow_y, &opticflow_result.flow_der_x,
                                &opticflow_result.flow_der_y, &opticflow_result.vel_x,
                                &opticflow_result.vel_y,
-                               &opticflow_stab.cmd.phi, &opticflow_stab.cmd.theta, &opticflow_result.corner_cnt);
+                               &opticflow_stab.cmd.phi, &opticflow_stab.cmd.theta, &opticflow_stab.cmd.psi, &opticflow_result.corner_cnt);
   pthread_mutex_unlock(&opticflow_mutex);
 }
 #endif

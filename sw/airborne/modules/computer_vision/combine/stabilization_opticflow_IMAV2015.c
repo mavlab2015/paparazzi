@@ -36,10 +36,12 @@
 #include "autopilot.h"
 #include "subsystems/datalink/downlink.h"
 
+#include "subsystems/radio_control.h"
+
 // Math
 #include <math.h>
 
-#define CMD_OF_SAT  500 // 40 deg = 2859.1851
+#define CMD_OF_SAT  800 // 40 deg = 2859.1851
 
 #ifndef VISION_PHI_PGAIN
 #define VISION_PHI_PGAIN 400
@@ -111,8 +113,7 @@ float pre_err_x, pre_err_y;
 float des_vx, des_vy;
 
 float pre_err_vx, pre_err_vy;
-int32_t guidance_v_delta_t;
-int testcount, v_control;
+int32_t testcount, v_control;
 
 /**
  * Horizontal guidance mode enter resets the errors
@@ -188,10 +189,11 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	return;
   }
   
-  testcount += 1;
 
-  if (testcount < 5) 
+
+  if (testcount < 10) 
   {
+  	  testcount += 1;
     	opticflow_stab.err_vx_int = 0 ;
   	opticflow_stab.err_vy_int = 0 ;
   	opticflow_stab.cmd.phi = 0;
@@ -225,13 +227,13 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	/* Calculate the error if we have enough flow */
 	float err_vx = 0;
 	float err_vy = 0;
-		  
+	
 	if (result->tracked_cnt > 0) 
 	{
 		if (visionhover_stab.marker_detected > 0)
 		{
-			err_vx = 0 - result->vel_x;
-			err_vy = 0 - result->vel_y;
+			err_vx = (visionhover_stab.phi_pgain * err_x)/100 - result->vel_x;
+			err_vy = (visionhover_stab.theta_pgain * err_y)/100 - result->vel_y;
 		}
 		else
 		{
@@ -252,14 +254,12 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   
 
 	/* Calculate the commands */
-	opticflow_stab.cmd.phi   = (visionhover_stab.phi_pgain * err_x
-	  			     + opticflow_stab.phi_pgain * err_vx
+	opticflow_stab.cmd.phi   = (opticflow_stab.phi_pgain * err_vx
 		                     + opticflow_stab.phi_igain * opticflow_stab.err_vx_int
-		                     + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff)/100;
-	opticflow_stab.cmd.theta = -(visionhover_stab.theta_pgain * err_y
-	  			       +opticflow_stab.theta_pgain * err_vy
+		                     + opticflow_stab.phi_dgain * opticflow_stab.err_vx_diff * 10)/100;
+	opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
 		                       + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
-		                       + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
+		                       + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff * 10)/100;
 
 	/* Bound the roll and pitch commands */
 	BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
