@@ -30,7 +30,7 @@
  */
 
 // Own header
-#include "modules/computer_vision/viewvideo.h"
+#include "modules/computer_vision/viewvideo_IMAV2015.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -46,13 +46,8 @@
 #include "lib/encoding/rtp.h"
 #include "udp_socket.h"
 
-#if JPEG_WITH_EXIF_HEADER
-#include "lib/exif/exif_module.h"
-#endif
-
 // Threaded computer vision
 #include <pthread.h>
-#include "rt_priority.h"
 
 // The video device
 #ifndef VIEWVIDEO_DEVICE
@@ -108,23 +103,46 @@ PRINT_CONFIG_VAR(VIEWVIDEO_SHOT_PATH)
 #ifndef VIEWVIDEO_USE_NETCAT
 #define VIEWVIDEO_USE_NETCAT FALSE
 #endif
-#ifndef VIEWVIDEO_USE_RTP
-#define VIEWVIDEO_USE_RTP TRUE
-#endif
-
-#if VIEWVIDEO_USE_NETCAT && VIEWVIDEO_USE_RTP
-#error "Can't set VIEWVIDEO_USE_NETCAT and VIEWVIDEO_USE_RTP to true at the same time."
-#endif
-
 #if VIEWVIDEO_USE_NETCAT
 PRINT_CONFIG_MSG("[viewvideo] Using netcat.")
-#elif VIEWVIDEO_USE_RTP
+#else
 PRINT_CONFIG_MSG("[viewvideo] Using RTP/UDP stream.")
 #endif
+
+
+// Vision algorithm input parameters
+#ifndef VISION_M
+#define VISION_M 8
+#endif
+PRINT_CONFIG_VAR(VISION_M)
+
+#ifndef VISION_m
+#define VISION_m 3
+#endif
+PRINT_CONFIG_VAR(VISION_m)
+
+#ifndef VISION_t
+#define VISION_t 15
+#endif
+PRINT_CONFIG_VAR(VISION_t)
+
+#ifndef VISION_IN
+#define VISION_IN 3
+#endif
+PRINT_CONFIG_VAR(VISION_IN)
+
 
 /* These are defined with configure */
 PRINT_CONFIG_VAR(VIEWVIDEO_HOST)
 PRINT_CONFIG_VAR(VIEWVIDEO_PORT_OUT)
+
+/* Initialize the default settings for the vision algorithm */
+struct visionhover_param_t visionhover_param = {
+  .M = VISION_M,
+  .m = VISION_m,
+  .t = VISION_t,
+  .IN = VISION_IN,
+};
 
 // Main thread
 static void *viewvideo_thread(void *data);
@@ -137,7 +155,6 @@ struct viewvideo_t viewvideo = {
   .quality_factor = VIEWVIDEO_QUALITY_FACTOR,
   .fps = VIEWVIDEO_FPS,
   .take_shot = FALSE,
-  .use_rtp = VIEWVIDEO_USE_RTP,
   .shot_number = 0
 };
 
@@ -153,9 +170,6 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
     printf("[viewvideo-thread] Could not start capture of %s.\n", viewvideo.dev->name);
     return 0;
   }
-
-  // be nice to the more important stuff
-  set_nice_level(10);
 
   // Resize image if needed
   struct image_t img_small;
@@ -187,14 +201,36 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
     // compute usleep to have a more stable frame rate
     struct timeval vision_thread_sleep_time;
     gettimeofday(&vision_thread_sleep_time, NULL);
-    int dt = (int)(vision_thread_sleep_time.tv_sec - last_time.tv_sec) * 1000000 +
-             (int)(vision_thread_sleep_time.tv_usec - last_time.tv_usec);
+    int dt = (int)(vision_thread_sleep_time.tv_sec - last_time.tv_sec) * 1000000 + (int)(vision_thread_sleep_time.tv_usec - last_time.tv_usec);
     if (dt < microsleep) { usleep(microsleep - dt); }
     last_time = vision_thread_sleep_time;
 
     // Wait for a new frame (blocking)
     struct image_t img;
     v4l2_image_get(viewvideo.dev, &img);
+
+////////////////////////////////////////////////////////////
+/////                                                 //////
+/////    TEST by Seong - IMAV2015    starts here..    //////
+/////                                                 //////
+////////////////////////////////////////////////////////////
+	
+	
+	// Find out the location of the centroid after generating the binary map via filtering the certain range of colors.
+	//struct centroid_deviation_t centroid_deviation = image_centroid(&img, &img, 180, 255, 0, 255, 0, 255);
+	
+	//printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
+	
+	struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+	
+	printf("Inliers = %i\n", marker_deviation.inlier);
+	
+/////////////////////////////////////////////////////////////
+/////                                                   /////
+/////   TEST by Seong - IMAV2015    ends here..         /////
+/////                                                   /////
+/////////////////////////////////////////////////////////////
+
 
     // Check if we need to take a shot
     if (viewvideo.take_shot) {
@@ -209,9 +245,6 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
         sprintf(save_name, "%s/img_%05d.jpg", STRINGIFY(VIEWVIDEO_SHOT_PATH), viewvideo.shot_number);
         // Check if file exists or not
         if (access(save_name, F_OK) == -1) {
-#if JPEG_WITH_EXIF_HEADER
-          write_exif_jpeg(save_name, jpeg_hr.buf, jpeg_hr.buf_size, img.w, img.h);
-#else
           FILE *fp = fopen(save_name, "w");
           if (fp == NULL) {
             printf("[viewvideo-thread] Could not write shot %s.\n", save_name);
@@ -220,7 +253,7 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
             fwrite(jpeg_hr.buf, sizeof(uint8_t), jpeg_hr.buf_size, fp);
             fclose(fp);
           }
-#endif
+
           // We don't need to seek for a next index anymore
           break;
         }
@@ -262,26 +295,23 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
       wait(NULL);
     }
 #else
-    if (viewvideo.use_rtp) {
-
-      // Send image with RTP
-      rtp_frame_send(
-        &video_sock,              // UDP socket
-        &img_jpeg,
-        0,                        // Format 422
-        VIEWVIDEO_QUALITY_FACTOR, // Jpeg-Quality
-        0,                        // DRI Header
-        VIEWVIDEO_RTP_TIME_INC    // 90kHz time increment
-      );
-      // Extra note: when the time increment is set to 0,
-      // it is automaticaly calculated by the send_rtp_frame function
-      // based on gettimeofday value. This seems to introduce some lag or jitter.
-      // An other way is to compute the time increment and set the correct value.
-      // It seems that a lower value is also working (when the frame is received
-      // the timestamp is always "late" so the frame is displayed immediately).
-      // Here, we set the time increment to the lowest possible value
-      // (1 = 1/90000 s) which is probably stupid but is actually working.
-    }
+    // Send image with RTP
+    rtp_frame_send(
+      &video_sock,              // UDP socket
+      &img_jpeg,
+      0,                        // Format 422
+      VIEWVIDEO_QUALITY_FACTOR, // Jpeg-Quality
+      0,                        // DRI Header
+      VIEWVIDEO_RTP_TIME_INC    // 90kHz time increment
+    );
+    // Extra note: when the time increment is set to 0,
+    // it is automaticaly calculated by the send_rtp_frame function
+    // based on gettimeofday value. This seems to introduce some lag or jitter.
+    // An other way is to compute the time increment and set the correct value.
+    // It seems that a lower value is also working (when the frame is received
+    // the timestamp is always "late" so the frame is displayed immediately).
+    // Here, we set the time increment to the lowest possible value
+    // (1 = 1/90000 s) which is probably stupid but is actually working.
 #endif
 
     // Free the image

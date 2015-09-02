@@ -26,11 +26,11 @@
  * Using images from a vertical camera and IMU sensor data.
  */
 
-#ifndef OPTICFLOW_CALCULATOR_H
-#define OPTICFLOW_CALCULATOR_H
+#ifndef OPTICFLOW_CALCULATOR_IMAV2015_H
+#define OPTICFLOW_CALCULATOR_IMAV2015_H
 
 #include "std.h"
-#include "inter_thread_data.h"
+#include "inter_thread_data_IMAV2015.h"
 #include "lib/vision/image.h"
 #include "lib/v4l/v4l2.h"
 
@@ -52,6 +52,19 @@ struct opticflow_t {
   uint8_t fast9_threshold;          ///< FAST9 corner detection threshold
   uint16_t fast9_min_distance;      ///< Minimum distance in pixels between corners
 };
+
+/* The vision algorithm parameters */
+struct visionhover_param_t {
+  float M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
+  float m;        ///< The safety margin around the pixel of interest [pixel]
+  float t;      ///< Threshold for intensity difference
+  float IN;      ///< The number of minimum inliers required
+};
+extern struct visionhover_param_t visionhover_param;
+
+
+extern struct centroid_deviation_t centroid_dev;
+extern struct marker_deviation_t marker_dev;
 
 
 void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h);

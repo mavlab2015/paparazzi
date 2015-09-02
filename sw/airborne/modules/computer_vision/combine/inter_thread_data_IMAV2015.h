@@ -26,8 +26,8 @@
  */
 
 
-#ifndef _INTER_THREAD_DATA_H
-#define _INTER_THREAD_DATA_H
+#ifndef _INTER_THREAD_DATA_IMAV2015_H
+#define _INTER_THREAD_DATA_IMAV2015_H
 
 /* The result calculated from the opticflow */
 struct opticflow_result_t {
@@ -42,6 +42,10 @@ struct opticflow_result_t {
 
   float vel_x;            ///< The velocity in the x direction
   float vel_y;            ///< The velocity in the y direction
+  
+  float deviation_x;      ///< Deviation of centroid from the center in x direction [pixel]
+  float deviation_y;      ///< Deviation of centroid from the center in y direction [pixel]
+  uint16_t inlier;            ///< The number of inliers
 };
 
 /* The state of the drone when it took an image */

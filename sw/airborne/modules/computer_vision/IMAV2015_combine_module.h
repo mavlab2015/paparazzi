@@ -1,9 +1,5 @@
 /*
- * Copyright (C) 2015 Guido de Croon <guido.de.croon@gmail.com>
- *
- * From:
- * Characterization of Flow Field Divergence for Vertical Landing Control of MAVs
- * by H.W. Ho and G.C.H.E. de Croon (submitted)
+ * Copyright (C) 2014 Hann Woei Ho
  *
  * This file is part of Paparazzi.
  *
@@ -23,20 +19,26 @@
  */
 
 /**
- * @file modules/computer_vision/opticflow/size_divergence.h
- * @brief Calculate divergence from flow vectors by looking at line sizes beteween the points.
+ * @file modules/computer_vision/opticflow_module.h
+ * @brief optical-flow based hovering for Parrot AR.Drone 2.0
  *
- * Uses optical flow vectors as determined with a corner tracker and Lucas Kanade to estimate divergence.
+ * Sensors from vertical camera and IMU of Parrot AR.Drone 2.0
  */
 
-#include "lib/vision/image.h"
+#ifndef IMAV2015_COMBINE_H
+#define IMAV2015_COMBINE_H
 
-#ifndef SIZE_DIVERGENCE
-#define SIZE_DIVERGENCE
+// Include opticflow calculator and stabilization loops
+#include "combine/opticflow_calculator_IMAV2015.h"
+#include "combine/stabilization_opticflow_IMAV2015.h"
 
-float get_size_divergence(struct flow_t *vectors, int count, int n_samples);
-float get_mean(float *numbers, int n_elements);
+// Needed for settings
+extern struct opticflow_t opticflow;
+
+// Module functions
+extern void opticflow_module_init(void);
+extern void opticflow_module_run(void);
+extern void opticflow_module_start(void);
+extern void opticflow_module_stop(void);
 
 #endif
-
-

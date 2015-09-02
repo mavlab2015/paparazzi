@@ -1,0 +1,89 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="video_rtp_stream" dir="computer_vision">
+  <doc>
+    <description>
+      Video streaming for Linux devices
+
+      - Sends a RTP/UDP stream of the camera
+      - Possibility to save an image(shot) on the internal memory (JPEG, full size, best quality)
+    </description>
+    <define name="VIEWVIDEO_DEVICE" value="/dev/video1" description="The video device to capture from"/>
+    <define name="VIEWVIDEO_DEVICE_SIZE" value="1280,720" description="Video capture size (width, height)"/>
+    <define name="VIEWVIDEO_DEVICE_BUFFERS" value="10" description="Amount of V4L2 image buffers"/>
+    <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="4" description="Reduction factor of the video stream"/>
+    <define name="VIEWVIDEO_QUALITY_FACTOR" value="50" description="JPEG encoding compression factor [0-99]"/>
+    <define name="VIEWVIDEO_FPS" value="4" description="Video stream frame rate"/>
+    <define name="VIEWVIDEO_SHOT_PATH" value="/data/video/images" description="Path where the images should be saved"/>
+    
+    <!-- Satbilization parameters and gains -->
+    <section name="VISION" prefix="VISION_">    
+      <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
+      <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
+      <define name="t" value="5" description="Threshold for intensity difference"/>
+      <define name="IN" value="3" description="The number of minimum inliers required"/>
+    </section>
+  </doc>
+  
+  <settings>
+	  <dl_settings NAME="Vision stabilization">
+      <!-- Satabilization loop parameters and gains -->
+	      <dl_settings name="vision_stab">	
+			<dl_setting var="visionhover_param.M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="100" shortname="M" param="VISION_M"/>
+			<dl_setting var="visionhover_param.m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="m" param="VISION_m"/>
+			<dl_setting var="visionhover_param.t" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="50" shortname="t" param="VISION_t"/>
+			<dl_setting var="visionhover_param.IN" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="IN" param="VISION_IN"/>
+			</dl_settings>
+          </dl_settings>
+  </settings>
+  
+  
+  <settings>
+    <dl_settings>
+      <dl_settings name="video">
+        <dl_setting var="viewvideo.take_shot" min="0" step="1" max="1" shortname="take_shot" module="computer_vision/viewvideo" handler="take_shot"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
+  <header>
+    <file name="viewvideo_IMAV2015.h"/>
+  </header>
+
+  <init fun="viewvideo_init()"/>
+  <periodic fun="viewvideo_periodic()" freq="1" start="viewvideo_start()" stop="viewvideo_stop()" autorun="TRUE"/>
+  <makefile target="ap">
+
+    <file name="viewvideo_IMAV2015.c"/>
+
+    <!-- Include the needed Computer Vision files -->
+    <define name="modules/computer_vision" type="include"/>
+    <file name="image.c" dir="modules/computer_vision/lib/vision"/>
+    <file name="jpeg.c" dir="modules/computer_vision/lib/encoding"/>
+    <file name="rtp.c" dir="modules/computer_vision/lib/encoding"/>
+    <file name="v4l2.c" dir="modules/computer_vision/lib/v4l"/>
+
+    <!-- Define the network connection to send images over -->
+    <raw>
+      VIEWVIDEO_HOST        ?= $(MODEM_HOST)
+      VIEWVIDEO_PORT_OUT    ?= 5000
+      VIEWVIDEO_BROADCAST   ?= $(MODEM_BROADCAST)
+
+      VIEWVID_CFLAGS  = -DVIEWVIDEO_HOST=$(VIEWVIDEO_HOST) -DVIEWVIDEO_PORT_OUT=$(VIEWVIDEO_PORT_OUT)
+      ifeq ($(VIEWVIDEO_USE_NC),)
+        ap.CFLAGS += $(VIEWVID_CFLAGS) -DVIEWVIDEO_BROADCAST=$(VIEWVIDEO_BROADCAST)
+      else
+        ap.CFLAGS += $(VIEWVID_CFLAGS) -DVIEWVIDEO_USE_NC
+      endif
+    </raw>
+
+    <!-- Random flags -->
+    <define name="__USE_GNU"/>
+    <flag name="LDFLAGS" value="lrt"/>
+    <flag name="LDFLAGS" value="static-libgcc"/>
+  </makefile>
+  <makefile target="nps">
+    <file name="viewvideo_nps.c"/>
+  </makefile>
+</module>
+

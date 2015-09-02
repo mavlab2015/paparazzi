@@ -33,7 +33,7 @@
 #include <stdlib.h>
 
 // Own Header
-#include "opticflow_calculator.h"
+#include "opticflow_calculator_IMAV2015.h"
 
 // Computer Vision
 #include "lib/vision/image.h"
@@ -101,6 +101,38 @@ PRINT_CONFIG_VAR(OPTICFLOW_FAST9_THRESHOLD)
 #define OPTICFLOW_FAST9_MIN_DISTANCE 10
 #endif
 PRINT_CONFIG_VAR(OPTICFLOW_FAST9_MIN_DISTANCE)
+
+// Vision algorithm input parameters
+#ifndef VH_M
+#define VH_M 8
+#endif
+PRINT_CONFIG_VAR(VISION_M)
+
+#ifndef VH_m
+#define VH_m 3
+#endif
+PRINT_CONFIG_VAR(VISION_m)
+
+#ifndef VH_t
+#define VH_t 15
+#endif
+PRINT_CONFIG_VAR(VISION_t)
+
+#ifndef VH_IN
+#define VH_IN 3
+#endif
+PRINT_CONFIG_VAR(VISION_IN)
+
+struct centroid_deviation_t centroid_deviation;
+struct marker_deviation_t marker_deviation;
+
+/* Initialize the default settings for the vision algorithm */
+struct visionhover_param_t visionhover_param = {
+  .M = VH_M,
+  .m = VH_m,
+  .t = VH_t,
+  .IN = VH_IN,
+};
 
 /* Functions only used here */
 static uint32_t timeval_diff(struct timeval *starttime, struct timeval *finishtime);
@@ -241,6 +273,22 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   free(corners);
   free(vectors);
   image_switch(&opticflow->img_gray, &opticflow->prev_img_gray);
+  
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////                                                                                /////////
+  ////////               Vision hover algorithm here                                      /////////
+  ////////                                                                                /////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  marker_deviation = marker2(img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+  result->deviation_x = marker_deviation.x;
+  result->deviation_y = marker_deviation.y;
+  result->inlier = marker_deviation.inlier;
+
+  
 }
 
 /**
