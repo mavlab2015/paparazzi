@@ -88,13 +88,13 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 #endif
 PRINT_CONFIG_VAR(LANDING_MARKER)
 
-#define ALT_FIRST -200
+#define ALT_FIRST -200 // -256 means 1m
 #define ALT_SECOND -700
-#define HOVER_COUNT_FIRST 1000
-#define MARKER_COUNT 200
-#define NO_MARKER_COUNT 200
+#define HOVER_COUNT_FIRST 3000
+#define MARKER_COUNT 70
+#define NO_MARKER_COUNT 120
 #define LANDING_COUNT 4000
-#define DEVIATION_SAT 80
+#define VH_VEL_SAT 20
 
 
 
@@ -228,7 +228,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.2)  // -256 means 1m
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4)  // -256 means 1m
 			{
 				alt_reached_first = 1;
 			}
@@ -268,7 +268,7 @@ void guidance_v_module_run(bool_t in_flight)
 				stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
 			}
 			else
-			stabilization_cmd[COMMAND_THRUST] = 8300; // 8000 (8300) for AR Drone 2 (heavy bat), 6500 for bebop
+			stabilization_cmd[COMMAND_THRUST] = 8800; // 8000 (8800) for AR Drone 2 (heavy bat), 6500 for bebop
 		}
 	}
 	if (forever_hover == 1)
@@ -278,7 +278,7 @@ void guidance_v_module_run(bool_t in_flight)
 			guidance_v_z_sp = ALT_SECOND;
 			opticflow_stab.landing_count += 1;
 			
-			if (opticflow_stab.landing_count < 2*LANDING_COUNT) 
+			if (opticflow_stab.landing_count < 3*LANDING_COUNT) 
 			{
 				if (stateGetPositionNed_i()->z > ALT_SECOND)
 					guidance_v_z_sp = stateGetPositionNed_i()->z;
@@ -287,27 +287,27 @@ void guidance_v_module_run(bool_t in_flight)
 			}
 			else
 			{	
-				if (opticflow_stab.landing_count < 2.5*LANDING_COUNT)
+				if (opticflow_stab.landing_count < 3.5*LANDING_COUNT)
 				{
-					if (stateGetPositionNed_i()->z > ALT_FIRST*0.65)
+					if (stateGetPositionNed_i()->z > ALT_FIRST*0.73)
 						guidance_v_z_sp = stateGetPositionNed_i()->z;
 					else
-						guidance_v_z_sp = ALT_FIRST*0.65;
+						guidance_v_z_sp = ALT_FIRST*0.73;
 				}
 				else
 				{
-					if (opticflow_stab.landing_count < 3.5*LANDING_COUNT)
+					if (opticflow_stab.landing_count < 5.5*LANDING_COUNT)
 					{
-						if (stateGetPositionNed_i()->z < ALT_FIRST*0.65)
+						if (stateGetPositionNed_i()->z < ALT_FIRST*0.73)
 							guidance_v_z_sp = stateGetPositionNed_i()->z;
 						else
-							guidance_v_z_sp = ALT_FIRST*0.65;
+							guidance_v_z_sp = ALT_FIRST*0.73;
 					}
 					else
 					{
 						return_start = 1;
-						guidance_v_z_sp = ALT_SECOND;
-						if (opticflow_stab.landing_count > 3.5*LANDING_COUNT + 2000)
+						guidance_v_z_sp = ALT_FIRST;
+						if (opticflow_stab.landing_count > 5.5*LANDING_COUNT + 2000)
 						{
 							return_count += 1;
 							guidance_v_z_sp += return_count;
@@ -433,14 +433,14 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	float err_x = 0;
 	float err_y = 0;
 	
+	float vh_desired_vx = 0;
+	float vh_desired_vy = 0;
+	
 	if (result->inlier > 0)
 	{
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
-		err_y = mystate->agl * (result->deviation_y) - 20; //-20 offset because the camera is closer to the tail..
-		
-		BoundAbs(err_x, DEVIATION_SAT);
-		BoundAbs(err_y, DEVIATION_SAT);
+		err_y = mystate->agl * (result->deviation_y) - 30; //-30 offset because the camera is closer to the tail..
 	}
 	/* Calculate the integrated errors */
 	
@@ -453,6 +453,17 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	pre_err_x = err_x;
 	pre_err_y = err_y;
 	
+	vh_desired_vx = (visionhover_stab.phi_pgain * err_x/1000 
+			+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/100000
+			+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff/1000);
+			
+	vh_desired_vy = (visionhover_stab.theta_pgain * err_y/1000 
+			+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/100000
+			+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff/1000);
+			
+	BoundAbs(vh_desired_vx, CMD_OF_SAT);
+	BoundAbs(vh_desired_vy, CMD_OF_SAT);	
+				
 	/* Calculate the error if we have enough flow */
 	float err_vx = 0;
 	float err_vy = 0;
@@ -465,14 +476,10 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		{		  	
 			if (opticflow_stab.marker_count < MARKER_COUNT)
 			{
-				err_vx = (visionhover_stab.phi_pgain * err_x/1000 
-					+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/100000
-					+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff/1000) - result->vel_x;
-				err_vy = (visionhover_stab.theta_pgain * err_y/1000 
-					+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/100000
-					+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff/1000) - result->vel_y;
+				err_vx = vh_desired_vx - result->vel_x;
+				err_vy = vh_desired_vy - result->vel_y;
 				
-				if (alt_reached_second == 1)	
+				if (alt_reached_second == 1 && result->inlier > 0)	
 					opticflow_stab.marker_count += 1;
 			}
 			else
@@ -501,6 +508,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 			  	opticflow_stab.err_vy_int = 0 ;
 			  	visionhover_stab.err_x_int = 0;
 			  	visionhover_stab.err_y_int = 0;
+			  	vh_desired_vx = 0;
+			  	vh_desired_vy = 0;
 			  	opticflow_stab.cmd.phi = 0;
 			  	opticflow_stab.cmd.theta = 0;
 			  	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
@@ -513,23 +522,33 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 				{
 					if (opticflow_stab.landing_count > LANDING_COUNT)
 					{
-						err_vx = (visionhover_stab.phi_pgain * err_x/1000 
-						+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/100000
-						+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff/1000) - result->vel_x;
-						err_vy = (visionhover_stab.theta_pgain * err_y/1000 
-						+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/100000
-						+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff/1000) - result->vel_y;
+						err_vx = vh_desired_vx - result->vel_x;
+						err_vy = vh_desired_vy - result->vel_y;
+						
+						if (opticflow_stab.landing_count == 3.5*LANDING_COUNT)
+						{
+							visionhover_stab.err_x_int = 0;
+			  				visionhover_stab.err_y_int = 0;
+			  			}
 					}
 					else
 					{
 						err_vx = 0 - result->vel_x;
 						err_vy = 0 - result->vel_y;
+						visionhover_stab.err_x_int = 0;
+			  			visionhover_stab.err_y_int = 0;
+			  			vh_desired_vx = 0;
+			  			vh_desired_vy = 0;
 					}
 				}
 				else
 				{
 					err_vx = 0 - result->vel_x;
 					err_vy = 0 - result->vel_y;
+					visionhover_stab.err_x_int = 0;
+			  		visionhover_stab.err_y_int = 0;
+			  		vh_desired_vx = 0;
+			  		vh_desired_vy = 0;
 				}
 			}
 			else

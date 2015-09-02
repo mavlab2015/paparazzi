@@ -53,25 +53,45 @@
         <define name="VISION_THETA_IGAIN" value="40"/>
         <define name="VISION_THETA_DGAIN" value="20"/>
         <define name="VISION_DESIRED_VX" value="0"/>
-        <define name="VISION_DESIRED_VY" value="1.2"/>
+        <define name="VISION_DESIRED_VY" value="1.1"/>
         
-        <define name="VH_PHI_PGAIN" value="30"/>
-        <!--define name="VH_PHI_PGAIN" value="5"/-->
-        <define name="VH_PHI_IGAIN" value="80" />
-        <!--define name="VH_PHI_IGAIN" value="8" /-->
-        <define name="VH_PHI_DGAIN" value="100" />
-        <define name="VH_THETA_PGAIN" value="30"/>
-        <!--define name="VH_THETA_PGAIN" value="5"/-->
-        <define name="VH_THETA_IGAIN" value="80"/>
-        <!--define name="VH_THETA_IGAIN" value="8"/-->
-        <define name="VH_THETA_DGAIN" value="100"/>
+        <define name="VH_PHI_PGAIN" value="75"/>
+        <define name="VH_PHI_IGAIN" value="75" />
+        <define name="VH_PHI_DGAIN" value="0" />
+        <define name="VH_THETA_PGAIN" value="75"/>
+        <define name="VH_THETA_IGAIN" value="75"/>
+        <define name="VH_THETA_DGAIN" value="0"/>
+        <define name="VH_LANDING_MARKER" value="FALSE"/>
+        
+        <define name="VH_M" value="6"/>
+        <define name="VH_m" value="4" />
+        <define name="VH_t" value="13"/>
+        <define name="VH_IN" value="5"/>
+    </load>
+    
+    <!--load name="cv_combine_IMAV2015.xml">
+    	<define name="VISION_PHI_PGAIN" value="250"/>
+        <define name="VISION_PHI_IGAIN" value="40" />
+        <define name="VISION_PHI_DGAIN" value="90" />
+        <define name="VISION_THETA_PGAIN" value="250"/>
+        <define name="VISION_THETA_IGAIN" value="40"/>
+        <define name="VISION_THETA_DGAIN" value="90"/>
+        <define name="VISION_DESIRED_VX" value="0"/>
+        <define name="VISION_DESIRED_VY" value="0"/>
+        
+        <define name="VH_PHI_PGAIN" value="40"/>
+        <define name="VH_PHI_IGAIN" value="85" />
+        <define name="VH_PHI_DGAIN" value="0" />
+        <define name="VH_THETA_PGAIN" value="40"/>
+        <define name="VH_THETA_IGAIN" value="85"/>
+        <define name="VH_THETA_DGAIN" value="0"/>
         <define name="VH_LANDING_MARKER" value="FALSE"/>
         
         <define name="VH_M" value="7"/>
         <define name="VH_m" value="5" />
-        <define name="VH_t" value="10"/>
+        <define name="VH_t" value="255"/>
         <define name="VH_IN" value="6"/>
-    </load>
+    </load-->
     <!--load name="video_rtp_stream_IMAV2015.xml">
     	<define name="VIEWVIDEO_DEVICE" value="/dev/video2" />
    	<define name="VIEWVIDEO_DEVICE_SIZE" value="320,240" />
@@ -238,7 +258,7 @@
     <define name="HOVER_KI" value="13"/>
     <!--define name="NOMINAL_HOVER_THROTTLE" value="0.67"/-->
     <define name="NOMINAL_HOVER_THROTTLE" value="0.702"/>
-    <!--define name="NOMINAL_HOVER_THROTTLE" value="0.71"/-->
+    <!--define name="NOMINAL_HOVER_THROTTLE" value="0.73"/-->
     <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
   </section>
 
