@@ -89,12 +89,22 @@ PRINT_CONFIG_VAR(VISION_DESIRED_VY)
 PRINT_CONFIG_VAR(LANDING_MARKER)
 
 #define ALT_FIRST -200 // -256 means 1m
-#define ALT_SECOND -700
+#define ALT_SECOND -620
+//#define ALT_SECOND -500
+#define FACTOR_ALT 0.6 // ALT_FIRST * FACTOR_ALT = Hovering & Dropping altitude on marker B
 #define HOVER_COUNT_FIRST 3000
 #define MARKER_COUNT 70
-#define NO_MARKER_COUNT 120
-#define LANDING_COUNT 4000
+//#define MARKER_COUNT 70000
+#define NO_MARKER_COUNT 150
+#define LANDING_COUNT_A 2000 // Count for initial OF stabilization at Marker B (ALT_SECOND)
+#define LANDING_COUNT_B 4000 // Count for marker stabilization (ALT_SECOND)
+#define LANDING_COUNT_C 2000 // Count for descent from ALT_SECOND to ALT_FIRST
+#define LANDING_COUNT_D 4000 // COUNT for final marker stabilization (ALT_FIRST)
+
 #define VH_VEL_SAT 20
+#define VH_OFFSET 30
+#define VH_ERR 30
+
 
 
 
@@ -145,7 +155,6 @@ int8_t alt_reached_first, alt_reached_second;
 int8_t init_done;
 
 int8_t inlier_sum;
-int8_t forever_hover_init;
 int8_t return_start;
 
 /**
@@ -171,10 +180,10 @@ void guidance_h_module_enter(void)
   marker_detected = 0;
   v_control = 1;
   forever_hover = 0;
-  forever_hover_init = 0;
   
   opticflow_stab.marker_count = 0;
   opticflow_stab.no_marker_count = 0;
+  
   
   /* Set rool/pitch to 0 degrees and psi to current heading */
   opticflow_stab.cmd.phi = 0;
@@ -208,9 +217,6 @@ void guidance_v_module_enter(void)
       return_count = 0;
       opticflow_stab.landing_count = 0;
       guidance_v_z_sp = ALT_FIRST;
-      
-      
-     
 }
 
 void guidance_v_module_run(bool_t in_flight)
@@ -219,7 +225,7 @@ void guidance_v_module_run(bool_t in_flight)
 	{
 		if (init_done == 0)
 		{			
-			if (stabilization_cmd[COMMAND_THRUST] < 3500)   //3000 (3500) for AR Drone 2 (heavy bat), 2000 for bebop
+			if (stabilization_cmd[COMMAND_THRUST] < 3000)   //3000 (3500) for AR Drone 2 (heavy bat), 2000 for bebop
 			{
 				stabilization_cmd[COMMAND_THRUST] += 2;
 			} 
@@ -228,7 +234,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4)  // -256 means 1m
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
 			{
 				alt_reached_first = 1;
 			}
@@ -256,7 +262,6 @@ void guidance_v_module_run(bool_t in_flight)
 				}
 			}
 			
-					
 	      		guidance_v_z_sum_err = 0;
 	      		GuidanceVSetRef(guidance_v_z_sp, 0, 0);
 			guidance_v_zd_sp = 0;
@@ -268,7 +273,7 @@ void guidance_v_module_run(bool_t in_flight)
 				stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
 			}
 			else
-			stabilization_cmd[COMMAND_THRUST] = 8800; // 8000 (8800) for AR Drone 2 (heavy bat), 6500 for bebop
+			stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 (8800) for AR Drone 2 (heavy bat), 6500 for bebop
 		}
 	}
 	if (forever_hover == 1)
@@ -278,40 +283,45 @@ void guidance_v_module_run(bool_t in_flight)
 			guidance_v_z_sp = ALT_SECOND;
 			opticflow_stab.landing_count += 1;
 			
-			if (opticflow_stab.landing_count < 3*LANDING_COUNT) 
+			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 			{
 				if (stateGetPositionNed_i()->z > ALT_SECOND)
 					guidance_v_z_sp = stateGetPositionNed_i()->z;
 				else
 					guidance_v_z_sp = ALT_SECOND;
+				//guidance_v_z_sp = ALT_SECOND;
 			}
 			else
 			{	
-				if (opticflow_stab.landing_count < 3.5*LANDING_COUNT)
+				if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
 				{
-					if (stateGetPositionNed_i()->z > ALT_FIRST*0.73)
+					if (stateGetPositionNed_i()->z > ALT_FIRST*FACTOR_ALT)
 						guidance_v_z_sp = stateGetPositionNed_i()->z;
 					else
-						guidance_v_z_sp = ALT_FIRST*0.73;
+						guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
+					//guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
 				}
 				else
 				{
-					if (opticflow_stab.landing_count < 5.5*LANDING_COUNT)
+					if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B 
+									+ LANDING_COUNT_C + LANDING_COUNT_D)
 					{
-						if (stateGetPositionNed_i()->z < ALT_FIRST*0.73)
+						if (stateGetPositionNed_i()->z < ALT_FIRST*FACTOR_ALT)
 							guidance_v_z_sp = stateGetPositionNed_i()->z;
 						else
-							guidance_v_z_sp = ALT_FIRST*0.73;
+							guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
+						//guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
 					}
 					else
 					{
 						return_start = 1;
-						guidance_v_z_sp = ALT_FIRST;
-						if (opticflow_stab.landing_count > 5.5*LANDING_COUNT + 2000)
+						guidance_v_z_sp = ALT_FIRST * 1.5;
+						if (opticflow_stab.landing_count > LANDING_COUNT_A + LANDING_COUNT_B 
+										+ LANDING_COUNT_C + LANDING_COUNT_D + 500)
 						{
 							return_count += 1;
 							guidance_v_z_sp += return_count;
-							if (stateGetPositionNed_i()->z > -30)
+							if (stateGetPositionNed_i()->z > -20)
 							{
 								stabilization_cmd[COMMAND_THRUST] = 0;
 								return;
@@ -320,21 +330,18 @@ void guidance_v_module_run(bool_t in_flight)
 					}
 				}
 			}
-			
-			
-			
 		}
 		else
 		{
 			opticflow_stab.landing_count += 1;
-			if (opticflow_stab.landing_count < LANDING_COUNT) 
+			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 			{
 				guidance_v_z_sp = ALT_SECOND;
 			}
 			else
 			{
 				guidance_v_z_sp += 1 ;
-				if (stateGetPositionNed_i()->z > -30)
+				if (stateGetPositionNed_i()->z > -20)
 				{
 					stabilization_cmd[COMMAND_THRUST] = 0;
 					return;
@@ -394,8 +401,9 @@ void guidance_h_module_run(bool_t in_flight)
 void stabilization_opticflow_update(struct opticflow_result_t *result, struct opticflow_state_t *mystate)
 {
   /* Check if we are in the correct AP_MODE before setting commands */
-  if (autopilot_mode != AP_MODE_MODULE) {
-    return;
+  if (autopilot_mode != AP_MODE_MODULE) 
+  {
+  	return;
   }
   
   if (alt_reached_first < 1)
@@ -417,7 +425,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	inlier_sum = 0;
   	return;
   }
-  
+  /*
   if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
   	v_control = 1;
   
@@ -427,7 +435,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	opticflow_stab.err_vy_int = 0 ;
   	v_control = 0;
   }
-  
+  */
   
   	/* Calculate the vision hover error if we have enough inliers */
   	float err_x = 0;
@@ -440,13 +448,13 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	{
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
-		err_y = mystate->agl * (result->deviation_y) - 30; //-30 offset because the camera is closer to the tail..
+		err_y = mystate->agl * (result->deviation_y) - VH_OFFSET; // Offset because the camera is closer to the tail..
 	}
 	/* Calculate the integrated errors */
 	
 	visionhover_stab.err_x_int += err_x;
   	visionhover_stab.err_y_int += err_y;   
-  
+  		
   	/* Calculate the differential errors*/
   	visionhover_stab.err_x_diff = (err_x - pre_err_x);
 	visionhover_stab.err_y_diff = (err_y - pre_err_y);
@@ -468,16 +476,38 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	float err_vx = 0;
 	float err_vy = 0;
 	
-	
-	
 	if (result->tracked_cnt > 0) 
 	{
 		if (forever_hover == 0) // When forever_hover is 0 (Not TRUE)
 		{		  	
 			if (opticflow_stab.marker_count < MARKER_COUNT)
 			{
-				err_vx = vh_desired_vx - result->vel_x;
-				err_vy = vh_desired_vy - result->vel_y;
+				if (result->deviation_x > -VH_ERR && result->deviation_x  < VH_ERR)
+				{
+					err_vx = 0 - result->vel_x;
+					
+					visionhover_stab.err_x_int = 0;	
+					visionhover_stab.err_x_diff = 0;
+					pre_err_x = 0;
+				}
+				else
+				{
+					err_vx = vh_desired_vx - result->vel_x;
+				}
+				
+				if (result->deviation_y  > -VH_ERR && result->deviation_y  < VH_ERR)
+				{
+					err_vy = 0 - result->vel_y;
+					
+					visionhover_stab.err_y_int = 0;	
+					visionhover_stab.err_y_diff = 0;
+					pre_err_y = 0;
+				}
+				else
+				{
+					err_vy = vh_desired_vy - result->vel_y;
+				}
+				
 				
 				if (alt_reached_second == 1 && result->inlier > 0)	
 					opticflow_stab.marker_count += 1;
@@ -502,34 +532,28 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		}
 		else // when forever_hover is 1 (TRUE)
 		{
-			if (forever_hover_init == 0)
-			{
-				opticflow_stab.err_vx_int = 0 ;
-			  	opticflow_stab.err_vy_int = 0 ;
-			  	visionhover_stab.err_x_int = 0;
-			  	visionhover_stab.err_y_int = 0;
-			  	vh_desired_vx = 0;
-			  	vh_desired_vy = 0;
-			  	opticflow_stab.cmd.phi = 0;
-			  	opticflow_stab.cmd.theta = 0;
-			  	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
-			  	forever_hover_init = 1;
-			  	return;
-		  	}
 			if (return_start == 0)
 			{
 				if (result->inlier > 0)
 				{
-					if (opticflow_stab.landing_count > LANDING_COUNT)
+					if (opticflow_stab.landing_count > LANDING_COUNT_A)
 					{
 						err_vx = vh_desired_vx - result->vel_x;
 						err_vy = vh_desired_vy - result->vel_y;
 						
-						if (opticflow_stab.landing_count == 3.5*LANDING_COUNT)
+						/*if (opticflow_stab.landing_count == LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
 						{
-							visionhover_stab.err_x_int = 0;
-			  				visionhover_stab.err_y_int = 0;
-			  			}
+							opticflow_stab.err_vx_int = 0 ;
+						  	opticflow_stab.err_vy_int = 0 ;
+						  	visionhover_stab.err_x_int = 0;
+						  	visionhover_stab.err_y_int = 0;
+						  	vh_desired_vx = 0;
+						  	vh_desired_vy = 0;
+						  	opticflow_stab.cmd.phi = 0;
+						  	opticflow_stab.cmd.theta = 0;
+						  	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
+						  	return; 
+			  			}*/
 					}
 					else
 					{
@@ -580,7 +604,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	opticflow_stab.cmd.theta = -(opticflow_stab.theta_pgain * err_vy
 		                       + opticflow_stab.theta_igain * opticflow_stab.err_vy_int
 		                       + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
-
+	
 	/* Bound the roll and pitch commands */
 	BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
 	BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);

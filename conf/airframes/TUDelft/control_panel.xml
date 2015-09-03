@@ -172,7 +172,7 @@
       </program>
     </session>
     
-        <session name="IMAV2015_indoor - Hobbyking">
+    <session name="IMAV2015_indoor - Hobbyking">
       <program name="Server"/>
       <program name="GCS"/>
       <program name="Data Link">
@@ -181,6 +181,22 @@
       <program name="Joystick">
         <arg flag="-ac" constant="@AIRCRAFT"/>
         <arg flag="hobbyking.xml"/>
+      </program>
+      <program name="Messages"/>
+      <program name="Settings">
+        <arg flag="-ac" constant="@AIRCRAFT"/>
+      </program>
+    </session>
+    
+    <session name="IMAV2015_indoor - X3D Pro">
+      <program name="Server"/>
+      <program name="GCS"/>
+      <program name="Data Link">
+        <arg flag="-udp"/>
+      </program>
+      <program name="Joystick">
+        <arg flag="-ac" constant="@AIRCRAFT"/>
+        <arg flag="extreme_3d_pro.xml"/>
       </program>
       <program name="Messages"/>
       <program name="Settings">

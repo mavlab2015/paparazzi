@@ -99,7 +99,9 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
                                &opticflow_stab.marker_count, 
                                &opticflow_stab.no_marker_count,
                                &opticflow_stab.landing_count,
-                               &opticflow_result.inlier);
+                               &opticflow_result.inlier,
+                               &opticflow_result.deviation_x,
+                               &opticflow_result.deviation_y);
   pthread_mutex_unlock(&opticflow_mutex);
 }
 #endif

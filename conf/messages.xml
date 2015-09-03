@@ -1965,6 +1965,8 @@
     <field name="no_marker_count"      type="uint32"/>
     <field name="landing_count"      type="uint32"/>
     <field name="inlier"      type="uint16"/>
+    <field name="deviation_x"         type="float"/>
+    <field name="deviation_y"         type="float"/>
   </message>
 
   <!--229 is free -->
