@@ -227,7 +227,6 @@ int8_t descent;
 int8_t already_dropped;
 float delta_z;
 
-int32_t temp_z_sp;
 
 /**
  * Horizontal guidance mode enter resets the errors
@@ -289,7 +288,6 @@ void guidance_v_module_enter(void)
       return_count = 0;
       opticflow_stab.landing_count = 0;
       guidance_v_z_sp = ALT_FIRST;
-      temp_z_sp = stateGetPositionNed_i()->z;
       delta_z = 0;
 }
 
@@ -345,8 +343,7 @@ void guidance_v_module_run(bool_t in_flight)
 				}
 			
 			}*/
-			
-			temp_z_sp = stateGetPositionNed_i()->z;
+
 			
 	      		guidance_v_z_sum_err = 0;
 	      		GuidanceVSetRef(guidance_v_z_sp, 0, 0);
@@ -359,7 +356,7 @@ void guidance_v_module_run(bool_t in_flight)
 				stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
 			}
 			else
-			stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 (8800) for AR Drone 2 (heavy bat), 6500 for bebop
+			stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 for AR Drone 2, 6500 for bebop
 		}
 	}
 	if (forever_hover == 1)
@@ -377,9 +374,6 @@ void guidance_v_module_run(bool_t in_flight)
 					guidance_v_z_sp = stateGetPositionNed_i()->z;
 				else
 					guidance_v_z_sp = ALT_SECOND;
-
-				temp_z_sp = guidance_v_z_sp;
-			
 			}
 			else
 			{	
@@ -568,8 +562,6 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
 		err_y = mystate->agl * (result->deviation_y); 
-		//err_x = (result->deviation_x) * (-temp_z_sp) /256 ;
-		//err_y = (result->deviation_y - VH_OFFSET) * (-temp_z_sp)/256;
 	}
 	/* Calculate the integrated errors */
 	

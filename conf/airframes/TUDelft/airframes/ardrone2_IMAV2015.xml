@@ -53,7 +53,10 @@
         <define name="VISION_THETA_IGAIN" value="20"/>
         <define name="VISION_THETA_DGAIN" value="30"/>
         <define name="VISION_DESIRED_VX" value="0"/>
+        <!--Without the parcel-->
         <!--define name="VISION_DESIRED_VY" value="1.1"/-->
+        
+        <!--With the parcel-->
         <define name="VISION_DESIRED_VY" value="1.4"/>
         
         <define name="VH_PHI_PGAIN" value="300"/>
@@ -252,8 +255,13 @@
     <define name="HOVER_KP" value="283"/>
     <define name="HOVER_KD" value="82"/>
     <define name="HOVER_KI" value="13"/>
+    <!--Normal Battery-->
     <!--define name="NOMINAL_HOVER_THROTTLE" value="0.67"/-->
+    
+    <!--Fat Battery-->
     <!--define name="NOMINAL_HOVER_THROTTLE" value="0.705"/-->
+    
+    <!--With 20g parcel-->
     <define name="NOMINAL_HOVER_THROTTLE" value="0.712"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
   </section>
