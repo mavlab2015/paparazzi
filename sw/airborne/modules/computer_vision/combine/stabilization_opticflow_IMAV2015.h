@@ -79,6 +79,14 @@ struct visionhover_stab_t {
   float err_x_diff;        ///< The difference in velocity error in x direction (m/s)
   float err_y_diff;        ///< The difference in velocity error in y direction (m/s)
   bool_t landing_marker;    /// Landing on marker enabled
+  bool_t drop;    /// Dropping on marker enabled
+  float descent_rate;
+  float vel_sat;
+  int32_t err;
+  
+  bool_t line_follow; /// Line following enabled
+  float line_phi_pgain;
+  float line_theta_pgain;
 };
 
 extern struct visionhover_stab_t visionhover_stab;

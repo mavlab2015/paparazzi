@@ -30,7 +30,11 @@
       <define name="THETA_IGAIN" value="0" description="Vision hover integrated gain on the summed pitch velocity error"/>
       <define name="THETA_DGAIN" value="0" description="Vision hover differential gain on the pitch velocity error"/>
       <define name="LANDING_MARKER" value="FALSE" description="LANDING ON MARKER ENABLED"/>
-      
+      <define name="DROP" value="FALSE" description="DROPPING AN OBJECT"/>
+      <define name="DESCENT_RATE" value="0.1" description="DESCENT_RATE"/>
+      <define name="VEL_SAT" value="15" description="OF Velocity Saturation value"/>     
+      <define name="ERR" value="10" description="Marker deviation tolerance value [pix]"/>    
+
       <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
       <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
       <define name="t" value="5" description="Threshold for intensity difference"/>
@@ -79,19 +83,31 @@
         <dl_setting var="opticflow_stab.theta_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="100" shortname="kd_op_theta" param="VISION_THETA_DGAIN"/>
         <dl_setting var="opticflow_stab.desired_vx" module="computer_vision/IMAV2015_combine_module" min="-5" step="0.1" max="5" shortname="desired_vx" param="VISION_DESIRED_VX"/>
         <dl_setting var="opticflow_stab.desired_vy" module="computer_vision/IMAV2015_combine_module" min="-5" step="0.1" max="5" shortname="desired_vy" param="VISION_DESIRED_VY"/>
-        
-        <dl_setting var="visionhover_stab.phi_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kp_vh_phi" param="VH_PHI_PGAIN"/>
-	<dl_setting var="visionhover_stab.phi_igain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="500" shortname="ki_vh_phi" param="VH_PHI_IGAIN"/>
-	<dl_setting var="visionhover_stab.phi_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kd_vh_phi" param="VH_PHI_DGAIN"/>
-	<dl_setting var="visionhover_stab.theta_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kp_vh_theta" param="VISION_THETA_PGAIN"/>
-	<dl_setting var="visionhover_stab.theta_igain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="500" shortname="ki_vh_theta" param="VH_THETA_IGAIN"/>
-	<dl_setting var="visionhover_stab.theta_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kd_vh_theta" param="VH_THETA_DGAIN"/>
+      </dl_settings>
+      
+      <dl_settings name="MARKER">
+        <dl_setting var="visionhover_stab.phi_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_vh_phi" param="VH_PHI_PGAIN"/>
+	<dl_setting var="visionhover_stab.phi_igain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="ki_vh_phi" param="VH_PHI_IGAIN"/>
+	<!--dl_setting var="visionhover_stab.phi_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kd_vh_phi" param="VH_PHI_DGAIN"/-->
+	<dl_setting var="visionhover_stab.theta_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_vh_theta" param="VISION_THETA_PGAIN"/>
+	<dl_setting var="visionhover_stab.theta_igain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="ki_vh_theta" param="VH_THETA_IGAIN"/>
+	<!--dl_setting var="visionhover_stab.theta_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kd_vh_theta" param="VH_THETA_DGAIN"/-->
 	<dl_setting var="visionhover_stab.landing_marker" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="land_marker" param="VH_LANDING_MARKER"/>
-			
+	<dl_setting var="visionhover_stab.drop" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="drop_enabled" param="VH_DROP"/>
+	<dl_setting var="visionhover_stab.descent_rate" module="computer_vision/IMAV2015_combine_module" min="0" step="0.001" max="1" shortname="descent_rate" param="VH_DESCENT_RATE"/>
+	<dl_setting var="visionhover_stab.vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="vel_sat" param="VH_VEL_SAT"/>
+	<dl_setting var="visionhover_stab.err" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="err" param="VH_ERR"/>
+	
 	<dl_setting var="visionhover_param.M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="20" shortname="M" param="VH_M"/>
 	<dl_setting var="visionhover_param.m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="m" param="VH_m"/>
 	<dl_setting var="visionhover_param.t" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="t" param="VH_t"/>
 	<dl_setting var="visionhover_param.IN" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="30" shortname="IN" param="VH_IN"/>
+      </dl_settings>
+
+      <dl_settings name="LINE">
+        <dl_setting var="visionhover_stab.line_follow" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="line_following" param="VH_LINE_FOLLOW"/>
+	<dl_setting var="visionhover_stab.line_phi_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_phi" param="VH_LINE_PHI_PGAIN"/>
+	<dl_setting var="visionhover_stab.line_theta_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_theta" param="VH_LINE_THETA_PGAIN"/>
       </dl_settings>
 
       <!-- Optical flow calculations parameters for Lucas Kanade and FAST9 -->
