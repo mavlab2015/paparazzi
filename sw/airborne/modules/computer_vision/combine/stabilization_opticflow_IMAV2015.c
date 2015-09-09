@@ -171,7 +171,7 @@ PRINT_CONFIG_VAR(VH_LINE_ALT_SECOND)
 #define HOVER_COUNT_FIRST 1000
 #define MARKER_COUNT 150
 //#define MARKER_COUNT 70000
-#define NO_MARKER_COUNT 130
+#define NO_MARKER_COUNT 120
 
 #define LANDING_COUNT_A 1000 // Count for initial OF stabilization at Marker B (ALT_SECOND)
 #define LANDING_COUNT_B 8000 // Count for marker stabilization (ALT_SECOND)
@@ -219,6 +219,7 @@ struct visionhover_stab_t visionhover_stab = {
   .line_phi_pgain = VH_LINE_PHI_PGAIN,
   .line_theta_pgain = VH_LINE_THETA_PGAIN,
   .line_vel_sat = VH_LINE_VEL_SAT,
+  .line_cmd_sat = VH_LINE_CMD_SAT,
   .line_alt_second = VH_LINE_ALT_SECOND
 };
 
@@ -274,7 +275,7 @@ void guidance_v_module_enter(void)
       return_count = 0;
       opticflow_stab.landing_count = 0;
       
-      if (!visionhover_stab.line_follow)
+        if (visionhover_stab.line_follow == 0)
         {	
         	guidance_v_z_sp = ALT_FIRST;	
   		alt_second_chosen = visionhover_stab.alt_second;
@@ -290,7 +291,6 @@ void guidance_v_module_enter(void)
 void guidance_v_module_run(bool_t in_flight)
 {
 
-  	
 	if (forever_hover == 0)
 	{
 		if (init_done == 0)
@@ -300,10 +300,19 @@ void guidance_v_module_run(bool_t in_flight)
 				stabilization_cmd[COMMAND_THRUST] += 2;
 			} 
 			else
+			{
 				init_done = 1;
+			}
 		}
 		else
 		{
+		/*
+		        if (visionhover_stab.drop == 1 && already_dropped == 0)
+			{	
+				printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
+				already_dropped = 1;
+			}
+		*/
 			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
 			{
 				alt_reached_first = 1;
@@ -329,7 +338,6 @@ void guidance_v_module_run(bool_t in_flight)
 				else
 				{
 					alt_reached_second = 1;
-					
 				}
 			}
 			/*if (alt_reached_second == 1 && opticflow_stab.marker_count > 200)
@@ -391,15 +399,18 @@ void guidance_v_module_run(bool_t in_flight)
 						}
 					}
 					else
-						descent = 0;	
+					{
+						descent = 0;
+						/*if (visionhover_stab.drop == 1 && already_dropped == 0)
+						{	
+							printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
+							already_dropped = 1;
+						}*/
+						
+					}	
 				}
 				else
 				{	
-					if (visionhover_stab.drop == 1 && already_dropped == 0)
-					{	
-					 	printf("<Drop_Paintball_Now1 \n"); // print only ONCE !!!
-					  	already_dropped = 1;
-					}
 					if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
 					{
 						guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
@@ -763,11 +774,17 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		                       + opticflow_stab.theta_dgain * opticflow_stab.err_vy_diff)/100;
 	
 	/* Bound the roll and pitch commands */
-	BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
-	BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
-	  
-	//printf("marker detected = %i\n", visionhover_stab.marker_detected);
-}
+	if (!visionhover_stab.line_follow)
+	{	
+		BoundAbs(opticflow_stab.cmd.phi, CMD_OF_SAT);
+		BoundAbs(opticflow_stab.cmd.theta, CMD_OF_SAT);
+	}
+	else
+	{
+		BoundAbs(opticflow_stab.cmd.phi, visionhover_stab.line_cmd_sat);
+		BoundAbs(opticflow_stab.cmd.theta, visionhover_stab.line_cmd_sat);
+	} 
+};
 
 
 

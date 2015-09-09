@@ -90,6 +90,7 @@ struct visionhover_stab_t {
   float line_phi_pgain;
   float line_theta_pgain;
   float line_vel_sat;
+  int32_t line_cmd_sat;
 };
 
 extern struct visionhover_stab_t visionhover_stab;

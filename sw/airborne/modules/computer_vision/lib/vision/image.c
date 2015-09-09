@@ -716,7 +716,8 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   uint16_t idx2[2][200] = {};
   uint32_t counter1, counter2, counter3;
   int32_t min1, max1, min2, max2, min3, max3, min4, max4;
-  int32_t sum_row, sum_col, marker_x, marker_y, inlier;
+  int32_t sum_row, sum_col;
+  uint32_t marker_x, marker_y, inlier;
   
 
   // Copy the creation timestamp (stays the same)
@@ -892,7 +893,7 @@ struct line_deviation_t line_follow(struct image_t *input, struct image_t *outpu
   uint16_t max_idx1[2][1] = {};
   uint16_t max_idx2[2][1] = {};
   uint16_t max_idx3[2][1] = {};
-  uint16_t max_idx[2][1] = {};
+  uint32_t max_idx[2][1] = {};
   
   uint8_t image[240][320] = {};
   uint16_t counter;
@@ -977,7 +978,7 @@ struct line_deviation_t line_follow(struct image_t *input, struct image_t *outpu
   }
   else
   {
-  	 if (integral2_max == integral_max_max)
+  	 if (integral2_max == integral_max_max || integral2_max > w*th)
   	 {
 	  	max_idx[0][0] = max_idx2[0][0];
 	  	max_idx[1][0] = max_idx2[1][0];

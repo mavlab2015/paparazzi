@@ -44,7 +44,8 @@
       <define name="LINE_FOLLOW" value="FALSE" description="FOLLOWING A LINE"/>
       <define name="LINE_PHI_PGAIN" value="400" description="Line following proportional gain on the roll velocity error"/>
       <define name="LINE_THETA_PGAIN" value="400" description="Line following proportional gain on the pitch velocity error"/>
-      <define name="LINE_VEL_SAT" value="30" description="Line following OF Velocity Saturation value"/>   
+      <define name="LINE_VEL_SAT" value="30" description="Line following OF Velocity Saturation value"/>
+      <define name="LINE_CMD_SAT" value="300" description="OF euler angle command saturation value"/>   
       <define name="LINE_ALT_SECOND" value="-400" description="Flight altitude (not hovering)"/>
       <define name="LINE_W" value="5" description="LINE WIDTH ESTIMATION"/>
       <define name="LINE_THR" value="100" description="ROPE INTENSITY THRESHOLD"/>  
@@ -119,6 +120,7 @@
 	<dl_setting var="visionhover_stab.line_phi_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_phi" param="VH_LINE_PHI_PGAIN"/>
 	<dl_setting var="visionhover_stab.line_theta_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_theta" param="VH_LINE_THETA_PGAIN"/>
 	<dl_setting var="visionhover_stab.line_vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="line_vel_sat" param="VH_LINE_VEL_SAT"/>
+	<dl_setting var="visionhover_stab.line_cmd_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="500" shortname="line_cmd_sat" param="VH_LINE_CMD_SAT"/>
 	<dl_setting var="visionhover_stab.line_alt_second" module="computer_vision/IMAV2015_combine_module" min="-700" step="1" max="-100" shortname="line_alt_2nd" param="VH_LINE_ALT_SECOND"/>
 	<dl_setting var="visionhover_param.line_w" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="20" shortname="line_w" param="VH_LINE_W"/>
 	<dl_setting var="visionhover_param.line_thr" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="line_thr" param="VH_LINE_THR"/>
