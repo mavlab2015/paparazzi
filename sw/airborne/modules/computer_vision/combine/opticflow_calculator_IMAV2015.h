@@ -33,6 +33,7 @@
 #include "inter_thread_data_IMAV2015.h"
 #include "lib/vision/image.h"
 #include "lib/v4l/v4l2.h"
+#include "stabilization_opticflow_IMAV2015.h"
 
 struct opticflow_t {
   bool_t got_first_img;             ///< If we got a image to work with
@@ -59,12 +60,16 @@ struct visionhover_param_t {
   float m;        ///< The safety margin around the pixel of interest [pixel]
   float t;      ///< Threshold for intensity difference
   float IN;      ///< The number of minimum inliers required
+  
+  float line_w;
+  float line_thr;
 };
 extern struct visionhover_param_t visionhover_param;
-
+//struct visionhover_stab_t visionhover_stab;
 
 extern struct centroid_deviation_t centroid_dev;
 extern struct marker_deviation_t marker_dev;
+extern struct line_deviation_t line_dev;
 
 
 void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h);

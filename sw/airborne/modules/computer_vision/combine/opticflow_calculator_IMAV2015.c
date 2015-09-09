@@ -123,8 +123,19 @@ PRINT_CONFIG_VAR(VISION_t)
 #endif
 PRINT_CONFIG_VAR(VISION_IN)
 
+#ifndef VH_LINE_W
+#define VH_LINE_W 5
+#endif
+PRINT_CONFIG_VAR(VISION_LINE_W)
+
+#ifndef VH_LINE_THR
+#define VH_LINE_THR 100
+#endif
+PRINT_CONFIG_VAR(VISION_LINE_THR)
+
 struct centroid_deviation_t centroid_deviation;
 struct marker_deviation_t marker_deviation;
+struct line_deviation_t line_deviation;
 
 /* Initialize the default settings for the vision algorithm */
 struct visionhover_param_t visionhover_param = {
@@ -132,7 +143,10 @@ struct visionhover_param_t visionhover_param = {
   .m = VH_m,
   .t = VH_t,
   .IN = VH_IN,
+  .line_w = VH_LINE_W,
+  .line_thr = VH_LINE_THR
 };
+struct visionhover_stab_t visionhover_stab;
 
 /* Functions only used here */
 static uint32_t timeval_diff(struct timeval *starttime, struct timeval *finishtime);
@@ -282,12 +296,20 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   /////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////
   
-  
-  marker_deviation = marker2(img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
-  result->deviation_x = marker_deviation.x;
-  result->deviation_y = marker_deviation.y;
-  result->inlier = marker_deviation.inlier;
-
+  if (!visionhover_stab.line_follow)
+  {
+	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+	  result->deviation_x = marker_deviation.x;
+	  result->deviation_y = marker_deviation.y;
+	  result->inlier = marker_deviation.inlier;
+  }
+  else
+  {
+  	  line_deviation = line_follow(img, img, visionhover_param.line_w, visionhover_param.line_thr);
+	  result->deviation_x = line_deviation.x;
+	  result->deviation_y = line_deviation.y;
+	  result->inlier = 111;
+  }
   
 }
 

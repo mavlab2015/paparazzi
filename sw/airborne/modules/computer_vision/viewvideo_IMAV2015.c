@@ -131,6 +131,16 @@ PRINT_CONFIG_VAR(VISION_t)
 #endif
 PRINT_CONFIG_VAR(VISION_IN)
 
+#ifndef VISION_LINE_W
+#define VISION_LINE_W 5
+#endif
+PRINT_CONFIG_VAR(VISION_LINE_W)
+
+#ifndef VISION_LINE_THR
+#define VISION_LINE_THR 100
+#endif
+PRINT_CONFIG_VAR(VISION_LINE_THR)
+
 
 /* These are defined with configure */
 PRINT_CONFIG_VAR(VIEWVIDEO_HOST)
@@ -142,6 +152,8 @@ struct visionhover_param_t visionhover_param = {
   .m = VISION_m,
   .t = VISION_t,
   .IN = VISION_IN,
+  .line_w = VISION_LINE_W,
+  .line_thr = VISION_LINE_THR
 };
 
 // Main thread
@@ -221,9 +233,11 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
 	
 	//printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
 	
-	struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+	//struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
 	
-	printf("Inliers = %i\n", marker_deviation.inlier);
+	struct line_deviation_t line_deviation = line_follow(&img, &img, visionhover_param.line_w, visionhover_param.line_thr);
+	
+	//printf("Inliers = %i\n", marker_deviation.inlier);
 	
 /////////////////////////////////////////////////////////////
 /////                                                   /////

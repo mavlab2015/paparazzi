@@ -26,6 +26,8 @@
  * Control loops for optic flow based hovering.
  * Computes setpoint for the lower level attitude stabilization to control horizontal velocity.
  */
+ 
+#include <stdio.h>
 
 // Own Header
 #include "stabilization_opticflow_IMAV2015.h"
@@ -153,8 +155,18 @@ PRINT_CONFIG_VAR(VH_PHI_PGAIN)
 #endif
 PRINT_CONFIG_VAR(VH_THETA_PGAIN)
 
+#ifndef VH_ALT_SECOND
+#define VH_ALT_SECOND -600
+#endif
+PRINT_CONFIG_VAR(VH_ALT_SECOND)
+
+#ifndef VH_LINE_ALT_SECOND
+#define VH_LINE_ALT_SECOND -400
+#endif
+PRINT_CONFIG_VAR(VH_LINE_ALT_SECOND)
+
 #define ALT_FIRST -200 // -256 means 1m
-#define ALT_SECOND -600
+
 #define FACTOR_ALT 1 // ALT_FIRST * FACTOR_ALT = Hovering & Dropping altitude on marker B
 #define HOVER_COUNT_FIRST 1000
 #define MARKER_COUNT 150
@@ -199,13 +211,18 @@ struct visionhover_stab_t visionhover_stab = {
   .theta_igain = VH_THETA_IGAIN,
   .landing_marker = VH_LANDING_MARKER,
   .drop = VH_DROP,
+  .alt_second = VH_ALT_SECOND,
   .descent_rate = VH_DESCENT_RATE,
   .vel_sat = VH_VEL_SAT,
   .err = VH_ERR,
   .line_follow = VH_LINE_FOLLOW,
   .line_phi_pgain = VH_LINE_PHI_PGAIN,
-  .line_theta_pgain = VH_LINE_THETA_PGAIN
+  .line_theta_pgain = VH_LINE_THETA_PGAIN,
+  .line_vel_sat = VH_LINE_VEL_SAT,
+  .line_alt_second = VH_LINE_ALT_SECOND
 };
+
+
 
 float pre_err_x, pre_err_y;
 float des_vx, des_vy;
@@ -218,6 +235,7 @@ int32_t test_count, hover_count_first, return_count;
 int32_t forever_hover;
 
 int8_t v_control, marker_detected;
+float alt_second_chosen;
 int8_t alt_reached_first, alt_reached_second;
 int8_t init_done;
 
@@ -228,39 +246,7 @@ int8_t already_dropped;
 float delta_z;
 
 
-/**
- * Horizontal guidance mode enter resets the errors
- * and starts the controller.
- */
-void guidance_h_module_enter(void)
-{
-  /* Reset the integrated errors */
-  opticflow_stab.err_vx_int = 0;
-  opticflow_stab.err_vy_int = 0;
-  visionhover_stab.err_x_int = 0;
-  visionhover_stab.err_y_int = 0;
-  
-  /*  Reset the differential errors and others*/
-  pre_err_vx = 0;
-  pre_err_vy = 0;
-  test_count = 0;
-  
-  alt_reached_first = 0;
-  marker_detected = 0;
-  v_control = 1;
-  forever_hover = 0;
-  descent = 0;
-  already_dropped = 0;
-  
-  opticflow_stab.marker_count = 0;
-  opticflow_stab.no_marker_count = 0;
-  
-  
-  /* Set rool/pitch to 0 degrees and psi to current heading */
-  opticflow_stab.cmd.phi = 0;
-  opticflow_stab.cmd.theta = 0;
-  opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
-}
+
 
 
 
@@ -287,12 +273,24 @@ void guidance_v_module_enter(void)
       return_start = 0;
       return_count = 0;
       opticflow_stab.landing_count = 0;
-      guidance_v_z_sp = ALT_FIRST;
+      
+      if (!visionhover_stab.line_follow)
+        {	
+        	guidance_v_z_sp = ALT_FIRST;	
+  		alt_second_chosen = visionhover_stab.alt_second;
+  	}
+  	else
+  	{	
+  		guidance_v_z_sp = visionhover_stab.line_alt_second;
+  		alt_second_chosen = visionhover_stab.line_alt_second;
+  	}
       delta_z = 0;
 }
 
 void guidance_v_module_run(bool_t in_flight)
 {
+
+  	
 	if (forever_hover == 0)
 	{
 		if (init_done == 0)
@@ -313,7 +311,7 @@ void guidance_v_module_run(bool_t in_flight)
 		
 			if (alt_reached_second == 0)
 			{
-				if (guidance_v_z_sp > ALT_SECOND)
+				if (guidance_v_z_sp > alt_second_chosen)
 				{	
 					if (alt_reached_first == 0)
 						hover_count_first = 0;
@@ -363,17 +361,17 @@ void guidance_v_module_run(bool_t in_flight)
 	{
 		if (!visionhover_stab.landing_marker)
 		{
-			guidance_v_z_sp = ALT_SECOND;
+			guidance_v_z_sp = alt_second_chosen;
 			
 			if (descent == 0)
 				opticflow_stab.landing_count += 1;
 
 			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 			{
-				if (stateGetPositionNed_i()->z > ALT_SECOND)
+				if (stateGetPositionNed_i()->z > alt_second_chosen)
 					guidance_v_z_sp = stateGetPositionNed_i()->z;
 				else
-					guidance_v_z_sp = ALT_SECOND;
+					guidance_v_z_sp = alt_second_chosen;
 			}
 			else
 			{	
@@ -435,7 +433,7 @@ void guidance_v_module_run(bool_t in_flight)
 			opticflow_stab.landing_count += 1;
 			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 			{
-				guidance_v_z_sp = ALT_SECOND;
+				guidance_v_z_sp = alt_second_chosen;
 			}
 			else
 			{
@@ -468,12 +466,39 @@ void guidance_v_module_run(bool_t in_flight)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-
-
-
-
+/**
+ * Horizontal guidance mode enter resets the errors
+ * and starts the controller.
+ */
+void guidance_h_module_enter(void)
+{
+  /* Reset the integrated errors */
+  opticflow_stab.err_vx_int = 0;
+  opticflow_stab.err_vy_int = 0;
+  visionhover_stab.err_x_int = 0;
+  visionhover_stab.err_y_int = 0;
+  
+  /*  Reset the differential errors and others*/
+  pre_err_vx = 0;
+  pre_err_vy = 0;
+  test_count = 0;
+  
+  alt_reached_first = 0;
+  marker_detected = 0;
+  v_control = 1;
+  forever_hover = 0;
+  descent = 0;
+  already_dropped = 0;
+  
+  opticflow_stab.marker_count = 0;
+  opticflow_stab.no_marker_count = 0;
+  
+  
+  /* Set rool/pitch to 0 degrees and psi to current heading */
+  opticflow_stab.cmd.phi = 0;
+  opticflow_stab.cmd.theta = 0;
+  opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
+}
 
 /**
  * Read the RC commands
@@ -548,35 +573,39 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   float err_vx = 0;
   float err_vy = 0;
 
-  if(visionhover_stab.line_follow)
-  {
-  
-  	err_vx = vh_desired_vx - result->vel_x;
-  	err_vy = vh_desired_vy - result->vel_y;
-  }
-  else
-  {
-  	/* Calculate the vision hover error if we have enough inliers */
+
+	/* Calculate the vision hover error if we have enough inliers */
 	if (result->inlier > 0)
 	{
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
 		err_y = mystate->agl * (result->deviation_y); 
 	}
-	/* Calculate the integrated errors */
 	
-	visionhover_stab.err_x_int += err_x;
-  	visionhover_stab.err_y_int += err_y;   
-	
-	vh_desired_vx = (visionhover_stab.phi_pgain * err_x/1000 
-			+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/1000);
-			
-	vh_desired_vy = (visionhover_stab.theta_pgain * err_y/1000 
-			+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/1000);
-			
-	BoundAbs(vh_desired_vx, VH_VEL_SAT);
-	BoundAbs(vh_desired_vy, VH_VEL_SAT);	
-				
+	/* Calculate the desired OF velocity setpoint */
+	if (!visionhover_stab.line_follow)
+	{
+		visionhover_stab.err_x_int += err_x;
+		visionhover_stab.err_y_int += err_y;
+		   
+		vh_desired_vx = (visionhover_stab.phi_pgain * err_x/1000 
+				+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/1000);
+		
+		vh_desired_vy = (visionhover_stab.theta_pgain * err_y/1000 
+				+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/1000);
+		
+		BoundAbs(vh_desired_vx, visionhover_stab.vel_sat);
+		BoundAbs(vh_desired_vy, visionhover_stab.vel_sat);	
+	}		
+	else
+	{
+		vh_desired_vx = (visionhover_stab.line_phi_pgain * err_x/1000);
+		
+		vh_desired_vy = (visionhover_stab.line_theta_pgain * err_y/1000);
+		
+		BoundAbs(vh_desired_vx, visionhover_stab.line_vel_sat);
+		BoundAbs(vh_desired_vy, visionhover_stab.line_vel_sat);	
+	}
 	/* Calculate the error if we have enough flow */	
 	if (result->tracked_cnt > 0) 
 	{
@@ -595,18 +624,35 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 					err_vx = vh_desired_vx - result->vel_x;
 				}
 				
-				if (result->deviation_y > VH_OFFSET-visionhover_stab.err
-					&& result->deviation_y < VH_OFFSET +visionhover_stab.err)
+				if (!visionhover_stab.line_follow)
 				{
-					err_vy = 0 - result->vel_y;
-					visionhover_stab.err_y_int = 0;	
+					if (result->deviation_y > VH_OFFSET-visionhover_stab.err
+						&& result->deviation_y < VH_OFFSET +visionhover_stab.err)
+					{
+						err_vy = 0 - result->vel_y;
+						visionhover_stab.err_y_int = 0;	
+					}
+					else
+					{
+						err_vy = vh_desired_vy - result->vel_y;
+					}
 				}
 				else
 				{
-					err_vy = vh_desired_vy - result->vel_y;
+					if (result->deviation_y > -visionhover_stab.err
+						&& result->deviation_y < +visionhover_stab.err)
+					{
+						err_vy = 0 - result->vel_y;
+						visionhover_stab.err_y_int = 0;	
+					}
+					else
+					{
+						err_vy = vh_desired_vy - result->vel_y;
+					}
 				}
-				if (alt_reached_second == 1 && result->inlier > 0)	
+				if (!visionhover_stab.line_follow && alt_reached_second == 1 && result->inlier > 0)
 					opticflow_stab.marker_count += 1;
+				
 			}
 			else
 			{		
@@ -618,7 +664,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 					opticflow_stab.no_marker_count += 1;
 				}
 			}
-		
+	
 			if (result->inlier > 0 && opticflow_stab.no_marker_count > NO_MARKER_COUNT)
 			{
 				inlier_sum += result->inlier;
@@ -643,9 +689,9 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 						else
 						{
 							err_vx = vh_desired_vx - result->vel_x;
-							
+						
 						}
-				
+			
 						if (result->deviation_y > VH_OFFSET-visionhover_stab.err 
 							&& result->deviation_y < VH_OFFSET +visionhover_stab.err)
 						{
@@ -656,7 +702,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 						{
 							err_vy = vh_desired_vy - result->vel_y;
 						}
-						
+					
 						/*if (opticflow_stab.landing_count > LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
 						{
 							err_vx = 0 - result->vel_x;
@@ -687,12 +733,12 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 			{
 				err_vx = 0 - result->vel_x;
 				err_vy = -opticflow_stab.desired_vy*50 - result->vel_y;
-				
+			
 			}
 		}
-		
+	
 	}
-  }
+  
 	
 	
 	

@@ -96,18 +96,17 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
 
 struct marker_deviation_t
 {
-	float x;
-	float y;
+	int16_t x;
+	int16_t y;
 	uint16_t inlier;
 };
 
 struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t IN);
-struct marker_deviation_t marker2(struct image_t *input, uint8_t M, uint8_t m, uint8_t t, uint8_t IN);
 
 struct line_deviation_t
 {
-	float x;
-	float y;
+	int16_t x;
+	int16_t y;
 	uint16_t inlier;
 };
 

@@ -33,9 +33,12 @@
 #include "state.h"
 #include "subsystems/abi.h"
 
+// Video
 #include "lib/v4l/v4l2.h"
+#include "lib/vision/image.h"
 #include "lib/encoding/jpeg.h"
 #include "lib/encoding/rtp.h"
+#include "udp_socket.h"
 
 /* Default sonar/agl to use in opticflow visual_estimator */
 #ifndef OPTICFLOW_AGL_ID
@@ -59,9 +62,26 @@ PRINT_CONFIG_MSG("OPTICFLOW_DEVICE_SIZE = " _SIZE_HELPER(OPTICFLOW_DEVICE_SIZE))
 
 /* The video device buffers (the amount of V4L2 buffers) */
 #ifndef OPTICFLOW_DEVICE_BUFFERS
-#define OPTICFLOW_DEVICE_BUFFERS 15       ///< The video device buffers (the amount of V4L2 buffers)
+#define OPTICFLOW_DEVICE_BUFFERS 10       ///< The video device buffers (the amount of V4L2 buffers)
 #endif
 PRINT_CONFIG_VAR(VIEWVIDEO_DEVICE_BUFFERS)
+
+#ifndef VIEWVIDEO_QUALITY_FACTOR
+#define VIEWVIDEO_QUALITY_FACTOR 50
+#endif
+PRINT_CONFIG_VAR(VIEWVIDEO_QUALITY_FACTOR)
+
+// RTP time increment at 90kHz (default: 0 for automatic)
+#ifndef VIEWVIDEO_RTP_TIME_INC
+#define VIEWVIDEO_RTP_TIME_INC 0
+#endif
+PRINT_CONFIG_VAR(VIEWVIDEO_RTP_TIME_INC)
+
+// Frames Per Seconds
+#ifndef VIEWVIDEO_FPS
+#define VIEWVIDEO_FPS 4
+#endif
+PRINT_CONFIG_VAR(VIEWVIDEO_FPS)
 
 /* The main opticflow variables */
 struct opticflow_t opticflow;                      ///< Opticflow calculations
@@ -89,10 +109,10 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
   pthread_mutex_lock(&opticflow_mutex);
   pprz_msg_send_OPTIC_FLOW_EST(trans, dev, AC_ID,
                                &opticflow_result.fps, &opticflow_result.corner_cnt,
-                               &opticflow_result.tracked_cnt, &opticflow_result.flow_x,
+                               &opticflow_result.tracked_cnt, /*&opticflow_result.flow_x,
                                &opticflow_result.flow_y, &opticflow_result.flow_der_x,
                                &opticflow_result.flow_der_y, &opticflow_result.vel_x,
-                               &opticflow_result.vel_y,
+                               &opticflow_result.vel_y,*/
                                &opticflow_stab.cmd.phi, 
                                &opticflow_stab.cmd.theta, 
                                &opticflow_stab.cmd.psi, 
@@ -211,6 +231,8 @@ static void *opticflow_module_calc(void *data __attribute__((unused)))
   // Create a new JPEG image
   struct image_t img_jpeg;
   image_create(&img_jpeg, opticflow_dev->w, opticflow_dev->h, IMAGE_JPEG);
+  struct UdpSocket video_sock;
+  udp_socket_create(&video_sock, STRINGIFY(VIEWVIDEO_HOST), VIEWVIDEO_PORT_OUT, -1, VIEWVIDEO_BROADCAST);
 #endif
 
   /* Main loop of the optical flow calculation */
@@ -235,16 +257,24 @@ static void *opticflow_module_calc(void *data __attribute__((unused)))
     opticflow_got_result = TRUE;
     pthread_mutex_unlock(&opticflow_mutex);
     
-#if OPTICFLOW_DEBUG
+#if OPTICFLOW_DEBUG    
     jpeg_encode_image(&img, &img_jpeg, 70, FALSE);
-    rtp_frame_send(
-      &VIEWVIDEO_DEV,           // UDP device
+    /*rtp_frame_send(
+      &OPTICFLOW_DEVICE,           // UDP device
       &img_jpeg,
       0,                        // Format 422
       70, // Jpeg-Quality
       0,                        // DRI Header
       0                         // 90kHz time increment
-    );
+    );*/
+    rtp_frame_send(
+        &video_sock,              // UDP socket
+        &img_jpeg,
+        0,                        // Format 422
+        VIEWVIDEO_QUALITY_FACTOR, // Jpeg-Quality
+        0,                        // DRI Header
+        VIEWVIDEO_RTP_TIME_INC    // 90kHz time increment
+      );
 #endif
 
     // Free the image
