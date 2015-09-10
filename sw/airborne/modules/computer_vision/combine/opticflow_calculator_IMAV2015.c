@@ -118,6 +118,11 @@ PRINT_CONFIG_VAR(VISION_m)
 #endif
 PRINT_CONFIG_VAR(VISION_t)
 
+#ifndef VH_RADIUS
+#define VH_RADIUS 10
+#endif
+PRINT_CONFIG_VAR(VISION_RADIUS)
+
 #ifndef VH_IN
 #define VH_IN 3
 #endif
@@ -142,6 +147,7 @@ struct visionhover_param_t visionhover_param = {
   .M = VH_M,
   .m = VH_m,
   .t = VH_t,
+  .radius = VH_RADIUS,
   .IN = VH_IN,
   .line_w = VH_LINE_W,
   .line_thr = VH_LINE_THR
@@ -298,7 +304,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   
   if (!visionhover_stab.line_follow)
   {
-	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.radius, visionhover_param.IN);
 	  result->deviation_x = marker_deviation.x;
 	  result->deviation_y = marker_deviation.y;
 	  result->inlier = marker_deviation.inlier;

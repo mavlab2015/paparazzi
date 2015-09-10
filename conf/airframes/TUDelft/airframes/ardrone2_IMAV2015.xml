@@ -77,6 +77,7 @@
         <define name="VH_M" value="5"/>
         <define name="VH_m" value="3" />
         <define name="VH_t" value="10"/>
+        <define name="VH_RADIUS" value="10"/>
         <define name="VH_IN" value="3"/>
         
         <define name="OPTICFLOW_DEBUG" value="FALSE"/>
@@ -102,6 +103,7 @@
         <define name="VH_LANDING_MARKER" value="FALSE"/>
         <define name="VH_DROP" value="FALSE"/>
         <define name="VH_ALT_SECOND" value="-600"/>
+        <define name="VH_NO_MARKER_COUNT" value="120"/>
         <define name="VH_DESCENT_RATE" value="0.1"/>
         <define name="VH_VEL_SAT" value="15"/>
         <define name="VH_ERR" value="10"/>
@@ -110,6 +112,7 @@
         <define name="VH_M" value="5"/>
         <define name="VH_m" value="3" />
         <define name="VH_t" value="10"/>
+        <define name="VH_RADIUS" value="10"/>
         <define name="VH_IN" value="3"/>
         
         <define name="VH_LINE_FOLLOW" value="FALSE"/>
@@ -118,6 +121,7 @@
         <define name="VH_LINE_VEL_SAT" value="47"/>
         <define name="VH_LINE_CMD_SAT" value="248"/>
         <define name="VH_LINE_ALT_SECOND" value="-200"/>
+        <define name="VH_LINE_NO_COUNT" value="100"/>
         
         <define name="VH_LINE_W" value="2"/>
         <define name="VH_LINE_THR" value="130"/>

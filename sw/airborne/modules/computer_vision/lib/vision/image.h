@@ -101,7 +101,7 @@ struct marker_deviation_t
 	uint16_t inlier;
 };
 
-struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t IN);
+struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN);
 
 struct line_deviation_t
 {

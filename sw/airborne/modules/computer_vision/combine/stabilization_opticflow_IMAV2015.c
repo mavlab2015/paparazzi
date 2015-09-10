@@ -165,13 +165,17 @@ PRINT_CONFIG_VAR(VH_ALT_SECOND)
 #endif
 PRINT_CONFIG_VAR(VH_LINE_ALT_SECOND)
 
+#ifndef VH_NO_MARKER_COUNT
+#define VH_NO_MARKER_COUNT 120
+#endif
+PRINT_CONFIG_VAR(VH_LINE_NO_MARKER_COUNT)
+
 #define ALT_FIRST -200 // -256 means 1m
 
 #define FACTOR_ALT 1 // ALT_FIRST * FACTOR_ALT = Hovering & Dropping altitude on marker B
 #define HOVER_COUNT_FIRST 1000
 #define MARKER_COUNT 150
 //#define MARKER_COUNT 70000
-#define NO_MARKER_COUNT 120
 
 #define LANDING_COUNT_A 1000 // Count for initial OF stabilization at Marker B (ALT_SECOND)
 #define LANDING_COUNT_B 8000 // Count for marker stabilization (ALT_SECOND)
@@ -212,6 +216,7 @@ struct visionhover_stab_t visionhover_stab = {
   .landing_marker = VH_LANDING_MARKER,
   .drop = VH_DROP,
   .alt_second = VH_ALT_SECOND,
+  .no_marker_count = VH_NO_MARKER_COUNT,
   .descent_rate = VH_DESCENT_RATE,
   .vel_sat = VH_VEL_SAT,
   .err = VH_ERR,
@@ -220,7 +225,8 @@ struct visionhover_stab_t visionhover_stab = {
   .line_theta_pgain = VH_LINE_THETA_PGAIN,
   .line_vel_sat = VH_LINE_VEL_SAT,
   .line_cmd_sat = VH_LINE_CMD_SAT,
-  .line_alt_second = VH_LINE_ALT_SECOND
+  .line_alt_second = VH_LINE_ALT_SECOND,
+  .line_no_count = VH_LINE_NO_COUNT
 };
 
 
@@ -246,7 +252,7 @@ int8_t descent;
 int8_t already_dropped;
 float delta_z;
 
-
+int8_t no_rope_land_here;
 
 
 
@@ -274,7 +280,8 @@ void guidance_v_module_enter(void)
       return_start = 0;
       return_count = 0;
       opticflow_stab.landing_count = 0;
-      
+      delta_z = 0;
+      no_rope_land_here = 0;
         if (visionhover_stab.line_follow == 0)
         {	
         	guidance_v_z_sp = ALT_FIRST;	
@@ -285,11 +292,27 @@ void guidance_v_module_enter(void)
   		guidance_v_z_sp = visionhover_stab.line_alt_second;
   		alt_second_chosen = visionhover_stab.line_alt_second;
   	}
-      delta_z = 0;
+      
 }
 
 void guidance_v_module_run(bool_t in_flight)
 {
+	if (visionhover_stab.drop == 1 && already_dropped == 0)
+	{	
+		printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
+		already_dropped = 1;
+	}
+	
+	if (visionhover_stab.line_follow == 0)
+        {	
+        	guidance_v_z_sp = ALT_FIRST;	
+  		alt_second_chosen = visionhover_stab.alt_second;
+  	}
+  	else
+  	{	
+  		guidance_v_z_sp = visionhover_stab.line_alt_second;
+  		alt_second_chosen = visionhover_stab.line_alt_second;
+  	}
 
 	if (forever_hover == 0)
 	{
@@ -306,13 +329,6 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-		/*
-		        if (visionhover_stab.drop == 1 && already_dropped == 0)
-			{	
-				printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
-				already_dropped = 1;
-			}
-		*/
 			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
 			{
 				alt_reached_first = 1;
@@ -340,16 +356,6 @@ void guidance_v_module_run(bool_t in_flight)
 					alt_reached_second = 1;
 				}
 			}
-			/*if (alt_reached_second == 1 && opticflow_stab.marker_count > 200)
-			{
-				if (guidance_v_z_sp < ALT_FIRST*FACTOR_ALT)
-				{	
-						delta_z += visionhover_stab.descent_rate;
-						guidance_v_z_sp += delta_z;
-				}
-			
-			}*/
-
 			
 	      		guidance_v_z_sum_err = 0;
 	      		GuidanceVSetRef(guidance_v_z_sp, 0, 0);
@@ -365,98 +371,115 @@ void guidance_v_module_run(bool_t in_flight)
 			stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 for AR Drone 2, 6500 for bebop
 		}
 	}
-	if (forever_hover == 1)
+	if (forever_hover == 1) // When you see the (a) second marker, or (b) reached the end of the rope.
 	{
-		if (!visionhover_stab.landing_marker)
+		if (no_rope_land_here == 0) // This means (a) is the case.
 		{
-			guidance_v_z_sp = alt_second_chosen;
-			
-			if (descent == 0)
-				opticflow_stab.landing_count += 1;
-
-			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
+			if (!visionhover_stab.landing_marker)
 			{
-				if (stateGetPositionNed_i()->z > alt_second_chosen)
-					guidance_v_z_sp = stateGetPositionNed_i()->z;
-				else
-					guidance_v_z_sp = alt_second_chosen;
-			}
-			else
-			{	
-				if (opticflow_stab.landing_count == LANDING_COUNT_A + LANDING_COUNT_B)
-					descent =1;
-				
-				if (descent == 1)
+				guidance_v_z_sp = alt_second_chosen;
+			
+				if (descent == 0)
+					opticflow_stab.landing_count += 1;
+
+				if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 				{
-					if (guidance_v_z_sp < ALT_FIRST*FACTOR_ALT && stateGetPositionNed_i()->z < ALT_FIRST*FACTOR_ALT)
-					{	
-						delta_z += visionhover_stab.descent_rate;
-						guidance_v_z_sp += delta_z;
-						
-						if (guidance_v_z_sp < stateGetPositionNed_i()->z)
-						{
-							guidance_v_z_sp = stateGetPositionNed_i()->z;
-						}
-					}
+					if (stateGetPositionNed_i()->z > alt_second_chosen)
+						guidance_v_z_sp = stateGetPositionNed_i()->z;
 					else
-					{
-						descent = 0;
-						/*if (visionhover_stab.drop == 1 && already_dropped == 0)
-						{	
-							printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
-							already_dropped = 1;
-						}*/
-						
-					}	
+						guidance_v_z_sp = alt_second_chosen;
 				}
 				else
 				{	
-					if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
+					if (opticflow_stab.landing_count == LANDING_COUNT_A + LANDING_COUNT_B)
+						descent =1;
+				
+					if (descent == 1)
 					{
-						guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
-					}
-					else
-					{
-						return_start = 1;
-						guidance_v_z_sp = ALT_FIRST * 1.5;
-						if (opticflow_stab.landing_count > LANDING_COUNT_A + LANDING_COUNT_B 
-										+ LANDING_COUNT_C + 1500)
-						{
-							return_count += 1;
-							guidance_v_z_sp += return_count;
-							if (stateGetPositionNed_i()->z > -30)
+						if (guidance_v_z_sp < ALT_FIRST*FACTOR_ALT 
+							&& stateGetPositionNed_i()->z < ALT_FIRST*FACTOR_ALT)
+						{	
+							delta_z += visionhover_stab.descent_rate;
+							guidance_v_z_sp += delta_z;
+						
+							if (guidance_v_z_sp < stateGetPositionNed_i()->z)
 							{
-								stabilization_cmd[COMMAND_THRUST] = 8000;
-								if (stateGetPositionNed_i()->z > -10)
+								guidance_v_z_sp = stateGetPositionNed_i()->z;
+							}
+						}
+						else
+						{
+							descent = 0;
+							/*if (visionhover_stab.drop == 1 && already_dropped == 0)
+							{	
+								printf("<Drop_Paintball_Now3 \n"); // print only ONCE !!!
+								already_dropped = 1;
+							}*/
+						
+						}	
+					}
+					else // When the descent maneuver is over
+					{	
+						if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B + LANDING_COUNT_C)
+						{
+							guidance_v_z_sp = ALT_FIRST*FACTOR_ALT;
+						}
+						else
+						{
+							return_start = 1;
+							guidance_v_z_sp = ALT_FIRST * 1.5;
+							if (opticflow_stab.landing_count > LANDING_COUNT_A + LANDING_COUNT_B 
+											+ LANDING_COUNT_C + 1500)
+							{
+								return_count += 1;
+								guidance_v_z_sp += return_count;
+								if (stateGetPositionNed_i()->z > -30)
 								{
-									stabilization_cmd[COMMAND_THRUST] = 0;
-									return;
-								}
+									stabilization_cmd[COMMAND_THRUST] = 8000;
+									if (stateGetPositionNed_i()->z > -10)
+									{
+										stabilization_cmd[COMMAND_THRUST] = 0;
+										return;
+									}
 								
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		else
-		{
-			opticflow_stab.landing_count += 1;
-			if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
+			else // When it's the landing mission
 			{
-				guidance_v_z_sp = alt_second_chosen;
-			}
-			else
-			{
-				if (stateGetPositionNed_i()->z > -30)
+				opticflow_stab.landing_count += 1;
+				if (opticflow_stab.landing_count < LANDING_COUNT_A + LANDING_COUNT_B) 
 				{
-					stabilization_cmd[COMMAND_THRUST] = 8000;
-					if (stateGetPositionNed_i()->z > -10)
+					guidance_v_z_sp = alt_second_chosen;
+				}
+				else
+				{
+					if (stateGetPositionNed_i()->z > -30)
 					{
-						stabilization_cmd[COMMAND_THRUST] = 0;
-						return;
-					}
+						stabilization_cmd[COMMAND_THRUST] = 8000;
+						if (stateGetPositionNed_i()->z > -10)
+						{
+							stabilization_cmd[COMMAND_THRUST] = 0;
+							return;
+						}
 					
+					}
+				}
+			}
+		}
+		else // This means "no_rope_land_here = 1". Thus, landing start.
+		{
+			guidance_v_z_sp += 1;
+			if (stateGetPositionNed_i()->z > -30)
+			{
+				stabilization_cmd[COMMAND_THRUST] = 8000;
+				if (stateGetPositionNed_i()->z > -10)
+				{
+					stabilization_cmd[COMMAND_THRUST] = 0;
+					return;
 				}
 			}
 		}
@@ -606,7 +629,13 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 				+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/1000);
 		
 		BoundAbs(vh_desired_vx, visionhover_stab.vel_sat);
-		BoundAbs(vh_desired_vy, visionhover_stab.vel_sat);	
+		BoundAbs(vh_desired_vy, visionhover_stab.vel_sat);
+		
+		if (result->deviation_x == 0 && result->deviation_y == 0)
+			opticflow_stab.landing_count += 1;
+		if (opticflow_stab.landing_count > visionhover_stab.line_no_count)
+			no_rope_land_here = 1;
+				
 	}		
 	else
 	{
@@ -676,7 +705,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 				}
 			}
 	
-			if (result->inlier > 0 && opticflow_stab.no_marker_count > NO_MARKER_COUNT)
+			if (result->inlier > 0 && opticflow_stab.no_marker_count > visionhover_stab.no_marker_count)
 			{
 				inlier_sum += result->inlier;
 				if (inlier_sum > 10)

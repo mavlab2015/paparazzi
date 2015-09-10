@@ -81,6 +81,7 @@ struct visionhover_stab_t {
   bool_t landing_marker;    /// Landing on marker enabled
   bool_t drop;    /// Dropping on marker enabled
   float alt_second;
+  int32_t no_marker_count;
   float descent_rate;
   float vel_sat;
   int32_t err;
@@ -91,6 +92,7 @@ struct visionhover_stab_t {
   float line_theta_pgain;
   float line_vel_sat;
   int32_t line_cmd_sat;
+  int32_t line_no_count;
 };
 
 extern struct visionhover_stab_t visionhover_stab;

@@ -56,13 +56,14 @@ struct opticflow_t {
 
 /* The vision algorithm parameters */
 struct visionhover_param_t {
-  float M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
-  float m;        ///< The safety margin around the pixel of interest [pixel]
-  float t;      ///< Threshold for intensity difference
-  float IN;      ///< The number of minimum inliers required
+  uint8_t M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
+  uint8_t m;        ///< The safety margin around the pixel of interest [pixel]
+  uint8_t t;      ///< Threshold for intensity difference
+  uint8_t radius; ///< Radius used for inlier detection
+  uint8_t IN;      ///< The number of minimum inliers required
   
-  float line_w;
-  float line_thr;
+  uint8_t line_w;
+  uint8_t line_thr;
 };
 extern struct visionhover_param_t visionhover_param;
 //struct visionhover_stab_t visionhover_stab;

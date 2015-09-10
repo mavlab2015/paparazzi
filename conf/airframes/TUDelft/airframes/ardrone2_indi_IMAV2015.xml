@@ -19,7 +19,7 @@
     <subsystem name="motor_mixing"/>
     <subsystem name="actuators" type="ardrone2"/>
     <subsystem name="imu" type="ardrone2"/>
-    <subsystem name="gps" type="ublox"/>
+    <!--subsystem name="gps" type="ublox"/-->
     <subsystem name="stabilization" type="indi"/>
     <subsystem name="ahrs" type="int_cmpl_quat">
       <configure name="USE_MAGNETOMETER" value="FALSE"/>
@@ -30,11 +30,11 @@
 
   <modules main_freq="512">
     <load name="bat_voltage_ardrone2.xml"/>
-    <load name="gps_ubx_ucenter.xml"/>
+    <!--load name="gps_ubx_ucenter.xml"/-->
     <load name="send_imu_mag_current.xml"/>
     <load name="air_data.xml"/>
-    <load name="logger_file.xml"/>
-    <load name = "cv_opticflow.xml">
+    <!--load name="logger_file.xml"/-->
+    <!--load name = "cv_opticflow.xml">
         <define name="VISION_PHI_PGAIN" value="140"/>
         <define name="VISION_PHI_IGAIN" value="5" />
         <define name="VISION_PHI_DGAIN" value="0" />
@@ -43,7 +43,7 @@
         <define name="VISION_THETA_DGAIN" value="0" />
         <define name="VISION_DESIRED_VX" value="0"/>
         <define name="VISION_DESIRED_VY" value="0"/>
-    </load>
+    </load-->
   </modules>
 
   <commands>
@@ -224,20 +224,20 @@
     <define name="SENSORS_PARAMS" value="&quot;nps_sensors_params_ardrone2.h&quot;"/>
   </section>
 
+  <!-- JOYSTICK = X3d PRO -->
   <!--section name="AUTOPILOT">
-    <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
-    <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
-    <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
-
-    <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
-  </section-->
-
-  <section name="AUTOPILOT">
     <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_Z_HOLD"/>
     <define name="MODE_AUTO1" value="AP_MODE_MODULE"/>
     <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/>
+  </section-->
+  
+  <!-- JOYSTICK = Hobbyking -->
+  <section name="AUTOPILOT">
+    <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
+    <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
+    <define name="MODE_AUTO1" value="AP_MODE_MODULE"/>
+    <define name="MODE_AUTO2" value="AP_MODE_MODULE"/>
   </section>
 
   <section name="BAT">

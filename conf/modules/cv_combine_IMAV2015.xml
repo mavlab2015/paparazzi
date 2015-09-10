@@ -33,12 +33,14 @@
       <define name="DROP" value="FALSE" description="DROPPING AN OBJECT"/>
       <define name="DESCENT_RATE" value="0.1" description="DESCENT_RATE"/>
       <define name="ALT_SECOND" value="-600" description="Flight altitude (not hovering)"/>
+      <define name="NO_MARKER_COUNT" value="120" description="Count when there is no marker detected = Threshold forever_hover"/>
       <define name="VEL_SAT" value="15" description="OF Velocity Saturation value"/>     
       <define name="ERR" value="10" description="Marker deviation tolerance value [pix]"/>    
 
       <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
       <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
       <define name="t" value="5" description="Threshold for intensity difference"/>
+      <define name="radius" value="10" description="Radius used for inlier detection"/>
       <define name="IN" value="3" description="The number of minimum inliers required"/>
       
       <define name="LINE_FOLLOW" value="FALSE" description="FOLLOWING A LINE"/>
@@ -47,6 +49,7 @@
       <define name="LINE_VEL_SAT" value="30" description="Line following OF Velocity Saturation value"/>
       <define name="LINE_CMD_SAT" value="300" description="OF euler angle command saturation value"/>   
       <define name="LINE_ALT_SECOND" value="-400" description="Flight altitude (not hovering)"/>
+      <define name="LINE_NO_COUNT" value="100" description="COUNT WHEN ROPE IS NOT VISIBLE"/>  
       <define name="LINE_W" value="5" description="LINE WIDTH ESTIMATION"/>
       <define name="LINE_THR" value="100" description="ROPE INTENSITY THRESHOLD"/>  
     </section>
@@ -105,6 +108,7 @@
 	<dl_setting var="visionhover_stab.landing_marker" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="land_marker" param="VH_LANDING_MARKER"/>
 	<dl_setting var="visionhover_stab.drop" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="drop_enabled" param="VH_DROP"/>
 	<dl_setting var="visionhover_stab.alt_second" module="computer_vision/IMAV2015_combine_module" min="-700" step="1" max="-200" shortname="alt_second" param="VH_ALT_SECOND"/>
+	<dl_setting var="visionhover_stab.no_marker_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="no_marker_count" param="VH_NO_MARKER_COUNT"/>
 	<dl_setting var="visionhover_stab.descent_rate" module="computer_vision/IMAV2015_combine_module" min="0" step="0.001" max="1" shortname="descent_rate" param="VH_DESCENT_RATE"/>
 	<dl_setting var="visionhover_stab.vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="vel_sat" param="VH_VEL_SAT"/>
 	<dl_setting var="visionhover_stab.err" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="err" param="VH_ERR"/>
@@ -112,6 +116,7 @@
 	<dl_setting var="visionhover_param.M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="20" shortname="M" param="VH_M"/>
 	<dl_setting var="visionhover_param.m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="m" param="VH_m"/>
 	<dl_setting var="visionhover_param.t" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="t" param="VH_t"/>
+	<dl_setting var="visionhover_param.radius" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="radius" param="VH_RADIUS"/>
 	<dl_setting var="visionhover_param.IN" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="30" shortname="IN" param="VH_IN"/>
       </dl_settings>
 
@@ -122,6 +127,7 @@
 	<dl_setting var="visionhover_stab.line_vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="line_vel_sat" param="VH_LINE_VEL_SAT"/>
 	<dl_setting var="visionhover_stab.line_cmd_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="500" shortname="line_cmd_sat" param="VH_LINE_CMD_SAT"/>
 	<dl_setting var="visionhover_stab.line_alt_second" module="computer_vision/IMAV2015_combine_module" min="-700" step="1" max="-100" shortname="line_alt_2nd" param="VH_LINE_ALT_SECOND"/>
+	<dl_setting var="visionhover_stab.line_no_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_no_count" param="VH_LINE_NO_COUNT"/>
 	<dl_setting var="visionhover_param.line_w" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="20" shortname="line_w" param="VH_LINE_W"/>
 	<dl_setting var="visionhover_param.line_thr" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="line_thr" param="VH_LINE_THR"/>
       </dl_settings>
