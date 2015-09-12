@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="video_rtp_stream" dir="computer_vision">
+<module name="video_rtp_stream_IMAV2015" dir="computer_vision">
   <doc>
     <description>
       Video streaming for Linux devices
@@ -8,42 +8,45 @@
       - Sends a RTP/UDP stream of the camera
       - Possibility to save an image(shot) on the internal memory (JPEG, full size, best quality)
     </description>
-    <define name="VIEWVIDEO_DEVICE" value="/dev/video1" description="The video device to capture from"/>
-    <define name="VIEWVIDEO_DEVICE_SIZE" value="1280,720" description="Video capture size (width, height)"/>
-    <define name="VIEWVIDEO_DEVICE_BUFFERS" value="10" description="Amount of V4L2 image buffers"/>
-    <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="4" description="Reduction factor of the video stream"/>
-    <define name="VIEWVIDEO_QUALITY_FACTOR" value="50" description="JPEG encoding compression factor [0-99]"/>
-    <define name="VIEWVIDEO_FPS" value="4" description="Video stream frame rate"/>
-    <define name="VIEWVIDEO_SHOT_PATH" value="/data/video/images" description="Path where the images should be saved"/>
-    
-    <!-- Satbilization parameters and gains -->
-    <section name="VISION" prefix="VISION_">    
-      <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
-      <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
-      <define name="t" value="5" description="Threshold for intensity difference"/>
-      <define name="IN" value="3" description="The number of minimum inliers required"/>
+    <section name="VISION" prefix="VIEWVIDEO_">
+	    <define name="DEVICE" value="/dev/video1" description="The video device to capture from"/>
+	    <define name="DEVICE_SIZE" value="1280,720" description="Video capture size (width, height)"/>
+	    <define name="DEVICE_BUFFERS" value="10" description="Amount of V4L2 image buffers"/>
+	    <define name="DOWNSIZE_FACTOR" value="4" description="Reduction factor of the video stream"/>
+	    <define name="QUALITY_FACTOR" value="50" description="JPEG encoding compression factor [0-99]"/>
+	    <define name="FPS" value="4" description="Video stream frame rate"/>
+	    <define name="SHOT_PATH" value="/data/video/images" description="Path where the images should be saved"/>
     </section>
+    <section name="VISIONHOVER" prefix="VH_">
+	    <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
+	    <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
+	    <define name="t" value="5" description="Threshold for intensity difference"/>
+	    <define name="RADIUS" value="10" description="Radius used for inlier detection"/>
+	    <define name="IN" value="3" description="The number of minimum inliers required"/>
+	    <define name="LINE_W" value="5" description="LINE WIDTH ESTIMATION"/>
+      	    <define name="LINE_THR" value="100" description="ROPE INTENSITY THRESHOLD"/>  
+    </section>
+
   </doc>
   
   <settings>
 	  <dl_settings NAME="Vision stabilization">
       <!-- Satabilization loop parameters and gains -->
 	      <dl_settings name="vision_stab">	
-			<dl_setting var="visionhover_param.M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="100" shortname="M" param="VISION_M"/>
-			<dl_setting var="visionhover_param.m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="m" param="VISION_m"/>
-			<dl_setting var="visionhover_param.t" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="50" shortname="t" param="VISION_t"/>
-			<dl_setting var="visionhover_param.IN" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10" shortname="IN" param="VISION_IN"/>
-			</dl_settings>
+	<dl_setting var="visionhover_param.M" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="20" shortname="M" param="VH_M"/>
+	<dl_setting var="visionhover_param.m" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="10" shortname="m" param="VH_m"/>
+	<dl_setting var="visionhover_param.t" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="255" shortname="t" param="VH_t"/>
+	<dl_setting var="visionhover_param.radius" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="255" shortname="radius" param="VH_RADIUS"/>
+	<dl_setting var="visionhover_param.IN" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="30" shortname="IN" param="VH_IN"/>
+	<dl_setting var="visionhover_param.line_w" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="20" shortname="line_w" param="VH_LINE_W"/>
+	<dl_setting var="visionhover_param.line_thr" module="computer_vision/viewvideo_IMAV2015" min="0" step="1" max="255" shortname="line_thr" param="VH_LINE_THR"/>
+              </dl_settings>
           </dl_settings>
-  </settings>
-  
-  
-  <settings>
-    <dl_settings>
-      <dl_settings name="video">
+    
+      <!--dl_settings name="video">
         <dl_setting var="viewvideo.take_shot" min="0" step="1" max="1" shortname="take_shot" module="computer_vision/viewvideo" handler="take_shot"/>
       </dl_settings>
-    </dl_settings>
+    </dl_settings-->
   </settings>
 
   <header>

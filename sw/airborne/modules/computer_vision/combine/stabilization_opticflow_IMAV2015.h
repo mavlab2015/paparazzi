@@ -58,10 +58,10 @@ struct opticflow_stab_t {
   float err_vy_diff;
   struct Int32Eulers cmd;   ///< The commands that are send to the hover loop
   
-  uint32_t marker_count;
-  uint32_t no_marker_count;
+  uint16_t marker_count;
+  uint16_t no_marker_count;
   
-  uint32_t landing_count;
+  uint16_t landing_count;
 };
 extern struct opticflow_stab_t opticflow_stab;
 
@@ -80,8 +80,15 @@ struct visionhover_stab_t {
   float err_y_diff;        ///< The difference in velocity error in y direction (m/s)
   bool_t landing_marker;    /// Landing on marker enabled
   bool_t drop;    /// Dropping on marker enabled
+  int8_t heat_enter;
+  
   float alt_second;
-  int32_t no_marker_count;
+  float factor_alt;
+  uint32_t landing_count_A;
+  uint32_t landing_count_B;
+  uint32_t landing_count_C;
+  uint32_t landing_count_D;
+  int16_t no_marker_count;
   float descent_rate;
   float vel_sat;
   int32_t err;
@@ -93,6 +100,13 @@ struct visionhover_stab_t {
   float line_vel_sat;
   int32_t line_cmd_sat;
   int32_t line_no_count;
+  
+  bool_t flower_mode;
+  int16_t flower_no_marker_count;
+  float right_forward_vx;
+  float right_forward_vy;
+  float left_forward_vx;
+  float left_forward_vy;
 };
 
 extern struct visionhover_stab_t visionhover_stab;

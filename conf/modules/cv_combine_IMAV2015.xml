@@ -31,8 +31,16 @@
       <define name="THETA_DGAIN" value="0" description="Vision hover differential gain on the pitch velocity error"/>
       <define name="LANDING_MARKER" value="FALSE" description="LANDING ON MARKER ENABLED"/>
       <define name="DROP" value="FALSE" description="DROPPING AN OBJECT"/>
+      <define name="HEAT_ENTER" value="0" description="HEATING A RESISTOR WHEN STARTING THE MODULE AP"/>
       <define name="DESCENT_RATE" value="0.1" description="DESCENT_RATE"/>
       <define name="ALT_SECOND" value="-600" description="Flight altitude (not hovering)"/>
+      <define name="FACTOR_ALT" value="1.2" description="Flight altitude factor (for dropping hovering)"/>
+      <define name="LANDING_COUNT_A" value="1000" description="Landing count A"/>
+      <define name="LANDING_COUNT_B" value="6000" description="Landing count B"/>
+      <define name="LANDING_COUNT_C" value="4000" description="Landing count C"/>
+      <define name="LANDING_COUNT_D" value="4000" description="Landing count D"/>
+
+      
       <define name="NO_MARKER_COUNT" value="120" description="Count when there is no marker detected = Threshold forever_hover"/>
       <define name="VEL_SAT" value="15" description="OF Velocity Saturation value"/>     
       <define name="ERR" value="10" description="Marker deviation tolerance value [pix]"/>    
@@ -40,7 +48,7 @@
       <define name="M" value="8" description="The distance between the pixel of interest and farthest neighbor pixel [pixel]"/>
       <define name="m" value="3" description="The safety margin around the pixel of interest [pixel]"/>
       <define name="t" value="5" description="Threshold for intensity difference"/>
-      <define name="radius" value="10" description="Radius used for inlier detection"/>
+      <define name="RADIUS" value="10" description="Radius used for inlier detection"/>
       <define name="IN" value="3" description="The number of minimum inliers required"/>
       
       <define name="LINE_FOLLOW" value="FALSE" description="FOLLOWING A LINE"/>
@@ -52,6 +60,13 @@
       <define name="LINE_NO_COUNT" value="100" description="COUNT WHEN ROPE IS NOT VISIBLE"/>  
       <define name="LINE_W" value="5" description="LINE WIDTH ESTIMATION"/>
       <define name="LINE_THR" value="100" description="ROPE INTENSITY THRESHOLD"/>  
+      
+      <define name="FLOWER_MODE" value="FALSE" description="FLOWER MODE ENABLED"/>
+      <define name="FLOWER_NO_MARKER_COUNT" value="30" description="FLOWER NO MARKER COUNT"/>
+      <define name="RIGHT_FORWARD_VX" value="0.7" description="RIGHT FORWARD VX"/>
+      <define name="RIGHT_FORWARD_VY" value="0.7" description="RIGHT FORWARD VY"/>
+      <define name="LEFT_FORWARD_VX" value="-0.7" description="LEFT FORWARD VX"/>
+      <define name="LEFT_FORWARD_VY" value="0.7" description="LEFT FORWARD VX"/>
     </section>
 
     <!-- Optical flow calculation parameters -->
@@ -107,7 +122,13 @@
 	<!--dl_setting var="visionhover_stab.theta_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="kd_vh_theta" param="VH_THETA_DGAIN"/-->
 	<dl_setting var="visionhover_stab.landing_marker" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="land_marker" param="VH_LANDING_MARKER"/>
 	<dl_setting var="visionhover_stab.drop" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="drop_enabled" param="VH_DROP"/>
+	<dl_setting var="visionhover_stab.heat_enter" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="4" shortname="heat_enter" param="VH_HEAT_ENTER"/>
 	<dl_setting var="visionhover_stab.alt_second" module="computer_vision/IMAV2015_combine_module" min="-700" step="1" max="-200" shortname="alt_second" param="VH_ALT_SECOND"/>
+	<dl_setting var="visionhover_stab.factor_alt" module="computer_vision/IMAV2015_combine_module" min="0.5" step="0.01" max="2" shortname="factor_alt" param="VH_FACOR_ALT"/>
+	<dl_setting var="visionhover_stab.landing_count_A" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10000" shortname="COUNT_A" param="VH_LANDING_COUNT_A"/>
+	<dl_setting var="visionhover_stab.landing_count_B" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10000" shortname="COUNT_B" param="VH_LANDING_COUNT_B"/>
+	<dl_setting var="visionhover_stab.landing_count_C" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10000" shortname="COUNT_C" param="VH_LANDING_COUNT_C"/>
+	<dl_setting var="visionhover_stab.landing_count_D" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10000" shortname="COUNT_D" param="VH_LANDING_COUNT_D"/>
 	<dl_setting var="visionhover_stab.no_marker_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="no_marker_count" param="VH_NO_MARKER_COUNT"/>
 	<dl_setting var="visionhover_stab.descent_rate" module="computer_vision/IMAV2015_combine_module" min="0" step="0.001" max="1" shortname="descent_rate" param="VH_DESCENT_RATE"/>
 	<dl_setting var="visionhover_stab.vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="60" shortname="vel_sat" param="VH_VEL_SAT"/>
@@ -130,6 +151,16 @@
 	<dl_setting var="visionhover_stab.line_no_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_no_count" param="VH_LINE_NO_COUNT"/>
 	<dl_setting var="visionhover_param.line_w" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="20" shortname="line_w" param="VH_LINE_W"/>
 	<dl_setting var="visionhover_param.line_thr" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="line_thr" param="VH_LINE_THR"/>
+      </dl_settings>
+      
+      <dl_settings name="FLOWER">
+        <dl_setting var="visionhover_stab.flower_mode" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="flower_mode" param="VH_FLOWER_MODE"/>
+        <dl_setting var="visionhover_stab.flower_no_marker_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="200" shortname="fl_no_count" param="VH_FLOWER_NO_MARKER_COUNT"/>
+	<dl_setting var="visionhover_stab.right_forward_vx" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="right_vy" param="VH_RIGHT_FORWARD_VX"/>
+	<dl_setting var="visionhover_stab.right_forward_vy" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="right_vy" param="VH_RIGHT_FORWARD_VY"/>
+	<dl_setting var="visionhover_stab.left_forward_vx" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="left_vx" param="VH_LEFT_FORWARD_VX"/>
+	<dl_setting var="visionhover_stab.left_forward_vy" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="left_vy" param="VH_LEFT_FORWARD_VY"/>
+	
       </dl_settings>
 
       <!-- Optical flow calculations parameters for Lucas Kanade and FAST9 -->

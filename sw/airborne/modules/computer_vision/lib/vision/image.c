@@ -714,18 +714,197 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   uint16_t x, y, i, j, k, l, n, o;
   uint8_t image[240][320] = {};
   uint16_t idx[2][200] = {};
-  uint16_t idx2[2][200] = {};
   uint32_t counter1, counter2, counter3, counter4;
   int32_t min1, max1, min2, max2, min3, max3, min4, max4;
-  int32_t sum_row, sum_col;
-  uint32_t marker_x, marker_y;
-  //uint32_t inlier;
-  uint32_t inlier[3][200];
+  uint32_t marker_x = 0;
+  uint32_t marker_y = 0;
+  uint32_t inlier[3][200] = {};
   uint32_t top_inlier;
-  uint32_t inlier_final;
+  uint32_t inlier_final = 0;
 
   // Copy the creation timestamp (stays the same)
   memcpy(&output->ts, &input->ts, sizeof(struct timeval));
+
+  // Go trough all the pixels
+  counter1 = 0;
+  for (y = 0; y < output->h; y++) 
+  {
+	  for (x = 0; x < output->w; x+=2) 
+	  {
+	  	image[y][x] = source[1];
+	  	image[y][x+1] = source[3];
+	  	// Go to the next 2 pixels
+	  	source+=4;
+	  	counter1+=1;
+	  } 
+  }
+  
+  counter2 = 0;
+  
+  for (i = M; i < output->h -M; i++)
+  {
+  	for (j = M; j < output->w -M; j++)
+  	{
+  		
+  	 	// 1st stage: FAST-like check	
+  	 	if ((image[i][j]<image[i-M][j]-t && image[i][j]<image[i+M][j]-t 
+  	  		&& image[i][j]>image[i][j-M]+t && image[i][j]>image[i][j+M]+t) 
+		|| 
+  	   		(image[i][j]<image[i][j-M]-t && image[i][j]<image[i][j+M]-t 
+  	   		&& image[i][j]>image[i-M][j]+t && image[i][j]>image[i+M][j]+t)
+  	   	|| 
+  	   		(image[i][j]<image[i-M][j-M]-t && image[i][j]<image[i+M][j+M]-t 
+  	   		&& image[i][j]>image[i-M][j+M]+t && image[i][j]>image[i+M][j-M]+t)      
+  	   	|| 
+  	   		(image[i][j]<image[i-M][j+M]-t && image[i][j]<image[i+M][j-M]-t 
+  	   		&& image[i][j]>image[i-M][j-M]+t && image[i][j]>image[i+M][j+M]+t))
+	   	{	
+			min1=999; max1=-1; min2=999; max2=-1; min3=999; max3=-1; min4=999; max4=-1;
+			
+			// 2nd stage: max & min comparison between different neighbor groups.
+			for (k = m; k < M+1; k++)
+			{
+				if (image[i+k][j] < min1) {min1 = image[i+k][j];}
+				if (image[i+k][j] > max1) {max1 = image[i+k][j];}
+				if (image[i][j+k] < min2) {min2 = image[i][j+k];}
+				if (image[i][j+k] > max2) {max2 = image[i][j+k];}
+				if (image[i+k][j+k] < min3) {min3 = image[i+k][j+k];}
+				if (image[i+k][j+k] > max3) {max3 = image[i+k][j+k];}
+				if (image[i+k][j-k] < min4) {min4 = image[i+k][j-k];}
+				if (image[i+k][j-k] > max4) {max4 = image[i+k][j-k];}
+				
+				if (image[i-k][j] < min1) {min1 = image[i-k][j];}
+				if (image[i-k][j] > max1) {max1 = image[i-k][j];}
+				if (image[i][j-k] < min2) {min2 = image[i][j-k];}
+				if (image[i][j-k] > max2) {max2 = image[i][j-k];}
+				if (image[i-k][j-k] < min3) {min3 = image[i-k][j-k];}
+				if (image[i-k][j-k] > max3) {max3 = image[i-k][j-k];}
+				if (image[i-k][j+k] < min4) {min4 = image[i-k][j+k];}
+				if (image[i-k][j+k] > max4) {max4 = image[i-k][j+k];}
+			}
+	
+			if ((image[i][j] > max1+t && image[i][j] < min2-t) || (image[i][j] > max2+t && image[i][j] < min1-t)
+			  || (image[i][j] > max3+t && image[i][j] < min4-t) || (image[i][j] > max4+t && image[i][j]<min3-t))
+			{
+				counter2 = counter2 + 1;
+				idx[0][counter2] = i;
+				idx[1][counter2] = j;
+			}    
+		}    
+  	}
+  }
+  
+  
+    // 3rd stage: Outlier rejection:
+    
+    counter3 = 0; // Counter for the final inlier index.
+    for (l = 1; l < counter2+1; l++)
+    {
+  	counter4 = 0; // Number of inliers corresponding to idx[][l].
+  	for (n = 1; n < counter2+1; n++)
+  	{
+  		if (sqrt(pow((idx[0][l]-idx[0][n]), 2) + pow((idx[1][l]-idx[1][n]), 2)) < radius)
+  		{
+  			counter4 += 1;
+  			if (counter4 > IN)
+  			{
+  				counter3 += 1;
+      				inlier[0][counter3] = idx[0][l]; // i (row) value of "l"th idx
+      				inlier[1][counter3] = idx[1][l]; // j (col) value of "l"th idx
+    	  			inlier[2][counter3] = counter4 ; // Number of inliers for "l"th idx
+	  		}
+	  	}
+	}
+    }
+
+    // Finally: find the inlier which is located at the top.
+    if (counter3 > 0)
+    {
+  	top_inlier = output->h;
+  	for (o = 1; o < counter3+1; o++)
+  	{
+  		if (inlier[0][o] < top_inlier)
+  		{
+  			top_inlier = inlier[0][o];
+  			marker_x = inlier[1][o];
+  			marker_y = inlier[0][o];
+  			inlier_final = inlier[2][o];
+  		} 
+  	}
+    }
+    else
+    {
+    	marker_x = (output->w)/2;
+    	marker_y = (output->h)/2; 
+    	inlier_final = 0;
+    }
+    
+    
+    
+    marker_deviation.x = marker_x - (output->w)/2;
+    marker_deviation.y = -marker_y + (output->h)/2;
+    marker_deviation.inlier = inlier_final;
+    
+    // Display the marker location and center-lines.
+    source-=4*counter1;
+    for (y = 0; y < output->h; y++) 
+    {
+    	for (x = 0; x < output->w; x+=2) 
+    	{
+	      	dest[0] = source[0]; 	    //U
+		dest[1] = source[1];        //Y
+		dest[2] = source[2];        //V
+		dest[3] = source[3];        //Y
+	 	
+	 	if ( y == (output->h)/2 || x == (output->w)/2)
+    		{	
+	    		dest[0] = 250;       // U
+			dest[2] = 60;        // V
+      		}
+      		if (y == marker_y || x == marker_x)
+      		{
+	      		dest[0] = 65;        //U
+			dest[2] = 255;       //V
+      		}
+      		dest+=4;
+      		source+=4;
+    	}
+    }
+    
+    //printf("The number of inliers = %i\n", counter3);
+    return marker_deviation;
+
+}
+
+/**
+ * Find the marker location without streaming.
+ * @param[in] *input The input image to filter
+ * @param[in] M The distance between the pixel of interest and farthest neighbor pixel [pixel]
+ * @param[in] m The safety margin around the pixel of interest [pixel]
+ * @param[in] t Threshold for intensity difference
+ * @param[in] radius The radius used for inlier detection.
+ * @param[in] IN The number of minimum inliers required
+ * @return The deviation of the marker location wrt the center.
+ */
+ 
+
+struct marker_deviation_t marker2(struct image_t *input, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN )
+{
+  struct marker_deviation_t marker_deviation;
+  
+  uint8_t *source = input->buf;
+  uint16_t x, y, i, j, k, l, n, o;
+  uint8_t image[240][320] = {};
+  uint16_t idx[2][200] = {};
+  uint32_t counter1, counter2, counter3, counter4;
+  int32_t min1, max1, min2, max2, min3, max3, min4, max4;
+  uint32_t marker_x = 0;
+  uint32_t marker_y = 0;
+  //uint32_t inlier;
+  uint32_t inlier[3][200] = {};
+  uint32_t top_inlier;
+  uint32_t inlier_final = 0;
+
 
   // Go trough all the pixels
   counter1 = 0;
@@ -813,24 +992,15 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   				counter3 += 1;
       				inlier[0][counter3] = idx[0][l]; // i (row) value of "l"th idx
       				inlier[1][counter3] = idx[1][l]; // j (col) value of "l"th idx
-    	  			inlier[3][counter3] = counter4 ; // Number of inliers for "l"th idx
+    	  			inlier[2][counter3] = counter4 ; // Number of inliers for "l"th idx
 	  		}
 	  	}
 	}
     }
 
-    // Finally: Compute the centroid of the inliers.
+    // Finally: find the inlier which is located at the top.
     if (counter3 > 0)
     {
-	/*sum_row = 0;
-	sum_col = 0;
-	for (o = 1; o < counter3+1; o++)
-	{
-		sum_row = sum_row + idx2[0][o];
-		sum_col = sum_col + idx2[1][o];
-  	}
-	marker_x = sum_col/counter3;
-  	marker_y = sum_row/counter3 ;*/
   	top_inlier = input->h;
   	for (o = 1; o < counter3+1; o++)
   	{
@@ -839,49 +1009,23 @@ struct marker_deviation_t marker(struct image_t *input, struct image_t *output, 
   			top_inlier = inlier[0][o];
   			marker_x = inlier[1][o];
   			marker_y = inlier[0][o];
-  			inlier_final = inlier[3][o];
+  			inlier_final = inlier[2][o];
   		} 
   	}
     }
-    
-    
-    if (counter3 == 0)
+    else
     {
-    	marker_x = (output->w)/2;
-    	marker_y = (output->h)/2; 
+    	marker_x = (input->w)/2;
+    	marker_y = (input->h)/2; 
+    	inlier_final = 0;
     }
     
-    marker_deviation.x = marker_x - (output->w)/2;
-    marker_deviation.y = -marker_y + (output->h)/2;
+    
+    
+    marker_deviation.x = marker_x - (input->w)/2;
+    marker_deviation.y = -marker_y + (input->h)/2;
     marker_deviation.inlier = inlier_final;
     
-    // Display the marker location and center-lines.
-    source-=4*counter1;
-    for (y = 0; y < output->h; y++) 
-    {
-    	for (x = 0; x < output->w; x+=2) 
-    	{
-	      	dest[0] = source[0]; 	    //U
-		dest[1] = source[1];        //Y
-		dest[2] = source[2];        //V
-		dest[3] = source[3];        //Y
-	 	
-	 	if ( y == (output->h)/2 || x == (output->w)/2)
-    		{	
-	    		dest[0] = 250;       // U
-			dest[2] = 60;        // V
-      		}
-      		if (y == marker_y || x == marker_x)
-      		{
-	      		dest[0] = 65;        //U
-			dest[2] = 255;       //V
-      		}
-      		dest+=4;
-      		source+=4;
-    	}
-    }
-    
-    //printf("The number of inliers = %i\n", counter3);
     return marker_deviation;
 
 }
@@ -926,6 +1070,190 @@ struct line_deviation_t line_follow(struct image_t *input, struct image_t *outpu
 
   // Copy the creation timestamp (stays the same)
   memcpy(&output->ts, &input->ts, sizeof(struct timeval));
+ 
+  // Go through all the pixels
+  
+  counter = 0;
+  for (y = 0; y < output->h; y++) 
+  {
+	  for (x = 0; x < output->w; x+=2) 
+	  {
+	  	image[y][x] = source[1];
+	  	image[y][x+1] = source[3];
+	  	// Go to the next 2 pixels
+	  	source+=4;
+	  	counter +=1;
+	  } 
+  }
+  
+  for (i= 0; i < output->h - w+1; i++)
+  {
+  	sum1 = 0;
+  	sum3 = 0;
+  	
+  	for (j = 0; j < w; j++)
+  	{
+  		sum1 += image[i+j][0];
+  		sum3 += image[i+j][output->w-1];
+  	}
+  	integral1[i] = sum1;
+  	integral3[i] = sum3;
+  	
+  	if (integral1[idx1] > integral1_max)
+  	{
+  		integral1_max = integral1[idx1];
+  		max_idx1[0][0] = i;
+  		max_idx1[1][0] = 0;
+  	}
+  	idx1 += 1;
+  	
+  	if (integral3[idx3] > integral3_max)
+  	{
+  		integral3_max = integral3[idx3];
+  		max_idx3[0][0] = i;
+  		max_idx3[1][0] = output->w-2;
+  	}
+  	idx3 += 1;
+  	
+  }
+  
+  for (i= 0; i < output->w - w+1; i++)
+  {
+  	sum2 = 0;
+  	for (j = 0; j < w; j++)
+  	{
+  		sum2 += image[0][i+j];
+  	}
+  	integral2[i] = sum2;
+  	if (integral2[idx2] > integral2_max)
+  	{
+  		integral2_max = integral2[idx2];
+  		max_idx2[0][0] = 0;
+  		max_idx2[1][0] = i;
+  	}
+  	idx2 += 1;
+  }
+
+  if (integral1_max > integral_max_max)
+  	integral_max_max = integral1_max;
+  if (integral2_max > integral_max_max)
+  	integral_max_max = integral2_max;
+  if (integral3_max > integral_max_max)
+  	integral_max_max = integral3_max;
+  
+  if (integral_max_max < w*th)
+  {	
+  	max_idx[0][0] = (output->h) / 2;
+  	max_idx[1][0] = (output->w) / 2;
+  }
+  else
+  {
+  	 if (integral2_max == integral_max_max || integral2_max > w*th)
+  	 {
+	  	max_idx[0][0] = max_idx2[0][0];
+	  	max_idx[1][0] = max_idx2[1][0];
+ 	 }
+ 	 else
+ 	 {
+	 	 if (integral1_max > w*th && integral3_max < w*th)
+	  	 {
+	  		max_idx[0][0] = max_idx1[0][0];
+	  		max_idx[1][0] = max_idx1[1][0];
+	  	 }
+	  	 if (integral3_max > w*th && integral1_max < w*th)
+	  	 {
+	  		max_idx[0][0] = max_idx3[0][0];
+	  		max_idx[1][0] = max_idx3[1][0];
+	  	 }
+	  	 if (integral1_max > w*th && integral3_max > w*th)
+	  	 {
+	  		if (max_idx1[0][0] < max_idx3[0][0])
+	  		{
+	  			max_idx[0][0] = max_idx1[0][0];
+	  			max_idx[1][0] = max_idx1[1][0];
+	  		}
+	  		else
+	  		{
+	  			max_idx[0][0] = max_idx3[0][0];
+	  			max_idx[1][0] = max_idx3[1][0];
+	  		}
+	  		
+	  	 }
+ 	 }
+  }	
+ 
+
+    
+    line_deviation.x = max_idx[1][0] - (output->w)/2;
+    line_deviation.y = -max_idx[0][0] + (output->h)/2;
+    //line_deviation.inlier = ;
+    
+    // Display the marker location and center-lines.
+    source-=4*counter;
+    for (y = 0; y < output->h; y++) 
+    {
+    	for (x = 0; x < output->w; x+=2) 
+    	{
+	      	dest[0] = source[0]; 	    //U
+		dest[1] = source[1];        //Y
+		dest[2] = source[2];        //V
+		dest[3] = source[3];        //Y
+	 	
+	 	if ( y == (output->h)/2 || x == (output->w)/2)
+    		{	
+	    		dest[0] = 250;       // U
+			dest[2] = 60;        // V
+      		}
+      		if (y == max_idx[0][0] || x == max_idx[1][0])
+      		{
+	      		dest[0] = 65;        //U
+			dest[2] = 255;       //V
+      		}
+      		dest+=4;
+      		source+=4;
+    	}
+    }
+    
+    //printf("The number of inliers = %i\n", counter3);
+    return line_deviation;
+}
+
+/**
+ * Compute the 2D image waypoint for line-following mission without streaming.
+ * @param[in] *input The input image
+ * @param[out] *output The output image
+ * @param[in] w Evaluation width for the pixel (estimated line width in pixel)
+ * @param[in] th Threshold for line detection.
+ * @return The deviation of the 2D waypoint wrt the center.
+ */
+ 
+
+struct line_deviation_t line_follow2(struct image_t *input, uint8_t w, uint8_t th)
+{
+  struct line_deviation_t line_deviation;
+  
+  uint8_t *source = input->buf;
+  uint16_t x, y, i, j;
+  int32_t integral1[240] = {};
+  int32_t integral2[320] = {};
+  int32_t integral3[240] = {};
+  int32_t integral1_max = 0;
+  int32_t integral2_max = 0;
+  int32_t integral3_max = 0;
+  int32_t integral_max_max = 0;
+  uint16_t idx1 = 0;
+  uint16_t idx2 = 0;
+  uint16_t idx3 = 0;
+  int32_t sum1 = 0;
+  int32_t sum2 = 0;
+  int32_t sum3 = 0;
+  uint16_t max_idx1[2][1] = {};
+  uint16_t max_idx2[2][1] = {};
+  uint16_t max_idx3[2][1] = {};
+  uint32_t max_idx[2][1] = {};
+  
+  uint8_t image[240][320] = {};
+  uint16_t counter;
  
   // Go through all the pixels
   
@@ -1041,35 +1369,8 @@ struct line_deviation_t line_follow(struct image_t *input, struct image_t *outpu
 
     
     line_deviation.x = max_idx[1][0] - (input->w)/2;
-    line_deviation.y = -max_idx[0][0] + (output->h)/2;
-    //line_deviation.inlier = ;
-    
-    // Display the marker location and center-lines.
-    source-=4*counter;
-    for (y = 0; y < output->h; y++) 
-    {
-    	for (x = 0; x < output->w; x+=2) 
-    	{
-	      	dest[0] = source[0]; 	    //U
-		dest[1] = source[1];        //Y
-		dest[2] = source[2];        //V
-		dest[3] = source[3];        //Y
-	 	
-	 	if ( y == (output->h)/2 || x == (output->w)/2)
-    		{	
-	    		dest[0] = 250;       // U
-			dest[2] = 60;        // V
-      		}
-      		if (y == max_idx[0][0] || x == max_idx[1][0])
-      		{
-	      		dest[0] = 65;        //U
-			dest[2] = 255;       //V
-      		}
-      		dest+=4;
-      		source+=4;
-    	}
-    }
-    
-    //printf("The number of inliers = %i\n", counter3);
+    line_deviation.y = -max_idx[0][0] + (input->h)/2;
+    line_deviation.inlier = 111;
+
     return line_deviation;
 }

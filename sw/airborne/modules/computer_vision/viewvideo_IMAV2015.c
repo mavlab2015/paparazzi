@@ -111,35 +111,40 @@ PRINT_CONFIG_MSG("[viewvideo] Using RTP/UDP stream.")
 
 
 // Vision algorithm input parameters
-#ifndef VISION_M
-#define VISION_M 8
+#ifndef VH_M
+#define VH_M 8
 #endif
-PRINT_CONFIG_VAR(VISION_M)
+PRINT_CONFIG_VAR(VH_M)
 
-#ifndef VISION_m
-#define VISION_m 3
+#ifndef VH_m
+#define VH_m 3
 #endif
-PRINT_CONFIG_VAR(VISION_m)
+PRINT_CONFIG_VAR(VH_m)
 
-#ifndef VISION_t
-#define VISION_t 15
+#ifndef VH_t
+#define VH_t 15
 #endif
-PRINT_CONFIG_VAR(VISION_t)
+PRINT_CONFIG_VAR(VH_t)
 
-#ifndef VISION_IN
-#define VISION_IN 3
+#ifndef VH_RADIUS
+#define VH_RADIUS 10
 #endif
-PRINT_CONFIG_VAR(VISION_IN)
+PRINT_CONFIG_VAR(VH_RADIUS)
 
-#ifndef VISION_LINE_W
-#define VISION_LINE_W 5
+#ifndef VH_IN
+#define VH_IN 3
 #endif
-PRINT_CONFIG_VAR(VISION_LINE_W)
+PRINT_CONFIG_VAR(VH_IN)
 
-#ifndef VISION_LINE_THR
-#define VISION_LINE_THR 100
+#ifndef VH_LINE_W
+#define VH_LINE_W 5
 #endif
-PRINT_CONFIG_VAR(VISION_LINE_THR)
+PRINT_CONFIG_VAR(VH_LINE_W)
+
+#ifndef VH_LINE_THR
+#define VH_LINE_THR 100
+#endif
+PRINT_CONFIG_VAR(VH_LINE_THR)
 
 
 /* These are defined with configure */
@@ -148,12 +153,13 @@ PRINT_CONFIG_VAR(VIEWVIDEO_PORT_OUT)
 
 /* Initialize the default settings for the vision algorithm */
 struct visionhover_param_t visionhover_param = {
-  .M = VISION_M,
-  .m = VISION_m,
-  .t = VISION_t,
-  .IN = VISION_IN,
-  .line_w = VISION_LINE_W,
-  .line_thr = VISION_LINE_THR
+  .M = VH_M,
+  .m = VH_m,
+  .t = VH_t,
+  .radius = VH_RADIUS,
+  .IN = VH_IN,
+  .line_w = VH_LINE_W,
+  .line_thr = VH_LINE_THR
 };
 
 // Main thread
@@ -231,13 +237,13 @@ static void *viewvideo_thread(void *data __attribute__((unused)))
 	// Find out the location of the centroid after generating the binary map via filtering the certain range of colors.
 	//struct centroid_deviation_t centroid_deviation = image_centroid(&img, &img, 180, 255, 0, 255, 0, 255);
 	
-	//printf("x_deviation and y_deviation is %.0f and %.0f\n", centroid_deviation.x, centroid_deviation.y);
+
 	
-	//struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.IN);
+	struct marker_deviation_t marker_deviation = marker(&img, &img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.radius, visionhover_param.IN);
 	
-	struct line_deviation_t line_deviation = line_follow(&img, &img, visionhover_param.line_w, visionhover_param.line_thr);
+	//struct line_deviation_t line_deviation = line_follow(&img, &img, visionhover_param.line_w, visionhover_param.line_thr);
 	
-	//printf("Inliers = %i\n", marker_deviation.inlier);
+
 	
 /////////////////////////////////////////////////////////////
 /////                                                   /////

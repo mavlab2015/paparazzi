@@ -36,7 +36,7 @@
 #include "lib/vision/image.h"
 #include "lib/v4l/v4l2.h"
 
-#include "combine/opticflow_calculator_IMAV2015.h"
+//#include "combine/opticflow_calculator_IMAV2015.h"
 
 
 // Main viewvideo structure
@@ -53,13 +53,17 @@ struct viewvideo_t {
 extern struct viewvideo_t viewvideo;
 
 /* The vision algorithm parameters */
-/*struct visionhover_param_t {
-  float M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
-  float m;        ///< The safety margin around the pixel of interest [pixel]
-  float t;      ///< Threshold for intensity difference
-  float IN;      ///< The number of minimum inliers required
-};*/
-struct visionhover_param_t visionhover_parameter;
+struct visionhover_param_t {
+  uint8_t M;        ///< The distance between the pixel of interest and farthest neighbor pixel [pixel]
+  uint8_t m;        ///< The safety margin around the pixel of interest [pixel]
+  uint8_t t;      ///< Threshold for intensity difference
+  uint8_t radius; ///< Radius used for inlier detection
+  uint8_t IN;      ///< The number of minimum inliers required
+  
+  uint8_t line_w;
+  uint8_t line_thr;
+};
+extern struct visionhover_param_t visionhover_param;
 
 
 // Module functions

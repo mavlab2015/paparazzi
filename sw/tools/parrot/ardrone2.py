@@ -407,8 +407,8 @@ elif args.command == 'upload_file_and_run':
     parrot_utils.uploadfile(ftp, args.folder + "/" + f[1], file(args.file, "rb"))
     sleep(0.5)
     parrot_utils.execute_command(tn, "chmod 777 /data/video/" + args.folder + "/" + f[1])
-    # parrot_utils.execute_command(tn, "/data/video/" + args.folder + "/" + f[1] + " > /dev/null 2>&1 &")
-    parrot_utils.execute_command(tn, "/data/video/" + args.folder + "/" + f[1] + " > /dev/ttyUSB0 2>&1 &")
+    parrot_utils.execute_command(tn, "/data/video/" + args.folder + "/" + f[1] + " > /dev/null 2>&1 &")
+    # parrot_utils.execute_command(tn, "/data/video/" + args.folder + "/" + f[1] + " > /dev/ttyUSB0 2>&1 &")
     # This line above means that the messages will go to the USB instead of telnet.. - SEONG
     print("#pragma message: Upload and Start of ap.elf to ARDrone2 Succes!")
 

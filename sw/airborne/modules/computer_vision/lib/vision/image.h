@@ -102,6 +102,7 @@ struct marker_deviation_t
 };
 
 struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN);
+struct marker_deviation_t marker2(struct image_t *input, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN);
 
 struct line_deviation_t
 {
@@ -111,6 +112,7 @@ struct line_deviation_t
 };
 
 struct line_deviation_t line_follow(struct image_t *input, struct image_t *output, uint8_t w, uint8_t th);
+struct line_deviation_t line_follow2(struct image_t *input, uint8_t w, uint8_t th);
 /////////////////////////////////////
 /////                          //////
 /////  Seong Addition ends..   //////
