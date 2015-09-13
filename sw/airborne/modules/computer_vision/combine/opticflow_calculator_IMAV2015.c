@@ -39,6 +39,7 @@
 #include "lib/vision/image.h"
 #include "lib/vision/lucas_kanade.h"
 #include "lib/vision/fast_rosten.h"
+#include "modules/computer_vision/qrcode/qr_code.h"
 
 // Camera parameters (defaults are from an ARDrone 2)
 #ifndef OPTICFLOW_FOV_W
@@ -201,7 +202,20 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   // Update FPS for information
   result->fps = 1 / (timeval_diff(&opticflow->prev_timestamp, &img->ts) / 1000.);
   memcpy(&opticflow->prev_timestamp, &img->ts, sizeof(struct timeval));
-
+  /////////////////////////////////////////////
+  ////////  QR CODE TESTING starts       //////
+  //////// SEONG                         //////
+  /////////////////////////////////////////////
+  
+  
+  qrscan(img);
+  
+  
+  /////////////////////////////////////////////
+  ////////  QR CODE TESTING   ends       //////
+  //////// SEONG                         //////
+  /////////////////////////////////////////////  
+  
   // Convert image to grayscale
   image_to_grayscale(img, &opticflow->img_gray);
 
