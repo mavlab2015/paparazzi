@@ -174,7 +174,9 @@ void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h)
   opticflow->got_first_img = FALSE;
   opticflow->prev_phi = 0.0;
   opticflow->prev_theta = 0.0;
-
+  opticflow->prev_deviation_x = 0.0;
+  opticflow->prev_deviation_y = 0.0;
+  
   /* Set the default values */
   opticflow->max_track_corners = OPTICFLOW_MAX_TRACK_CORNERS;
   opticflow->window_size = OPTICFLOW_WINDOW_SIZE;
@@ -305,6 +307,12 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   if (!visionhover_stab.line_follow)
   {
 	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.radius, visionhover_param.IN);
+	  /*float alpha = 0.1;
+	  opticflow->prev_deviation_x = alpha * marker_deviation.x + (1-alpha) * opticflow->prev_deviation_x;
+	  result->deviation_x = opticflow->prev_deviation_x;
+	  opticflow->prev_deviation_y = alpha * marker_deviation.y + (1-alpha) * opticflow->prev_deviation_y;
+	  result->deviation_y = opticflow->prev_deviation_y;*/
+	  
 	  result->deviation_x = marker_deviation.x;
 	  result->deviation_y = marker_deviation.y;
 	  result->inlier = marker_deviation.inlier;

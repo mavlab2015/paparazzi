@@ -47,7 +47,7 @@
     </load-->
     
     <!--With the parcel-->
-    <load name="cv_combine_IMAV2015.xml">
+    <!--load name="cv_combine_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="300"/>
         <define name="VISION_PHI_IGAIN" value="20" />
         <define name="VISION_PHI_DGAIN" value="30" />
@@ -94,26 +94,27 @@
         <define name="VH_LINE_W" value="2"/>
         <define name="VH_LINE_THR" value="130"/>
         
-        <define name="OPTICFLOW_DEBUG" value="TRUE"/>
-    </load>
+        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
+    </load-->
     
         <!--Without the parcel-->
-    <!--load name="cv_combine_IMAV2015.xml">
-    	<define name="VISION_PHI_PGAIN" value="300"/>
-        <define name="VISION_PHI_IGAIN" value="20" />
+    <load name="cv_combine_IMAV2015.xml">
+    	<define name="VISION_PHI_PGAIN" value="400"/>
+        <define name="VISION_PHI_IGAIN" value="25" />
         <define name="VISION_PHI_DGAIN" value="30" />
-        <define name="VISION_THETA_PGAIN" value="300"/>
-        <define name="VISION_THETA_IGAIN" value="20"/>
+        <define name="VISION_THETA_PGAIN" value="400"/>
+        <define name="VISION_THETA_IGAIN" value="25"/>
         <define name="VISION_THETA_DGAIN" value="30"/>
         <define name="VISION_DESIRED_VX" value="0"/>      
         <define name="VISION_DESIRED_VY" value="1.1"/>
         
-        <define name="VH_PHI_PGAIN" value="300"/>
-        <define name="VH_PHI_IGAIN" value="500" />
-        <define name="VH_PHI_DGAIN" value="0" />
-        <define name="VH_THETA_PGAIN" value="300"/>
-        <define name="VH_THETA_IGAIN" value="500"/>
-        <define name="VH_THETA_DGAIN" value="0"/>
+        <define name="VH_PHI_PGAIN" value="10"/>
+        <define name="VH_PHI_IGAIN" value="5" />
+        <define name="VH_PHI_DGAIN" value="5" />
+        <define name="VH_THETA_PGAIN" value="10"/>
+        <define name="VH_THETA_IGAIN" value="5"/>
+        <define name="VH_THETA_DGAIN" value="5"/>
+        <define name="VH_ALPHA" value="1"/>
         <define name="VH_LANDING_MARKER" value="FALSE"/>
         <define name="VH_DROP" value="FALSE"/>
         <define name="VH_HEAT_ENTER" value="0"/>
@@ -126,7 +127,7 @@
         <define name="VH_NO_MARKER_COUNT" value="120"/>
         <define name="VH_DESCENT_RATE" value="0.1"/>
         <define name="VH_VEL_SAT" value="15"/>
-        <define name="VH_ERR" value="10"/>
+        <define name="VH_ERR" value="0"/>
         
         
         <define name="VH_M" value="5"/>
@@ -152,7 +153,12 @@
         <define name="VH_RIGHT_FORWARD_VY" value="0.7"/>
         <define name="VH_LEFT_FORWARD_VX" value="-0.7"/>
         <define name="VH_LEFT_FORWARD_VY" value="0.7"/>
-    </load-->
+        
+        <define name="VH_LINE_W" value="2"/>
+        <define name="VH_LINE_THR" value="130"/>
+        
+        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
+    </load>
   </modules>
 
   <commands>
@@ -215,14 +221,10 @@
     <!--define name="BODY_TO_IMU_PSI" value="0." unit="deg"/-->
     
     <!-- SEONG_DRONE2 setting-->
-    <!--define name="BODY_TO_IMU_PHI" value="-2.0" unit="deg"/-->
-    <!--define name="BODY_TO_IMU_THETA" value="1.0" unit="deg"/-->
-    <!--define name="BODY_TO_IMU_PSI" value="0." unit="deg"/-->
-    
-    <!-- 019905 setting-->
-    <define name="BODY_TO_IMU_PHI" value="-5." unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-2." unit="deg"/>
+    <define name="BODY_TO_IMU_PHI" value="-5.3" unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="-0.6" unit="deg"/>
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
+    
   </section>
   
 
@@ -322,7 +324,7 @@
     <!--define name="NOMINAL_HOVER_THROTTLE" value="0.67"/-->
     
     <!--Fat Battery-->
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.71"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.702"/>
     
     <!--With 20g parcel-->
     <!--define name="NOMINAL_HOVER_THROTTLE" value="0.72"/-->

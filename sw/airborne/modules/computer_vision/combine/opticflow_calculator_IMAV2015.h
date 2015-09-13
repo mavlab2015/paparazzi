@@ -52,6 +52,10 @@ struct opticflow_t {
   bool_t fast9_adaptive;            ///< Whether the FAST9 threshold should be adaptive
   uint8_t fast9_threshold;          ///< FAST9 corner detection threshold
   uint16_t fast9_min_distance;      ///< Minimum distance in pixels between corners
+  
+  float prev_deviation_x;
+  float prev_deviation_y;
+  float alpha;
 };
 
 /* The vision algorithm parameters */

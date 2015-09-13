@@ -93,13 +93,13 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
   pthread_mutex_lock(&opticflow_mutex);
   pprz_msg_send_OPTIC_FLOW_EST(trans, dev, AC_ID,
                                &opticflow_result.fps, &opticflow_result.corner_cnt,
-                               &opticflow_result.tracked_cnt, /*&opticflow_result.flow_x,
+                               &opticflow_result.tracked_cnt, &opticflow_result.flow_x,
                                &opticflow_result.flow_y, &opticflow_result.flow_der_x,
                                &opticflow_result.flow_der_y, &opticflow_result.vel_x,
                                &opticflow_result.vel_y,
                                &opticflow_stab.cmd.phi, 
                                &opticflow_stab.cmd.theta, 
-                               &opticflow_stab.cmd.psi, */
+                               &opticflow_stab.cmd.psi, 
                                &opticflow_stab.marker_count, 
                                &opticflow_stab.no_marker_count,
                                &opticflow_stab.landing_count,

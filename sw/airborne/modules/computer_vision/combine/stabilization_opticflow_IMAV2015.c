@@ -106,6 +106,11 @@ PRINT_CONFIG_VAR(VH_PHI_PGAIN)
 #endif
 PRINT_CONFIG_VAR(VH_PHI_IGAIN)
 
+#ifndef VH_PHI_DGAIN
+#define VH_PHI_DGAIN 100
+#endif
+PRINT_CONFIG_VAR(VH_PHI_DGAIN)
+
 #ifndef VH_THETA_PGAIN
 #define VH_THETA_PGAIN 400
 #endif
@@ -115,6 +120,17 @@ PRINT_CONFIG_VAR(VH_THETA_PGAIN)
 #define VH_THETA_IGAIN 100
 #endif
 PRINT_CONFIG_VAR(VH_THETA_IGAIN)
+
+
+#ifndef VH_THETA_DGAIN
+#define VH_THETA_DGAIN 100
+#endif
+PRINT_CONFIG_VAR(VH_THETA_DGAIN)
+
+#ifndef VH_ALPHA
+#define VH_ALPHA 1
+#endif
+PRINT_CONFIG_VAR(VH_ALPHA)
 
 #ifndef VH_LANDING_MARKER
 #define VH_LANDING_MARKER FALSE
@@ -284,8 +300,11 @@ struct opticflow_stab_t opticflow_stab = {
 struct visionhover_stab_t visionhover_stab = {
   .phi_pgain = VH_PHI_PGAIN,
   .phi_igain = VH_PHI_IGAIN,
+  .phi_dgain = VH_PHI_DGAIN,
   .theta_pgain = VH_THETA_PGAIN,
   .theta_igain = VH_THETA_IGAIN,
+  .theta_dgain = VH_THETA_DGAIN,
+  .alpha = VH_ALPHA,
   .landing_marker = VH_LANDING_MARKER,
   .heat_enter = VH_HEAT_ENTER,
   .drop = VH_DROP,
@@ -418,7 +437,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.6) 
 			{
 				alt_reached_first = 1;
 			}
@@ -681,7 +700,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   }
 
 
-  if (test_count < 10) 
+  if (test_count < 5) 
   {
   	test_count += 1;
     	opticflow_stab.err_vx_int = 0 ;
@@ -708,6 +727,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   
   float err_x = 0;
   float err_y = 0;
+  float lp_pre_err_x;
+  float lp_pre_err_y;
 
   float vh_desired_vx = 0;
   float vh_desired_vy = 0;
@@ -722,6 +743,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
 		err_y = mystate->agl * (result->deviation_y); 
+		
 	}
 	
 	/* Calculate the desired OF velocity setpoint */
@@ -729,12 +751,26 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 	{
 		visionhover_stab.err_x_int += err_x;
 		visionhover_stab.err_y_int += err_y;
-		   
-		vh_desired_vx = (visionhover_stab.phi_pgain * err_x/1000 
-				+ visionhover_stab.phi_igain * visionhover_stab.err_x_int/1000);
 		
-		vh_desired_vy = (visionhover_stab.theta_pgain * err_y/1000 
-				+ visionhover_stab.theta_igain * visionhover_stab.err_y_int/1000);
+		/* Calculate the differential errors (TODO: bound??) */
+		visionhover_stab.err_x_diff = (err_x - pre_err_x);
+		visionhover_stab.err_y_diff = (err_y - pre_err_y);
+		pre_err_x = err_x;
+		pre_err_y = err_y;
+		   
+		/* Applying low-pass filter for the p-gain? */;
+		err_x = visionhover_stab.alpha * err_x + (1-visionhover_stab.alpha)*lp_pre_err_x;
+		lp_pre_err_x = err_x;
+		err_y = visionhover_stab.alpha * err_y + (1-visionhover_stab.alpha)*lp_pre_err_y;
+		lp_pre_err_y = err_y;
+		
+		vh_desired_vx = (visionhover_stab.phi_pgain * err_x
+				+ visionhover_stab.phi_igain * visionhover_stab.err_x_int
+				+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff)/1000;
+		
+		vh_desired_vy = (visionhover_stab.theta_pgain * err_y
+				+ visionhover_stab.theta_igain * visionhover_stab.err_y_int
+				+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff)/1000;
 		
 		BoundAbs(vh_desired_vx, visionhover_stab.vel_sat);
 		BoundAbs(vh_desired_vy, visionhover_stab.vel_sat);	
@@ -772,6 +808,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 				{
 					err_vx = 0 - result->vel_x;
 					visionhover_stab.err_x_int = 0;	
+					lp_pre_err_x = 0;
 				}
 				else
 				{
@@ -785,6 +822,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 					{
 						err_vy = 0 - result->vel_y;
 						visionhover_stab.err_y_int = 0;	
+						lp_pre_err_y = 0;
 					}
 					else
 					{
