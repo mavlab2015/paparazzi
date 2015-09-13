@@ -42,7 +42,7 @@ zbar_image_scanner_t *scanner = 0;
 void qrscan(struct image_t *img)
 {
   int i, j;
-
+  printf("SCAN START!\n");
   // Create the JPEG encoded image
   struct image_t gray;
   image_create(&gray, img->w, img->h, IMAGE_GRAYSCALE);
