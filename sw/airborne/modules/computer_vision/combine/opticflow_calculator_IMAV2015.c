@@ -322,7 +322,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   	  line_deviation = line_follow(img, img, visionhover_param.line_w, visionhover_param.line_thr);
 	  result->deviation_x = line_deviation.x;
 	  result->deviation_y = line_deviation.y;
-	  result->inlier = line_deviation.inlier;
+	  result->inlier = 111;
   }
   
 }

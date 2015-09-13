@@ -266,8 +266,8 @@ PRINT_CONFIG_VAR(VH_LEFT_FORWARD_VY)
 #define ALT_FIRST -200 // -256 means 1m
 
 #define HOVER_COUNT_FIRST 1000
-//#define MARKER_COUNT 150
-#define MARKER_COUNT 30000
+#define MARKER_COUNT 150
+//#define MARKER_COUNT 30000
 
 
 #define VH_OFFSET 30
@@ -437,7 +437,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.6) 
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
 			{
 				alt_reached_first = 1;
 			}
@@ -659,6 +659,7 @@ void guidance_h_module_enter(void)
   opticflow_stab.cmd.phi = 0;
   opticflow_stab.cmd.theta = 0;
   opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
+  
 }
 
 /**
@@ -696,11 +697,11 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   
   if (alt_reached_first < 1)
   {
-  	return;
+  	//return;
   }
 
 
-  if (test_count < 5) 
+  if (test_count < 10) 
   {
   	test_count += 1;
     	opticflow_stab.err_vx_int = 0 ;
@@ -711,7 +712,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	opticflow_stab.cmd.theta = 0;
   	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
   	inlier_sum = 0;
-  	return;
+  	//return;
   }
   /*
   if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
@@ -743,8 +744,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		marker_detected = 1;
 		err_x = mystate->agl * result->deviation_x;
 		err_y = mystate->agl * (result->deviation_y); 
-		
-	}
+	}	
+	
 	
 	/* Calculate the desired OF velocity setpoint */
 	if (!visionhover_stab.line_follow)
@@ -766,35 +767,31 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		
 		vh_desired_vx = (visionhover_stab.phi_pgain * err_x
 				+ visionhover_stab.phi_igain * visionhover_stab.err_x_int
-				+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff)/1000;
+				+ visionhover_stab.phi_dgain * visionhover_stab.err_x_diff)/100;
 		
 		vh_desired_vy = (visionhover_stab.theta_pgain * err_y
 				+ visionhover_stab.theta_igain * visionhover_stab.err_y_int
-				+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff)/1000;
+				+ visionhover_stab.theta_dgain * visionhover_stab.err_y_diff)/100;
 		
 		BoundAbs(vh_desired_vx, visionhover_stab.vel_sat);
 		BoundAbs(vh_desired_vy, visionhover_stab.vel_sat);	
 	}		
 	else
 	{
-		if (result->deviation_x == 0 && result->deviation_y == 0)
+		if (alt_reached_second == 1 && result->deviation_x == 0 && result->deviation_y == 0)
 			opticflow_stab.landing_count += 1;
 		if (opticflow_stab.landing_count > visionhover_stab.line_no_count)
 			no_rope_land_here = 1;
-		if (no_rope_land_here == 0)
-		{
-			vh_desired_vx = (visionhover_stab.line_phi_pgain * err_x/1000);
 		
-			vh_desired_vy = (visionhover_stab.line_theta_pgain * err_y/1000);
+		vh_desired_vx = (visionhover_stab.line_phi_pgain * err_x)/1000;
+	
+		vh_desired_vy = (visionhover_stab.line_theta_pgain * err_y)/1000;
+
+	
+		BoundAbs(vh_desired_vx, visionhover_stab.line_vel_sat*2);
+		BoundAbs(vh_desired_vy, visionhover_stab.line_vel_sat);	
 		
-			BoundAbs(vh_desired_vx, visionhover_stab.line_vel_sat);
-			BoundAbs(vh_desired_vy, visionhover_stab.line_vel_sat);	
-		}
-		else
-		{
-			vh_desired_vx = opticflow_stab.desired_vx*50;
-			vh_desired_vy = opticflow_stab.desired_vy*50;
-		}
+
 	}
 	/* Calculate the error if we have enough flow */	
 	if (result->tracked_cnt > 0) 
