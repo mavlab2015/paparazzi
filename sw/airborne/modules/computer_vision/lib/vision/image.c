@@ -192,6 +192,47 @@ uint16_t image_yuv422_colorfilt(struct image_t *input, struct image_t *output, u
   return cnt;
 }
 
+
+/**
+ * Filter colors in an YUV422 image
+ * @param[in] *input The input image to filter
+ * @param[out] *output The filtered output image
+ * @param[in] y_m The Y minimum value
+ * @param[in] y_M The Y maximum value
+ * @param[in] u_m The U minimum value
+ * @param[in] u_M The U maximum value
+ * @param[in] v_m The V minimum value
+ * @param[in] v_M The V maximum value
+ * @return The amount of filtered pixels
+ */
+uint16_t image_yuv422_colorfilt_simple(struct image_t *input, uint8_t y_m, uint8_t y_M, uint8_t u_m,
+                                uint8_t u_M, uint8_t v_m, uint8_t v_M)
+{
+  uint16_t cnt = 0;
+  uint8_t *source = input->buf;
+  
+  // Go trough all the pixels
+  for (uint16_t y = 0; y < input->h; y++) {
+    for (uint16_t x = 0; x < input->w; x += 2) {
+      // Check if the color is inside the specified values
+      if (
+        (source[1] >= y_m)
+        && (source[1] <= y_M)
+        && (source[0] >= u_m)
+        && (source[0] <= u_M)
+        && (source[2] >= v_m)
+        && (source[2] <= v_M)
+      ) {
+        cnt ++;
+      }
+      
+      // Go to the next 2 pixels
+      source += 4;
+    }
+  }
+  return cnt;
+}
+
 /**
 * Simplified high-speed low CPU downsample function without averaging
 *  downsample factor must be 1, 2, 4, 8 ... 2^X
@@ -586,19 +627,19 @@ struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t
          )
        {
         // UYVY
-        //dest[0] = 64;         // U 0
-        //dest[1] = source[1];  // Y 255
-        //dest[2] = 255;        // V 0
-        //dest[3] = source[3];  // Y 255
+        dest[0] = 255;         // U 0
+        dest[1] = source[1];  // Y 255
+        dest[2] = 255;        // V 0
+        dest[3] = source[3];  // Y 255
         bin[y][x] = 1;
         bin[y][x+1] = 1;
        } 
       else {
         // UYVY
-        //dest[0] = source[0];  // U 
-        //dest[1] = source[1];  // Y 
-        //dest[2] = source[2];  // V 
-        //dest[3] = source[3];  // Y 
+        dest[0] = source[0];  // U 
+        dest[1] = source[1];  // Y 
+        dest[2] = source[2];  // V 
+        dest[3] = source[3];  // Y 
         bin[y][x] = 0;
         bin[y][x+1] = 0;
       }
@@ -1374,3 +1415,6 @@ struct line_deviation_t line_follow2(struct image_t *input, uint8_t w, uint8_t t
 
     return line_deviation;
 }
+
+
+

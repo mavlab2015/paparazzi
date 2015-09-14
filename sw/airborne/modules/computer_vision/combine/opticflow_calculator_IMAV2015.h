@@ -72,6 +72,33 @@ struct visionhover_param_t {
 extern struct visionhover_param_t visionhover_param;
 //struct visionhover_stab_t visionhover_stab;
 
+/* The flower detection algorithm parameters */
+struct flowerdetect_param_t {
+  uint8_t red_y_m;
+  uint8_t red_y_M;
+  uint8_t red_u_m;
+  uint8_t red_u_M;
+  uint8_t red_v_m;
+  uint8_t red_v_M;
+  
+  uint8_t green_y_m;
+  uint8_t green_y_M;
+  uint8_t green_u_m;
+  uint8_t green_u_M;
+  uint8_t green_v_m;
+  uint8_t green_v_M;
+  
+  uint8_t blue_y_m;
+  uint8_t blue_y_M;
+  uint8_t blue_u_m;
+  uint8_t blue_u_M;
+  uint8_t blue_v_m;
+  uint8_t blue_v_M;
+};
+extern struct flowerdetect_param_t flowerdetect_param;
+
+extern int flower_color; // 0 - not recognized, 1 - red, 2 - green, 3 - blue
+
 extern struct centroid_deviation_t centroid_dev;
 extern struct marker_deviation_t marker_dev;
 extern struct line_deviation_t line_dev;
