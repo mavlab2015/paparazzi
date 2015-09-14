@@ -132,6 +132,21 @@ PRINT_CONFIG_VAR(VH_THETA_DGAIN)
 #endif
 PRINT_CONFIG_VAR(VH_ALPHA)
 
+#ifndef VH_POST_LEFT
+#define VH_POST_LEFT 1
+#endif
+PRINT_CONFIG_VAR(VH_POST_LEFT)
+
+#ifndef VH_POST_MIDDLE
+#define VH_POST_MIDDLE 2
+#endif
+PRINT_CONFIG_VAR(VH_POST_MIDDLE)
+
+#ifndef VH_POST_RIGHT
+#define VH_POST_RIGHT 3
+#endif
+PRINT_CONFIG_VAR(VH_POST_RIGHT)
+
 #ifndef VH_LANDING_MARKER
 #define VH_LANDING_MARKER FALSE
 #endif
@@ -314,6 +329,9 @@ struct visionhover_stab_t visionhover_stab = {
   .theta_igain = VH_THETA_IGAIN,
   .theta_dgain = VH_THETA_DGAIN,
   .alpha = VH_ALPHA,
+  .post_left = VH_POST_LEFT,
+  .post_middle = VH_POST_MIDDLE,
+  .post_right = VH_POST_RIGHT,
   .landing_marker = VH_LANDING_MARKER,
   .heat_enter = VH_HEAT_ENTER,
   .drop = VH_DROP,
