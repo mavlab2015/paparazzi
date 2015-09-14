@@ -98,7 +98,8 @@ struct visionhover_stab_t {
   float line_alt_second;
   float line_phi_pgain;
   float line_theta_pgain;
-  float line_vel_sat;
+  float line_vel_x_sat;
+  float line_vel_y_sat;
   int32_t line_cmd_sat;
   int32_t line_no_count;
   
@@ -108,6 +109,7 @@ struct visionhover_stab_t {
   float right_forward_vy;
   float left_forward_vx;
   float left_forward_vy;
+  uint32_t servo_count;
 };
 
 extern struct visionhover_stab_t visionhover_stab;

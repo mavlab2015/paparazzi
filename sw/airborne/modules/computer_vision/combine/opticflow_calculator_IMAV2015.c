@@ -159,6 +159,8 @@ struct visionhover_stab_t visionhover_stab;
 static uint32_t timeval_diff(struct timeval *starttime, struct timeval *finishtime);
 static int cmp_flow(const void *a, const void *b);
 
+uint8_t QR_read_already;
+
 /**
  * Initialize the opticflow calculator
  * @param[out] *opticflow The new optical flow calculator
@@ -207,9 +209,11 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   //////// SEONG                         //////
   /////////////////////////////////////////////
   
-  
-  qrscan(img);
-  
+  if (qrscan(img) > 0 && QR_read_already < 1)
+  {
+  	result->qr_result = qrscan(img);
+  	QR_read_already = 1;
+  }
   
   /////////////////////////////////////////////
   ////////  QR CODE TESTING   ends       //////
@@ -321,12 +325,6 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   if (!visionhover_stab.line_follow)
   {
 	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.radius, visionhover_param.IN);
-	  /*float alpha = 0.1;
-	  opticflow->prev_deviation_x = alpha * marker_deviation.x + (1-alpha) * opticflow->prev_deviation_x;
-	  result->deviation_x = opticflow->prev_deviation_x;
-	  opticflow->prev_deviation_y = alpha * marker_deviation.y + (1-alpha) * opticflow->prev_deviation_y;
-	  result->deviation_y = opticflow->prev_deviation_y;*/
-	  
 	  result->deviation_x = marker_deviation.x;
 	  result->deviation_y = marker_deviation.y;
 	  result->inlier = marker_deviation.inlier;
@@ -339,6 +337,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
 	  result->inlier = 111;
   }
   
+
 }
 
 /**

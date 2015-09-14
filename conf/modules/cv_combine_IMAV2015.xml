@@ -51,11 +51,12 @@
       <define name="t" value="5" description="Threshold for intensity difference"/>
       <define name="RADIUS" value="10" description="Radius used for inlier detection"/>
       <define name="IN" value="3" description="The number of minimum inliers required"/>
-      
+     
       <define name="LINE_FOLLOW" value="FALSE" description="FOLLOWING A LINE"/>
       <define name="LINE_PHI_PGAIN" value="400" description="Line following proportional gain on the roll velocity error"/>
       <define name="LINE_THETA_PGAIN" value="400" description="Line following proportional gain on the pitch velocity error"/>
-      <define name="LINE_VEL_SAT" value="30" description="Line following OF Velocity Saturation value"/>
+      <define name="LINE_VEL_X_SAT" value="40" description="Line following OF Velocity Saturation value"/>
+      <define name="LINE_VEL_Y_SAT" value="20" description="Line following OF Velocity Saturation value"/>
       <define name="LINE_CMD_SAT" value="300" description="OF euler angle command saturation value"/>   
       <define name="LINE_ALT_SECOND" value="-400" description="Flight altitude (not hovering)"/>
       <define name="LINE_NO_COUNT" value="100" description="COUNT WHEN ROPE IS NOT VISIBLE"/>  
@@ -147,7 +148,8 @@
         <dl_setting var="visionhover_stab.line_follow" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="line_following" param="VH_LINE_FOLLOW"/>
 	<dl_setting var="visionhover_stab.line_phi_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_phi" param="VH_LINE_PHI_PGAIN"/>
 	<dl_setting var="visionhover_stab.line_theta_pgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kp_line_theta" param="VH_LINE_THETA_PGAIN"/>
-	<dl_setting var="visionhover_stab.line_vel_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_vel_sat" param="VH_LINE_VEL_SAT"/>
+	<dl_setting var="visionhover_stab.line_vel_x_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_vel_x_sat" param="VH_LINE_VEL_X_SAT"/>
+	<dl_setting var="visionhover_stab.line_vel_y_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_vel_y_sat" param="VH_LINE_VEL_Y_SAT"/>
 	<dl_setting var="visionhover_stab.line_cmd_sat" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1500" shortname="line_cmd_sat" param="VH_LINE_CMD_SAT"/>
 	<dl_setting var="visionhover_stab.line_alt_second" module="computer_vision/IMAV2015_combine_module" min="-700" step="1" max="-100" shortname="line_alt_2nd" param="VH_LINE_ALT_SECOND"/>
 	<dl_setting var="visionhover_stab.line_no_count" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="line_no_count" param="VH_LINE_NO_COUNT"/>
@@ -162,6 +164,7 @@
 	<dl_setting var="visionhover_stab.right_forward_vy" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="right_vy" param="VH_RIGHT_FORWARD_VY"/>
 	<dl_setting var="visionhover_stab.left_forward_vx" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="left_vx" param="VH_LEFT_FORWARD_VX"/>
 	<dl_setting var="visionhover_stab.left_forward_vy" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="left_vy" param="VH_LEFT_FORWARD_VY"/>
+	<dl_setting var="visionhover_stab.servo_count" module="computer_vision/IMAV2015_combine_module" min="1000" step="0.1" max="10000" shortname="servo_cnt" param="VH_SERVO_COUNT"/>
 	
       </dl_settings>
 

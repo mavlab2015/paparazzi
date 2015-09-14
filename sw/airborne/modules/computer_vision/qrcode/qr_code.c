@@ -28,6 +28,7 @@
 #include "zbar.h"
 #include <stdio.h>
 
+
 void qrcode_init(void)
 {
 	// TODO: add qrscan to the list of image processing tasks in viewvideo
@@ -39,8 +40,9 @@ void qrcode_init(void)
 
 zbar_image_scanner_t *scanner = 0;
 
-void qrscan(struct image_t *img)
+uint8_t qrscan(struct image_t *img)
 {
+  uint8_t int_data;
   int i, j;
   printf("SCAN START!\n");
   // Create the JPEG encoded image
@@ -84,15 +86,21 @@ void qrscan(struct image_t *img)
     // do something useful with results
     zbar_symbol_type_t typ = zbar_symbol_get_type(symbol);
     char *data = (char *)zbar_symbol_get_data(symbol);
-    printf("decoded %s symbol \"%s\"\n",
-           zbar_get_symbol_name(typ), data);
-
-#if DOWNLINK
-    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(data), data);
-#endif
+       
+    /*printf("decoded %s symbol \"%s\"\n",
+          zbar_get_symbol_name(typ), data);*/
+  int_data = atoi(data);
+  
+  //printf("int_data = %i\n", int_data);
+/*#if DOWNLINK
+    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(data), data);
+  #endif*/
   }
+
 
 // clean up
   zbar_image_destroy(image);
   //zbar_image_scanner_destroy(scanner);
+  
+  return int_data;
 }

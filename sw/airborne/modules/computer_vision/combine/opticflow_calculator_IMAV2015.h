@@ -76,7 +76,6 @@ extern struct centroid_deviation_t centroid_dev;
 extern struct marker_deviation_t marker_dev;
 extern struct line_deviation_t line_dev;
 
-
 void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h);
 void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_t *state, struct image_t *img, struct opticflow_result_t *result);
 

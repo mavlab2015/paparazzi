@@ -32,9 +32,10 @@
 #include <stdint.h>
 
 #include "../lib/vision/image.h"
+#include "../combine/inter_thread_data_IMAV2015.h"
 
 extern void qrcode_init(void);
-extern void qrscan(struct image_t *img);
+extern uint8_t qrscan(struct image_t *img);
 
 
 #endif

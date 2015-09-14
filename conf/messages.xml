@@ -1867,7 +1867,8 @@
   </message>
 
   <message name="INFO_MSG" id="215">
-    <field name="msg" type="char[]"/>
+    <!--field name="msg" type="char[]"/-->
+    <field name="msg" type="uint8"/>
   </message>
 
   <message name="STAB_ATTITUDE_INDI" id="216">
@@ -1970,6 +1971,7 @@
     <field name="inlier"      type="uint16"/>
     <field name="deviation_x"         type="int32"/>
     <field name="deviation_y"         type="int32"/>
+    <field name="qr_result"         type="uint8"/>
   </message>
 
   <!--229 is free -->

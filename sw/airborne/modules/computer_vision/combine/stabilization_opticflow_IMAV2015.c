@@ -177,10 +177,15 @@ PRINT_CONFIG_VAR(VH_PHI_PGAIN)
 #endif
 PRINT_CONFIG_VAR(VH_THETA_PGAIN)
 
-#ifndef VH_LINE_VEL_SAT
-#define VH_LINE_VEL_SAT 47
+#ifndef VH_LINE_VEL_X_SAT
+#define VH_LINE_VEL_X_SAT 40
 #endif
-PRINT_CONFIG_VAR(VH_LINE_VEL_SAT)
+PRINT_CONFIG_VAR(VH_LINE_VEL_X_SAT)
+
+#ifndef VH_LINE_VEL_Y_SAT
+#define VH_LINE_VEL_Y_SAT 20
+#endif
+PRINT_CONFIG_VAR(VH_LINE_VEL_Y_SAT)
 
 #ifndef VH_LINE_CMD_SAT
 #define VH_LINE_CMD_SAT 248
@@ -262,6 +267,10 @@ PRINT_CONFIG_VAR(VH_LEFT_FORWARD_VX)
 #endif
 PRINT_CONFIG_VAR(VH_LEFT_FORWARD_VY)
 
+#ifndef VH_SERVO_COUNT
+#define VH_SERVO_COUNT 1000
+#endif
+PRINT_CONFIG_VAR(VH_SERVO_COUNT)
 
 #define ALT_FIRST -200 // -256 means 1m
 
@@ -322,7 +331,8 @@ struct visionhover_stab_t visionhover_stab = {
   .line_follow = VH_LINE_FOLLOW,
   .line_phi_pgain = VH_LINE_PHI_PGAIN,
   .line_theta_pgain = VH_LINE_THETA_PGAIN,
-  .line_vel_sat = VH_LINE_VEL_SAT,
+  .line_vel_x_sat = VH_LINE_VEL_X_SAT,
+  .line_vel_y_sat = VH_LINE_VEL_Y_SAT,
   .line_cmd_sat = VH_LINE_CMD_SAT,
   .line_alt_second = VH_LINE_ALT_SECOND,
   .line_no_count = VH_LINE_NO_COUNT,
@@ -333,6 +343,7 @@ struct visionhover_stab_t visionhover_stab = {
   .right_forward_vy = VH_RIGHT_FORWARD_VY,
   .left_forward_vx = VH_LEFT_FORWARD_VX,
   .left_forward_vy = VH_LEFT_FORWARD_VY,
+  .servo_count = VH_SERVO_COUNT
 };
 
 
@@ -362,6 +373,8 @@ float delta_z;
 int8_t no_rope_land_here;
 
 int8_t flower_phase;
+int8_t servo_command;
+uint32_t servo_count;
 
 
 
@@ -390,6 +403,8 @@ void guidance_v_module_enter(void)
       delta_z = 0;
       no_rope_land_here = 0;
       flower_phase = 0;
+      servo_command = 0;
+      
         if (visionhover_stab.line_follow)
         {	
         	guidance_v_z_sp = visionhover_stab.line_alt_second;
@@ -418,10 +433,41 @@ void guidance_v_module_enter(void)
 	{	
 		drop_ball(4);
 	}
+	
+	if (visionhover_stab.flower_mode)
+	{	
+		if (servo_count < 1)
+		{
+			drop_ball(1);
+			servo_count = 1;
+			return;
+		}
+		
+		if (servo_count == 1)
+		{
+			drop_ball(2);
+			servo_count = 2;
+			return;
+		}
+		
+		if (servo_count == 2)
+		{
+			drop_ball(3);
+			servo_count = 3;
+			return;
+		}
+		if (servo_count ==3)
+		{
+			drop_ball(4);
+			servo_count = 0;
+			return;
+		}
+	}
 }
 
 void guidance_v_module_run(bool_t in_flight)
 {
+	
 	if (forever_hover == 0)
 	{
 		if (init_done == 0)
@@ -730,13 +776,22 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   float err_y = 0;
   float lp_pre_err_x;
   float lp_pre_err_y;
-
-  float vh_desired_vx = 0;
-  float vh_desired_vy = 0;
   
   float err_vx = 0;
   float err_vy = 0;
-
+  
+  float vh_desired_vx = 0;
+  float vh_desired_vy = 0;
+  
+  float OF_desired_vx = opticflow_stab.desired_vx;
+  float OF_desired_vy = opticflow_stab.desired_vy;
+  /*
+  if (result->qr_result == 1)
+  {
+  	OF_desired_vx = visionhover_stab.
+  }
+ */
+  
 
 	/* Calculate the vision hover error if we have enough inliers */
 	if (result->inlier > 0)
@@ -788,8 +843,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 		vh_desired_vy = (visionhover_stab.line_theta_pgain * err_y)/1000;
 
 	
-		BoundAbs(vh_desired_vx, visionhover_stab.line_vel_sat*2);
-		BoundAbs(vh_desired_vy, visionhover_stab.line_vel_sat);	
+		BoundAbs(vh_desired_vx, visionhover_stab.line_vel_x_sat);
+		BoundAbs(vh_desired_vy, visionhover_stab.line_vel_y_sat);	
 		
 
 	}

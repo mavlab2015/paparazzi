@@ -46,6 +46,8 @@ struct opticflow_result_t {
   int32_t deviation_x;      ///< Deviation of centroid from the center in x direction [pixel]
   int32_t deviation_y;      ///< Deviation of centroid from the center in y direction [pixel]
   uint16_t inlier;            ///< The number of inliers
+  
+  uint8_t qr_result;
 };
 
 /* The state of the drone when it took an image */
