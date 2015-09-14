@@ -139,6 +139,30 @@ PRINT_CONFIG_VAR(VISION_LINE_W)
 #endif
 PRINT_CONFIG_VAR(VISION_LINE_THR)
 
+// Flower detection parameters
+#define RED_Y_MIN 120
+#define RED_Y_MAX 220
+#define RED_U_MIN 0
+#define RED_U_MAX 120
+#define RED_V_MIN 160
+#define RED_V_MAX 255
+
+#define GREEN_Y_MIN 120
+#define GREEN_Y_MAX 255
+#define GREEN_U_MIN 0
+#define GREEN_U_MAX 127
+#define GREEN_V_MIN 50
+#define GREEN_V_MAX 160
+
+#define BLUE_Y_MIN 55
+#define BLUE_Y_MAX 130
+#define BLUE_U_MIN 150
+#define BLUE_U_MAX 255
+#define BLUE_V_MIN 0
+#define BLUE_V_MAX 255
+
+int flower_color=0;
+
 struct centroid_deviation_t centroid_deviation;
 struct marker_deviation_t marker_deviation;
 struct line_deviation_t line_deviation;
@@ -154,6 +178,31 @@ struct visionhover_param_t visionhover_param = {
   .line_thr = VH_LINE_THR
 };
 struct visionhover_stab_t visionhover_stab;
+
+
+/* Initialize the default settings for the flower detect algorithm */
+struct flowerdetect_param_t flowerdetect_param = {
+  .red_y_m = RED_Y_MIN,
+  .red_y_M = RED_Y_MAX,
+  .red_u_m = RED_U_MIN,
+  .red_u_M = RED_U_MAX,
+  .red_v_m = RED_V_MIN,
+  .red_v_M = RED_V_MAX,
+  
+  .green_y_m = GREEN_Y_MIN,
+  .green_y_M = GREEN_Y_MAX,
+  .green_u_m = GREEN_U_MIN,
+  .green_u_M = GREEN_U_MAX,
+  .green_v_m = GREEN_V_MIN,
+  .green_v_M = GREEN_V_MAX,
+  
+  .blue_y_m = BLUE_Y_MIN,
+  .blue_y_M = BLUE_Y_MAX,
+  .blue_u_m = BLUE_U_MIN,
+  .blue_u_M = BLUE_U_MAX,
+  .blue_v_m = BLUE_V_MIN,
+  .blue_v_M = BLUE_V_MAX
+};
 
 /* Functions only used here */
 static uint32_t timeval_diff(struct timeval *starttime, struct timeval *finishtime);
@@ -209,11 +258,17 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   //////// SEONG                         //////
   /////////////////////////////////////////////
   
+<<<<<<< HEAD
   if (qrscan(img) > 0 && QR_read_already < 1)
   {
   	result->qr_result = qrscan(img);
   	QR_read_already = 1;
   }
+=======
+  
+  qrscan(img);
+  
+>>>>>>> 653b65902d0184eb1035bbdf1a723e4a45014f61
   
   /////////////////////////////////////////////
   ////////  QR CODE TESTING   ends       //////
@@ -324,6 +379,46 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   
   if (!visionhover_stab.line_follow)
   {
+	  
+	  /* flower detection */
+	  //centroid_deviation=image_centroid(img, img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
+      //                          flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
+                                
+      uint16_t counter_red=image_yuv422_colorfilt_simple(img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
+                                flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
+      uint16_t counter_green=image_yuv422_colorfilt_simple(img, flowerdetect_param.green_y_m, flowerdetect_param.green_y_M, flowerdetect_param.green_u_m,
+                                flowerdetect_param.green_u_M, flowerdetect_param.green_v_m, flowerdetect_param.green_v_M);
+      uint16_t counter_blue=image_yuv422_colorfilt_simple(img, flowerdetect_param.blue_y_m, flowerdetect_param.blue_y_M, flowerdetect_param.blue_u_m,
+                                flowerdetect_param.blue_u_M, flowerdetect_param.blue_v_m, flowerdetect_param.blue_v_M);
+      static uint16_t counter_tresh=200; // min number of pixels to consider a blob to be a flower                         
+              
+              
+      if (counter_red > counter_green && counter_red > counter_green && counter_red > counter_tresh)
+        {
+            flower_color=1;
+            //printf("red flower \n");
+        }
+      else if (counter_green > counter_red && counter_green > counter_blue && counter_green > counter_tresh)
+        {
+            flower_color=2;
+            //printf("green flower \n");
+        }
+      else if (counter_blue > counter_green && counter_blue > counter_red && counter_blue > counter_tresh)
+        {
+            flower_color=3;
+            //printf("blue flower \n");
+        }
+      else
+        {
+            flower_color=0;
+            //printf("no flower \n");
+        }
+      
+      printf("%i, %i, %i, %i \n",counter_red, counter_green, counter_blue, flower_color);
+                                
+        
+    
+	  /* marker detection */
 	  marker_deviation = marker(img, img, visionhover_param.M, visionhover_param.m, visionhover_param.t, visionhover_param.radius, visionhover_param.IN);
 	  result->deviation_x = marker_deviation.x;
 	  result->deviation_y = marker_deviation.y;
