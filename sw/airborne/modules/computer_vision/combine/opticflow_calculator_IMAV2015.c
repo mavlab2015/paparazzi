@@ -237,20 +237,28 @@ void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h)
 void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_t *state, struct image_t *img, struct opticflow_result_t *result)
 {
   // Update FPS for information
-  result->fps = 1 / (timeval_diff(&opticflow->prev_timestamp, &img->ts) / 1000.);
+  float dt = (timeval_diff(&opticflow->prev_timestamp, &img->ts) / 1000.);
+  if (dt == 0)
+  {
+  	result->fps = 15;
+  }
+  else
+  {
+  	result->fps = 1/dt;
+  }
   memcpy(&opticflow->prev_timestamp, &img->ts, sizeof(struct timeval));
   /////////////////////////////////////////////
   ////////  QR CODE TESTING starts       //////
   //////// SEONG                         //////
   /////////////////////////////////////////////
   
-  
+  /*
   if ((qrscan(img) ==1 || qrscan(img) ==2 || qrscan(img) == 3 ) && QR_read_already < 1)
   {
   	result->qr_result = qrscan(img);
   	QR_read_already = 1;
   }
-  
+  */
   
   /////////////////////////////////////////////
   ////////  QR CODE TESTING   ends       //////

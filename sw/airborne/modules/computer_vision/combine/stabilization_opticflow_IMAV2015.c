@@ -285,8 +285,8 @@ PRINT_CONFIG_VAR(VH_SERVO_COUNT)
 #define ALT_FIRST -200 // -256 means 1m
 
 #define HOVER_COUNT_FIRST 300
-#define MARKER_COUNT 150
-//#define MARKER_COUNT 30000
+//#define MARKER_COUNT 150
+#define MARKER_COUNT 30000
 
 
 #define VH_OFFSET 30
@@ -447,6 +447,42 @@ void guidance_v_module_enter(void)
 	{	
 		drop_ball(4);
 	}
+  /*	
+  if (visionhover_stab.flower_mode)
+  {	
+  	if (servo_command < 1)
+	{
+		drop_ball(1);
+		servo_command = 1;
+		return;
+	}
+	if (servo_command == 1)
+	{
+		drop_ball(2);
+		servo_command = 2;
+		return;
+	}
+	if (servo_command == 2)
+	{
+		drop_ball(3);
+		servo_command = 3;
+		return;
+	}
+	if (servo_command == 3)
+	{
+		drop_ball(4);
+		servo_command = 0;
+		return;
+	}	
+  }
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////                                                                                ////
+  ////   When you use this, you should comment servo_command = 0 at the beginning!!   ////
+  ////                                                                                ////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  
+  	
+  */
 }
 
 void guidance_v_module_run(bool_t in_flight)
@@ -724,48 +760,6 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   {
   	return;
   }
-  
-  	
-  if (visionhover_stab.flower_mode)
-  {	
-  	
-  	if (result->flower_type == 1 && (servo_command == 0 || servo_command == 6))
-	{
-		drop_ball(1);
-		servo_command = 1;
-		servo_count = 0;
-	}
-	if (servo_command == 1)
-	{
-		servo_count += 1;
-		if (servo_count > visionhover_stab.servo_count)
-			servo_command = 2;
-		
-	}
-	if (servo_command == 2)
-	{
-		drop_ball(2);
-		servo_command = 3;
-	}
-	if (result->flower_type == 3 && (servo_command == 0|| servo_command == 3))
-	{
-		drop_ball(3);
-		servo_command = 4;
-		servo_count = 0;
-	}
-	if (servo_command == 4)
-	{
-		servo_count += 1;
-		if (servo_count > visionhover_stab.servo_count)
-			servo_command = 5;
-		
-	}
-	if (servo_command == 5)
-	{
-		drop_ball(4);
-		servo_command = 6;
-	}	
-  }
  
   if (alt_reached_first < 1)
   {
@@ -1006,7 +1000,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 						{
 							err_vy = vh_desired_vy - result->vel_y;
 						}
-
+						///////////////////////////////////////////////////////////////
+						///////////////////////////////////////////////////////////////
 						if (opticflow_stab.landing_count == visionhover_stab.landing_count_A +
 										 visionhover_stab.landing_count_B +1) 
 						{
@@ -1026,6 +1021,50 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 							drop_ball(3);
 							already_dropped = 1;
 						}
+						
+						if (visionhover_stab.flower_mode)
+						{	
+							if (result->flower_type == 1 && 
+								(servo_command == 0 || servo_command == 3 || servo_command == 6))
+							{
+								drop_ball(1);
+								servo_command = 1;
+								servo_count = 0;
+							}
+							if (servo_command == 1)
+							{
+								servo_count += 1;
+								if (servo_count > visionhover_stab.servo_count)
+									servo_command = 2;
+		
+							}
+							if (servo_command == 2)
+							{
+								drop_ball(2);
+								servo_command = 3;
+							}
+							if (result->flower_type == 3 && 
+								(servo_command == 0|| servo_command == 3 || servo_command == 6))
+							{
+								drop_ball(3);
+								servo_command = 4;
+								servo_count = 0;
+							}
+							if (servo_command == 4)
+							{
+								servo_count += 1;
+								if (servo_count > visionhover_stab.servo_count)
+									servo_command = 5;
+		
+							}
+							if (servo_command == 5)
+							{
+								drop_ball(4);
+								servo_command = 6;
+							}	
+						}
+						/////////////////////////////////////////////////////////////
+						/////////////////////////////////////////////////////////////
 					}
 					else
 					{
