@@ -187,7 +187,7 @@
 	    <dl_setting var="flowerdetect_param.blue_u_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue u_M" param="FD_blue_u_M"/>
 	    <dl_setting var="flowerdetect_param.blue_v_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_m" param="FD_blue_v_m"/>
 	    <dl_setting var="flowerdetect_param.blue_v_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_M" param="FD_blue_v_M"/>
->>>>>>> 653b65902d0184eb1035bbdf1a723e4a45014f61
+
       </dl_settings>
 
       <!-- Optical flow calculations parameters for Lucas Kanade and FAST9 -->

@@ -1105,8 +1105,6 @@ struct line_deviation_t line_follow(struct image_t *input, struct image_t *outpu
     return line_deviation;
 }
 
-<<<<<<< HEAD
-=======
 /**
  * Compute the 2D image waypoint for line-following mission without streaming.
  * @param[in] *input The input image
@@ -1266,4 +1264,3 @@ struct line_deviation_t line_follow2(struct image_t *input, uint8_t w, uint8_t t
 
 
 
->>>>>>> 653b65902d0184eb1035bbdf1a723e4a45014f61

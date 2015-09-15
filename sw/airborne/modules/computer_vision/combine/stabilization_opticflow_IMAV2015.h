@@ -73,6 +73,9 @@ struct visionhover_stab_t {
   float theta_igain;      ///< The pitch I gain on the err_vy_int
   float theta_dgain;      ///< The pitch D gain on the err_vy_diff
   float alpha; ///< Low pass filter coefficient for the p-gain error
+  uint8_t post_left; ///< The address of the left postbox
+  uint8_t post_middle; ///< The address of the middle postbox
+  uint8_t post_right; ///< The address of the right postbox
   
   float err_x_int;         ///< The integrated velocity error in x direction (m/s)
   float err_y_int;         ///< The integrated velocity error in y direction (m/s)

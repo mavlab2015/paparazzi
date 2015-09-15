@@ -258,17 +258,13 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   //////// SEONG                         //////
   /////////////////////////////////////////////
   
-<<<<<<< HEAD
+
   if (qrscan(img) > 0 && QR_read_already < 1)
   {
   	result->qr_result = qrscan(img);
   	QR_read_already = 1;
   }
-=======
-  
-  qrscan(img);
-  
->>>>>>> 653b65902d0184eb1035bbdf1a723e4a45014f61
+
   
   /////////////////////////////////////////////
   ////////  QR CODE TESTING   ends       //////
