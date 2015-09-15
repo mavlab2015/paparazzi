@@ -137,11 +137,6 @@ PRINT_CONFIG_VAR(VH_ALPHA)
 #endif
 PRINT_CONFIG_VAR(VH_POST_LEFT)
 
-#ifndef VH_POST_MIDDLE
-#define VH_POST_MIDDLE 2
-#endif
-PRINT_CONFIG_VAR(VH_POST_MIDDLE)
-
 #ifndef VH_POST_RIGHT
 #define VH_POST_RIGHT 3
 #endif
@@ -330,7 +325,6 @@ struct visionhover_stab_t visionhover_stab = {
   .theta_dgain = VH_THETA_DGAIN,
   .alpha = VH_ALPHA,
   .post_left = VH_POST_LEFT,
-  .post_middle = VH_POST_MIDDLE,
   .post_right = VH_POST_RIGHT,
   .landing_marker = VH_LANDING_MARKER,
   .heat_enter = VH_HEAT_ENTER,
@@ -473,7 +467,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.2) 
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
 			{
 				alt_reached_first = 1;
 			}

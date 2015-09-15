@@ -123,6 +123,11 @@
 	<dl_setting var="visionhover_stab.theta_igain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="ki_vh_theta" param="VH_THETA_IGAIN"/>
 	<dl_setting var="visionhover_stab.theta_dgain" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1000" shortname="kd_vh_theta" param="VH_THETA_DGAIN"/>
 	<dl_setting var="visionhover_stab.alpha" module="computer_vision/IMAV2015_combine_module" min="0" step="0.1" max="1" shortname="lowpass_alpha" param="VH_ALPHA"/>
+	<dl_setting var="visionhover_stab.post_left" module="computer_vision/IMAV2015_combine_module" min="1" step="1" max="3" shortname="post_left" param="VH_POST_LEFT"/>
+	<dl_setting var="visionhover_stab.post_right" module="computer_vision/IMAV2015_combine_module" min="1" step="1" max="3" shortname="post_right" param="VH_POST_RIGHT"/>
+	
+	
+	
 	<dl_setting var="visionhover_stab.landing_marker" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="land_marker" param="VH_LANDING_MARKER"/>
 	<dl_setting var="visionhover_stab.drop" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="1" values="FALSE|TRUE" shortname="drop_enabled" param="VH_DROP"/>
 	<dl_setting var="visionhover_stab.heat_enter" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="4" shortname="heat_enter" param="VH_HEAT_ENTER"/>
