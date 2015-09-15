@@ -103,7 +103,7 @@
         <define name="VH_RIGHT_FORWARD_VY" value="0.6"/>
         <define name="VH_LEFT_FORWARD_VX" value="-0.6"/>
         <define name="VH_LEFT_FORWARD_VY" value="0.6"/>
-        <define name="VH_SERVO_COUNT" value="2000"/>
+        <define name="VH_SERVO_COUNT" value="3"/>
         
         <define name="OPTICFLOW_DEBUG" value="TRUE"/>
     </load>
