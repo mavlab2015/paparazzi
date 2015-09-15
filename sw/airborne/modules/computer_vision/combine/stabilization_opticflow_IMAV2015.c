@@ -392,7 +392,8 @@ int8_t no_rope_land_here;
 
 int8_t flower_phase;
 int8_t servo_command;
-uint32_t servo_count;
+uint16_t servo_count;
+
 
 
 
@@ -422,6 +423,7 @@ void guidance_v_module_enter(void)
       no_rope_land_here = 0;
       flower_phase = 0;
       servo_command = 0;
+      servo_count = 0;
       
         if (visionhover_stab.line_follow)
         {	
@@ -450,36 +452,6 @@ void guidance_v_module_enter(void)
 	if (visionhover_stab.heat_enter == 4 )
 	{	
 		drop_ball(4);
-	}
-	
-	if (visionhover_stab.flower_mode)
-	{	
-		if (servo_count < 1)
-		{
-			drop_ball(1);
-			servo_count = 1;
-			return;
-		}
-		
-		if (servo_count == 1)
-		{
-			drop_ball(2);
-			servo_count = 2;
-			return;
-		}
-		
-		if (servo_count == 2)
-		{
-			drop_ball(3);
-			servo_count = 3;
-			return;
-		}
-		if (servo_count ==3)
-		{
-			drop_ball(4);
-			servo_count = 0;
-			return;
-		}
 	}
 }
 
@@ -759,9 +731,44 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	return;
   }
   
+  	
+  if (visionhover_stab.flower_mode)
+  {	
+  	/*
+  	if (result->flower_type == 1 && servo_command == 0;)
+	{
+		drop_ball(1);
+		servo_command = 1;
+	}
+	if (servo_command == 1)
+	{
+		visionhover_stab.servo_count += 1;
+		
+	}
+	if (servo_count == 1)
+	{
+		drop_ball(2);
+		servo_count = 2;
+		return;
+	}
+		if (servo_count == 2)
+	{
+		drop_ball(3);
+		servo_count = 3;
+		return;
+	}
+	if (servo_count ==3)
+	{
+		drop_ball(4);
+		servo_count = 0;
+		return;
+	}
+	*/
+  }
+ 
   if (alt_reached_first < 1)
   {
-  	//return;
+  	return;
   }
 
 
@@ -776,7 +783,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	opticflow_stab.cmd.theta = 0;
   	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
   	inlier_sum = 0;
-  	//return;
+  	return;
   }
   /*
   if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
@@ -792,8 +799,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   
   float err_x = 0;
   float err_y = 0;
-  float lp_pre_err_x;
-  float lp_pre_err_y;
+  float lp_pre_err_x = 0;
+  float lp_pre_err_y = 0;
   
   float err_vx = 0;
   float err_vy = 0;
