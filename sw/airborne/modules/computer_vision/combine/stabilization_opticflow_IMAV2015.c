@@ -29,7 +29,7 @@
  
 #include <stdio.h>
 
-// Own Header
+// Own Header IMAV2015
 #include "stabilization_opticflow_IMAV2015.h"
 
 // Stabilization
