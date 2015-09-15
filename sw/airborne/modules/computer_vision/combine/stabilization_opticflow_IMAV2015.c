@@ -289,7 +289,7 @@ PRINT_CONFIG_VAR(VH_SERVO_COUNT)
 
 #define ALT_FIRST -200 // -256 means 1m
 
-#define HOVER_COUNT_FIRST 1000
+#define HOVER_COUNT_FIRST 300
 #define MARKER_COUNT 150
 //#define MARKER_COUNT 30000
 
@@ -473,7 +473,7 @@ void guidance_v_module_run(bool_t in_flight)
 		}
 		else
 		{
-			if (stateGetPositionNed_i()->z < ALT_FIRST*0.4) 
+			if (stateGetPositionNed_i()->z < ALT_FIRST*0.2) 
 			{
 				alt_reached_first = 1;
 			}
@@ -534,7 +534,7 @@ void guidance_v_module_run(bool_t in_flight)
 				stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
 			}
 			else
-			stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 for AR Drone 2, 6500 for bebop
+			stabilization_cmd[COMMAND_THRUST] = 7000; // 8000 for AR Drone 2, 6500 for bebop
 		}
 	}
 	if (forever_hover == 1) // When you see the (a) second marker, or (b) reached the end of the rope.
