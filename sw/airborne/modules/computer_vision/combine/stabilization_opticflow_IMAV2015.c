@@ -734,36 +734,43 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	
   if (visionhover_stab.flower_mode)
   {	
-  	/*
-  	if (result->flower_type == 1 && servo_command == 0;)
+  	
+  	if (result->flower_type == 1 && (servo_command == 0 || servo_command == 6))
 	{
 		drop_ball(1);
 		servo_command = 1;
+		servo_count = 0;
 	}
 	if (servo_command == 1)
 	{
-		visionhover_stab.servo_count += 1;
+		servo_count += 1;
+		if (servo_count > visionhover_stab.servo_count)
+			servo_command = 2;
 		
 	}
-	if (servo_count == 1)
+	if (servo_command == 2)
 	{
 		drop_ball(2);
-		servo_count = 2;
-		return;
+		servo_command = 3;
 	}
-		if (servo_count == 2)
+	if (result->flower_type == 3 && (servo_command == 0|| servo_command == 3))
 	{
 		drop_ball(3);
-		servo_count = 3;
-		return;
+		servo_command = 4;
+		servo_count = 0;
 	}
-	if (servo_count ==3)
+	if (servo_command == 4)
+	{
+		servo_count += 1;
+		if (servo_count > visionhover_stab.servo_count)
+			servo_command = 5;
+		
+	}
+	if (servo_command == 5)
 	{
 		drop_ball(4);
-		servo_count = 0;
-		return;
-	}
-	*/
+		servo_command = 6;
+	}	
   }
  
   if (alt_reached_first < 1)
@@ -810,12 +817,20 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   
   float OF_desired_vx = opticflow_stab.desired_vx;
   float OF_desired_vy = opticflow_stab.desired_vy;
-  /*
-  if (result->qr_result == 1)
-  {
-  	OF_desired_vx = visionhover_stab.
-  }
- */
+  
+  	if (visionhover_stab.post_left == result->qr_result)
+	{
+		OF_desired_vx = visionhover_stab.left_forward_vx;
+		OF_desired_vy = visionhover_stab.left_forward_vy;
+	}
+	if (visionhover_stab.post_right == result->qr_result)
+	{
+		OF_desired_vx = visionhover_stab.right_forward_vx;
+		OF_desired_vy = visionhover_stab.right_forward_vy;
+	}
+
+  
+ 
   
 
 	/* Calculate the vision hover error if we have enough inliers */
@@ -925,8 +940,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 			}
 			else // When marker_count is large enough
 			{	
-				err_vx = opticflow_stab.desired_vx*50 - result->vel_x;
-				err_vy = opticflow_stab.desired_vy*50 - result->vel_y;
+				err_vx = OF_desired_vx*50 - result->vel_x;
+				err_vy = OF_desired_vy*50 - result->vel_y;
 				
 				
 				if (flower_phase == 1)
@@ -1037,7 +1052,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 			  		vh_desired_vx = 0;
 			  		vh_desired_vy = 0;
 				}
-			}
+			} // If the return start is TRUE
 			else
 			{
 				err_vx = 0 - result->vel_x;
