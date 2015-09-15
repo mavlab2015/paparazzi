@@ -48,7 +48,7 @@
         <define name="VISION_DESIRED_VY" value="0"/>
     </load-->
     
-    <!--With the parcel-->
+
     <load name="cv_combine_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="200"/>
         <define name="VISION_PHI_IGAIN" value="15" />
@@ -107,7 +107,21 @@
         <define name="VH_LEFT_FORWARD_VY" value="0.8"/>
         <define name="VH_SERVO_COUNT" value="3"/>
         
-        <define name="OPTICFLOW_DEBUG" value="TRUE"/>
+        <define name="RED_Y_MIN" value="120"/>
+        <define name="RED_Y_MAX" value="220" />
+        <define name="RED_U_MIN" value="0"/>
+        <define name="RED_U_MAX" value="120"/>
+        <define name="RED_V_MIN" value="160"/>
+        <define name="RED_V_MAX" value="255" />
+        <define name="BLUE_Y_MIN" value="55" />
+        <define name="BLUE_Y_MAX" value="130" />
+        <define name="BLUE_U_MIN" value="150" />
+        <define name="BLUE_U_MAX" value="255" />
+        <define name="BLUE_V_MIN" value="0" />
+        <define name="BLUE_V_MAX" value="255" />
+        <define name="COUNTER_TRESH" value="2000"/>
+        
+        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
     </load>
 
   </modules>

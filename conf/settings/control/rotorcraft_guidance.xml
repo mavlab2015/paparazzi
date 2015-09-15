@@ -12,7 +12,7 @@
       <dl_setting var="guidance_v_z_sp" min="-5" step="0.5" max="3" module="guidance/guidance_v" shortname="sp" unit="2e-8m" alt_unit="m" alt_unit_coef="0.00390625"/>
     </dl_settings>
 
-    <dl_settings NAME="Horiz Loop">
+    <!--dl_settings NAME="Horiz Loop">
       <dl_setting var="guidance_h_use_ref" min="0" step="1" max="1" module="guidance/guidance_h" shortname="use_ref" values="FALSE|TRUE" handler="SetUseRef" param="GUIDANCE_H_USE_REF"/>
       <dl_setting var="gh_ref.max_speed" min="0.1" step="0.1" max="15.0" module="guidance/guidance_h" shortname="max_speed" handler="SetMaxSpeed" param="GUIDANCE_H_REF_MAX_SPEED"/>
       <dl_setting var="guidance_h_approx_force_by_thrust" min="0" step="1" max="1" module="guidance/guidance_h" shortname="approx_force" values="FALSE|TRUE" param="GUIDANCE_H_APPROX_FORCE_BY_THRUST"/>
@@ -26,13 +26,13 @@
       <dl_setting var="guidance_h_again" min="0" step="1" max="400" module="guidance/guidance_h" shortname="ka" param="GUIDANCE_H_AGAIN"/>
       <dl_setting var="guidance_h_pos_sp.x" MIN="-10" MAX="10" STEP="1"  module="guidance/guidance_h" shortname="sp_x_ned" unit="1/2^8m" alt_unit="m" alt_unit_coef="0.00390625"/>
       <dl_setting var="guidance_h_pos_sp.y" MIN="-10" MAX="10" STEP="1"  module="guidance/guidance_h" shortname="sp_y_ned" unit="1/2^8m" alt_unit="m" alt_unit_coef="0.00390625"/>
-    </dl_settings>
+    </dl_settings-->
 
-    <dl_settings NAME="NAV">
+    <!--dl_settings NAME="NAV">
       <dl_setting var="flight_altitude" MIN="0" STEP="0.1" MAX="400" module="navigation" unit="m" handler="SetFlightAltitude"/>
       <dl_setting var="nav_heading" MIN="0" STEP="1" MAX="360" module="navigation" unit="1/2^12r" alt_unit="deg" alt_unit_coef="0.0139882"/>
       <dl_setting var="nav_radius" MIN="-50" STEP="0.1" MAX="50" module="navigation" unit="m"/>
-    </dl_settings>
+    </dl_settings-->
 
   </dl_settings>
 </settings>

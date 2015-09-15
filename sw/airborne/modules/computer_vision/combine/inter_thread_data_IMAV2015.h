@@ -48,7 +48,7 @@ struct opticflow_result_t {
   uint16_t inlier;            ///< The number of inliers
   
   uint8_t qr_result;
-  uint8_t flower_type; /// 0 = no flower, 1 = Red, 2 = Green, 3 = Blue
+  uint8_t flower_type; /// 0 = no flower/green flower, 1 = Red, 3 = Blue
 };
 
 /* The state of the drone when it took an image */

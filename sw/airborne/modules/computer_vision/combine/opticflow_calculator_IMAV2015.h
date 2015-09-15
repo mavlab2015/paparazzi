@@ -87,10 +87,11 @@ struct flowerdetect_param_t {
   uint8_t blue_u_M;
   uint8_t blue_v_m;
   uint8_t blue_v_M;
+  uint16_t counter_tresh;
 };
 extern struct flowerdetect_param_t flowerdetect_param;
 
-extern int flower_color; // 0 - not recognized, 1 - red, 2 - green, 3 - blue
+extern uint8_t flower_color; // 0 - not recognized, 1 - red, 2 - green, 3 - blue
 
 extern struct centroid_deviation_t centroid_dev;
 extern struct marker_deviation_t marker_dev;

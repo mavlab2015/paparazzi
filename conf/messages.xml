@@ -1972,6 +1972,7 @@
     <field name="deviation_x"         type="int32"/>
     <field name="deviation_y"         type="int32"/>
     <field name="qr_result"         type="uint8"/>
+    <field name="flower_type"         type="uint8"/>
   </message>
 
   <!--229 is free -->

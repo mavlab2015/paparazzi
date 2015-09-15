@@ -140,21 +140,59 @@ PRINT_CONFIG_VAR(VISION_LINE_W)
 PRINT_CONFIG_VAR(VISION_LINE_THR)
 
 // Flower detection parameters
+#ifndef RED_Y_MIN
 #define RED_Y_MIN 120
+#endif
+
+#ifndef RED_Y_MAX
 #define RED_Y_MAX 220
+#endif
+
+#ifndef RED_U_MIN
 #define RED_U_MIN 0
+#endif
+
+#ifndef RED_U_MAX
 #define RED_U_MAX 120
+#endif
+
+#ifndef RED_V_MIN
 #define RED_V_MIN 160
+#endif
+
+#ifndef RED_V_MAX
 #define RED_V_MAX 255
+#endif
 
+#ifndef BLUE_Y_MIN
 #define BLUE_Y_MIN 55
-#define BLUE_Y_MAX 130
-#define BLUE_U_MIN 150
-#define BLUE_U_MAX 255
-#define BLUE_V_MIN 0
-#define BLUE_V_MAX 255
+#endif
 
-int flower_color=0;
+#ifndef BLUE_Y_MAX
+#define BLUE_Y_MAX 130
+#endif
+
+#ifndef BLUE_U_MIN
+#define BLUE_U_MIN 150
+#endif
+
+#ifndef BLUE_U_MAX
+#define BLUE_U_MAX 255
+#endif
+
+#ifndef BLUE_V_MIN
+#define BLUE_V_MIN 0
+#endif
+
+#ifndef BLUE_V_MAX
+#define BLUE_V_MAX 255
+#endif
+
+#ifndef COUNTER_TRESH
+#define COUNTER_TRESH 2000
+#endif
+
+uint8_t flower_color=0;
 
 struct centroid_deviation_t centroid_deviation;
 struct marker_deviation_t marker_deviation;
@@ -187,7 +225,9 @@ struct flowerdetect_param_t flowerdetect_param = {
   .blue_u_m = BLUE_U_MIN,
   .blue_u_M = BLUE_U_MAX,
   .blue_v_m = BLUE_V_MIN,
-  .blue_v_M = BLUE_V_MAX
+  .blue_v_M = BLUE_V_MAX,
+  
+  .counter_tresh = COUNTER_TRESH
 };
 
 /* Functions only used here */
@@ -376,7 +416,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
 		                        flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
 	      uint16_t counter_blue=image_yuv422_colorfilt_simple(img, flowerdetect_param.blue_y_m, flowerdetect_param.blue_y_M, flowerdetect_param.blue_u_m,
 		                        flowerdetect_param.blue_u_M, flowerdetect_param.blue_v_m, flowerdetect_param.blue_v_M);
-	      static uint16_t counter_tresh=2000; // min number of pixels to consider a blob to be a flower                         
+	      //static uint16_t counter_tresh=2000; // min number of pixels to consider a blob to be a flower                         
 		      
 		    #if (OPTICFLOW_DEBUG)
             centroid_deviation=image_centroid(img, img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
@@ -385,14 +425,14 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
                                   flowerdetect_param.blue_u_M, flowerdetect_param.blue_v_m, flowerdetect_param.blue_v_M);
         #endif 
 
-	      if (counter_red > counter_blue && counter_red > counter_tresh)
+	      if (counter_red > counter_blue && counter_red > flowerdetect_param.counter_tresh)
 		{
-		    flower_color=1;
+		    result->flower_type=1;
 		    //printf("red flower \n");
 		}
-	      else if (counter_blue > counter_red && counter_blue > counter_tresh)
+	      else if (counter_blue > counter_red && counter_blue > flowerdetect_param.counter_tresh)
     {
-        flower_color=3;
+        result->flower_type=3;
         //printf("blue flower \n");
     }
      //   else if (counter_green > counter_red && counter_green > counter_blue && counter_green > counter_tresh)
@@ -402,12 +442,12 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
 		//}
 	      else
 		{
-		    flower_color=0;
+		    result->flower_type=0;
 		    //printf("no flower \n");
 		}
       
-      	  printf("%i, %i, %i \n",counter_red, counter_blue, flower_color);
-      	  result->flower_type = flower_color;
+      	  //printf("%i, %i, %i \n",counter_red, counter_blue, flower_color);
+      	  //result->flower_type = flower_color;
 	  }
           else
           {

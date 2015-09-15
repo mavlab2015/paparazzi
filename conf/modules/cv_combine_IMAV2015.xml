@@ -69,6 +69,20 @@
       <define name="RIGHT_FORWARD_VY" value="0.7" description="RIGHT FORWARD VY"/>
       <define name="LEFT_FORWARD_VX" value="-0.7" description="LEFT FORWARD VX"/>
       <define name="LEFT_FORWARD_VY" value="0.7" description="LEFT FORWARD VX"/>
+      
+      <define name="RED_Y_MIN" value="120" description="red y min"/>
+      <define name="RED_Y_MAX" value="220" description="red y max"/>
+      <define name="RED_U_MIN" value="0" description="red u min"/>
+      <define name="RED_U_MAX" value="120" description="red u max"/>
+      <define name="RED_V_MIN" value="160" description="red v min"/>
+      <define name="RED_V_MAX" value="255" description="red v max"/>
+      <define name="BLUE_Y_MIN" value="55" description="red y min"/>
+      <define name="BLUE_Y_MAX" value="130" description="red y max"/>
+      <define name="BLUE_U_MIN" value="150" description="red u min"/>
+      <define name="BLUE_U_MAX" value="255" description="red u max"/>
+      <define name="BLUE_V_MIN" value="0" description="red v min"/>
+      <define name="BLUE_V_MAX" value="255" description="red v max"/>
+      <define name="COUNTER_TRESH" value="2000" description="counter tresh"/>
     </section>
 
     <!-- Optical flow calculation parameters -->
@@ -172,19 +186,21 @@
 	    <dl_setting var="visionhover_stab.left_forward_vy" module="computer_vision/IMAV2015_combine_module" min="-2" step="0.1" max="2" shortname="left_vy" param="VH_LEFT_FORWARD_VY"/>
 	    <dl_setting var="visionhover_stab.servo_count" module="computer_vision/IMAV2015_combine_module" min="1" step="1" max="1000" shortname="servo_cnt" param="VH_SERVO_COUNT"/>
 	    
-	    <dl_setting var="flowerdetect_param.red_y_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red y_m" param="FD_red_y_m"/>
-	    <dl_setting var="flowerdetect_param.red_y_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red y_M" param="FD_red_y_M"/>
-	    <dl_setting var="flowerdetect_param.red_u_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red u_m" param="FD_red_u_m"/>
-	    <dl_setting var="flowerdetect_param.red_u_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red u_M" param="FD_red_u_M"/>
-	    <dl_setting var="flowerdetect_param.red_v_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red v_m" param="FD_red_v_m"/>
-	    <dl_setting var="flowerdetect_param.red_v_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red v_M" param="FD_red_v_M"/>
+	    <dl_setting var="flowerdetect_param.red_y_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red y_m" param="RED_Y_MIN"/>
+	    <dl_setting var="flowerdetect_param.red_y_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red y_M" param="RED_Y_MAX"/>
+	    <dl_setting var="flowerdetect_param.red_u_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red u_m" param="RED_U_MIN"/>
+	    <dl_setting var="flowerdetect_param.red_u_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red u_M" param="RED_U_MAX"/>
+	    <dl_setting var="flowerdetect_param.red_v_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red v_m" param="RED_V_MIN"/>
+	    <dl_setting var="flowerdetect_param.red_v_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="red v_M" param="RED_V_MAX"/>
 	    
-	    <dl_setting var="flowerdetect_param.blue_y_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue y_m" param="FD_blue_y_m"/>
-	    <dl_setting var="flowerdetect_param.blue_y_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue y_M" param="FD_blue_y_M"/>
-	    <dl_setting var="flowerdetect_param.blue_u_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue u_m" param="FD_blue_u_m"/>
-	    <dl_setting var="flowerdetect_param.blue_u_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue u_M" param="FD_blue_u_M"/>
-	    <dl_setting var="flowerdetect_param.blue_v_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_m" param="FD_blue_v_m"/>
-	    <dl_setting var="flowerdetect_param.blue_v_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_M" param="FD_blue_v_M"/>
+	    <dl_setting var="flowerdetect_param.blue_y_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue y_m" param="BLUE_Y_MIN"/>
+	    <dl_setting var="flowerdetect_param.blue_y_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue y_M" param="BLUE_Y_MAX"/>
+	    <dl_setting var="flowerdetect_param.blue_u_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue u_m" param="BLUE_U_MIN"/>
+	    <dl_setting var="flowerdetect_param.blue_u_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue u_M" param="BLUE_U_MAX"/>
+	    <dl_setting var="flowerdetect_param.blue_v_m" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_m" param="BLUE_V_MIN"/>
+	    <dl_setting var="flowerdetect_param.blue_v_M" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="255" shortname="blue v_M" param="BLUE_V_MAX"/>
+	    
+	    <dl_setting var="flowerdetect_param.counter_tresh" module="computer_vision/IMAV2015_combine_module" min="0" step="1" max="10000" shortname="counter_tresh" param="COUNTER_TRESH"/>
 
       </dl_settings>
 
