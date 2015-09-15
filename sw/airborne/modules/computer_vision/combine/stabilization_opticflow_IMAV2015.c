@@ -779,7 +779,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   }
 
 
-  if (test_count < 10) 
+  /*if (test_count < 10) 
   {
   	test_count += 1;
     	opticflow_stab.err_vx_int = 0 ;
@@ -791,7 +791,7 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
   	opticflow_stab.cmd.psi = stateGetNedToBodyEulers_i()->psi;
   	inlier_sum = 0;
   	return;
-  }
+  }*/
   /*
   if (opticflow_stab.desired_vx !=0 || opticflow_stab.desired_vy !=0)
   	v_control = 1;
