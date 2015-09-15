@@ -81,13 +81,6 @@ struct flowerdetect_param_t {
   uint8_t red_v_m;
   uint8_t red_v_M;
   
-  uint8_t green_y_m;
-  uint8_t green_y_M;
-  uint8_t green_u_m;
-  uint8_t green_u_M;
-  uint8_t green_v_m;
-  uint8_t green_v_M;
-  
   uint8_t blue_y_m;
   uint8_t blue_y_M;
   uint8_t blue_u_m;

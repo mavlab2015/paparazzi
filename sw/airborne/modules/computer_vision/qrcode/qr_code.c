@@ -44,7 +44,7 @@ uint8_t qrscan(struct image_t *img)
 {
   uint8_t int_data;
   int i, j;
-  printf("SCAN START!\n");
+  //printf("SCAN START!\n");
   // Create the JPEG encoded image
   struct image_t gray;
   image_create(&gray, img->w, img->h, IMAGE_GRAYSCALE);

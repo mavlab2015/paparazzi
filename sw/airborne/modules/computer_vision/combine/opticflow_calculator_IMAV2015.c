@@ -147,13 +147,6 @@ PRINT_CONFIG_VAR(VISION_LINE_THR)
 #define RED_V_MIN 160
 #define RED_V_MAX 255
 
-#define GREEN_Y_MIN 120
-#define GREEN_Y_MAX 255
-#define GREEN_U_MIN 0
-#define GREEN_U_MAX 127
-#define GREEN_V_MIN 50
-#define GREEN_V_MAX 160
-
 #define BLUE_Y_MIN 55
 #define BLUE_Y_MAX 130
 #define BLUE_U_MIN 150
@@ -188,13 +181,6 @@ struct flowerdetect_param_t flowerdetect_param = {
   .red_u_M = RED_U_MAX,
   .red_v_m = RED_V_MIN,
   .red_v_M = RED_V_MAX,
-  
-  .green_y_m = GREEN_Y_MIN,
-  .green_y_M = GREEN_Y_MAX,
-  .green_u_m = GREEN_U_MIN,
-  .green_u_M = GREEN_U_MAX,
-  .green_v_m = GREEN_V_MIN,
-  .green_v_M = GREEN_V_MAX,
   
   .blue_y_m = BLUE_Y_MIN,
   .blue_y_M = BLUE_Y_MAX,
@@ -378,40 +364,41 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
 	  if (visionhover_stab.flower_mode)
 	  {
 		  /* flower detection */
-		  //centroid_deviation=image_centroid(img, img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
-	      //                          flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
-		                        
-	      uint16_t counter_red=image_yuv422_colorfilt_simple(img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
+		    uint16_t counter_red=image_yuv422_colorfilt_simple(img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
 		                        flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
-	      uint16_t counter_green=image_yuv422_colorfilt_simple(img, flowerdetect_param.green_y_m, flowerdetect_param.green_y_M, flowerdetect_param.green_u_m,
-		                        flowerdetect_param.green_u_M, flowerdetect_param.green_v_m, flowerdetect_param.green_v_M);
 	      uint16_t counter_blue=image_yuv422_colorfilt_simple(img, flowerdetect_param.blue_y_m, flowerdetect_param.blue_y_M, flowerdetect_param.blue_u_m,
 		                        flowerdetect_param.blue_u_M, flowerdetect_param.blue_v_m, flowerdetect_param.blue_v_M);
-	      static uint16_t counter_tresh=200; // min number of pixels to consider a blob to be a flower                         
+	      static uint16_t counter_tresh=2000; // min number of pixels to consider a blob to be a flower                         
 		      
-		      
-	      if (counter_red > counter_green && counter_red > counter_green && counter_red > counter_tresh)
+		    #if (OPTICFLOW_DEBUG)
+            centroid_deviation=image_centroid(img, img, flowerdetect_param.red_y_m, flowerdetect_param.red_y_M, flowerdetect_param.red_u_m,
+                                  flowerdetect_param.red_u_M, flowerdetect_param.red_v_m, flowerdetect_param.red_v_M);
+            centroid_deviation=image_centroid(img, img, flowerdetect_param.blue_y_m, flowerdetect_param.blue_y_M, flowerdetect_param.blue_u_m,
+                                  flowerdetect_param.blue_u_M, flowerdetect_param.blue_v_m, flowerdetect_param.blue_v_M);
+        #endif 
+
+	      if (counter_red > counter_blue && counter_red > counter_tresh)
 		{
 		    flower_color=1;
 		    //printf("red flower \n");
 		}
-	      else if (counter_green > counter_red && counter_green > counter_blue && counter_green > counter_tresh)
-		{
-		    flower_color=2;
+	      else if (counter_blue > counter_red && counter_blue > counter_tresh)
+    {
+        flower_color=3;
+        //printf("blue flower \n");
+    }
+     //   else if (counter_green > counter_red && counter_green > counter_blue && counter_green > counter_tresh)
+		//{
+		//    flower_color=2;
 		    //printf("green flower \n");
-		}
-	      else if (counter_blue > counter_green && counter_blue > counter_red && counter_blue > counter_tresh)
-		{
-		    flower_color=3;
-		    //printf("blue flower \n");
-		}
+		//}
 	      else
 		{
 		    flower_color=0;
 		    //printf("no flower \n");
 		}
       
-      	  //printf("%i, %i, %i, %i \n",counter_red, counter_green, counter_blue, flower_color);
+      	  printf("%i, %i, %i \n",counter_red, counter_blue, flower_color);
       	  result->flower_type = flower_color;
 	  }
           else
