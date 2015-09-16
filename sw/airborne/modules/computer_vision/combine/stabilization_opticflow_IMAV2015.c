@@ -1027,10 +1027,13 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 							already_dropped = 1;
 						}
 						
-						if (visionhover_stab.flower_mode)
+						if (visionhover_stab.flower_mode 
+						&& opticflow_stab.landing_count > visionhover_stab.landing_count_A +
+										 visionhover_stab.landing_count_B +
+										  visionhover_stab.landing_count_C)
 						{	
 							if (result->flower_type == 1 && 
-								(servo_command == 0 || servo_command == 3 || servo_command == 6))
+								(servo_command == 0 || servo_command == 6))
 							{
 								drop_ball(1);
 								servo_command = 1;
@@ -1048,8 +1051,8 @@ void stabilization_opticflow_update(struct opticflow_result_t *result, struct op
 								drop_ball(2);
 								servo_command = 3;
 							}
-							if (result->flower_type == 3 && 
-								(servo_command == 0|| servo_command == 3 || servo_command == 6))
+							if (result->flower_type == 0 && 
+								(servo_command == 0|| servo_command == 3 ))
 							{
 								drop_ball(3);
 								servo_command = 4;
