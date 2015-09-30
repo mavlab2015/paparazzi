@@ -185,7 +185,7 @@ let ac_msg = fun messages_xml logging ac_name ac ->
 let cam_max_angle = (Deg>>Rad) 89.
 
 let send_cam_status = fun a ->
-  if a.gps_mode = gps_mode_3D then
+  if a.gps_mode >= gps_mode_3D then
     match a.nav_ref with
         None -> () (* No geo ref for camera target *)
       | Some nav_ref ->
@@ -659,7 +659,7 @@ let send_config = fun http _asker args ->
     let ac_name = ExtXml.attrib conf "name" in
     let protocol =
       if http then
-        sprintf "http://%s:8889" (Unix.gethostname ())
+        sprintf "http://%s:%d" !hostname !port
       else
         sprintf "file://%s" Env.paparazzi_home in
     let prefix = fun s -> sprintf "%s/%s%s" protocol root_dir s in
@@ -757,7 +757,7 @@ let raw_datalink = fun logging _sender vs ->
 (** Got a LINK_REPORT, update state but don't send (done asynchronously) *)
 let link_report = fun logging _sender vs ->
   let ac_id = Pprz.string_assoc "ac_id" vs
-  and link_id = Pprz.int_assoc "link_id" vs in
+  and link_id = int_of_string (Pprz.string_assoc "link_id" vs) in
   try
     let ac = Hashtbl.find aircrafts ac_id in
     let link_status = {
@@ -794,11 +794,11 @@ let () =
 
   let options =
     [ "-b", Arg.String (fun x -> ivy_bus := x), (sprintf "Bus\tDefault is %s" !ivy_bus);
-      "-hostname", Arg.Set_string hostname, "<hostname> Set the address for the http server";
       "-http", Arg.Set http, "Send http: URLs (default is file:)";
+      "-hostname", Arg.Set_string hostname, "<hostname> Set the address for the http server";
+      "-port", Arg.Set_int port, (sprintf "<port> Set http port for serving XML and KML files (default is %d)" !port);
       "-kml", Arg.Set Kml.enabled, "Enable KML file updating";
       "-kml_no_http", Arg.Set Kml.no_http, "KML without web server (local files only)";
-      "-kml_port", Arg.Set_int Kml.port, (sprintf "Port for KML files (default is %d)" !Kml.port);
       "-n", Arg.Clear logging, "Disable log";
       "-timestamp", Arg.Set timestamp, "Bind on timestampped messages";
       "-no_md5_check", Arg.Set no_md5_check, "Disable safety matching of live and current configurations";

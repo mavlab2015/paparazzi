@@ -396,8 +396,8 @@ struct State {
   struct Int32Vect2 h_windspeed_i;
 
   /**
-   * Norm of horizontal ground speed.
-   * @details Unit: m/s in BFP with #INT32_SPEED_FRAC
+   * Norm of relative wind speed.
+   * Unit: m/s in BFP with #INT32_SPEED_FRAC
    */
   int32_t airspeed_i;
 
@@ -439,7 +439,7 @@ extern void stateInit(void);
 /// Set the local (flat earth) coordinate frame origin (int).
 static inline void stateSetLocalOrigin_i(struct LtpDef_i *ltp_def)
 {
-  memcpy(&state.ned_origin_i, ltp_def, sizeof(struct LtpDef_i));
+  state.ned_origin_i = *ltp_def;
   /* convert to float */
   ECEF_FLOAT_OF_BFP(state.ned_origin_f.ecef, state.ned_origin_i.ecef);
   LLA_FLOAT_OF_BFP(state.ned_origin_f.lla, state.ned_origin_i.lla);
@@ -459,7 +459,7 @@ static inline void stateSetLocalOrigin_i(struct LtpDef_i *ltp_def)
 /// Set the local (flat earth) coordinate frame origin from UTM (float).
 static inline void stateSetLocalUtmOrigin_f(struct UtmCoor_f *utm_def)
 {
-  memcpy(&state.utm_origin_f, utm_def, sizeof(struct UtmCoor_f));
+  state.utm_origin_f = *utm_def;
   state.utm_initialized_f = TRUE;
 
   /* clear bits for all local frame representations */
@@ -564,7 +564,7 @@ static inline void stateSetPosition_i(
 /// Set position from UTM coordinates (float).
 static inline void stateSetPositionUtm_f(struct UtmCoor_f *utm_pos)
 {
-  memcpy(&state.utm_pos_f, utm_pos, sizeof(struct UtmCoor_f));
+  state.utm_pos_f = *utm_pos;
   /* clear bits for all position representations and only set the new one */
   state.pos_status = (1 << POS_UTM_F);
 }
@@ -628,7 +628,7 @@ static inline void stateSetPosition_f(
     state.pos_status |= (1 << POS_LLA_F);
   }
   if (utm_pos != NULL) {
-    memcpy(&state.utm_pos_f, utm_pos, sizeof(struct UtmCoor_f));
+    state.utm_pos_f = *utm_pos;
     state.pos_status |= (1 << POS_UTM_F);
   }
 }
@@ -864,21 +864,21 @@ static inline struct EcefCoor_i *stateGetSpeedEcef_i(void)
 }
 
 /// Get norm of horizontal ground speed (int).
-static inline uint32_t *stateGetHorizontalSpeedNorm_i(void)
+static inline uint32_t stateGetHorizontalSpeedNorm_i(void)
 {
   if (!bit_is_set(state.speed_status, SPEED_HNORM_I)) {
     stateCalcHorizontalSpeedNorm_i();
   }
-  return &state.h_speed_norm_i;
+  return state.h_speed_norm_i;
 }
 
 /// Get dir of horizontal ground speed (int).
-static inline int32_t *stateGetHorizontalSpeedDir_i(void)
+static inline int32_t stateGetHorizontalSpeedDir_i(void)
 {
   if (!bit_is_set(state.speed_status, SPEED_HDIR_I)) {
     stateCalcHorizontalSpeedDir_i();
   }
-  return &state.h_speed_dir_i;
+  return state.h_speed_dir_i;
 }
 
 /// Get ground speed in local NED coordinates (float).
@@ -909,21 +909,21 @@ static inline struct EcefCoor_f *stateGetSpeedEcef_f(void)
 }
 
 /// Get norm of horizontal ground speed (float).
-static inline float *stateGetHorizontalSpeedNorm_f(void)
+static inline float stateGetHorizontalSpeedNorm_f(void)
 {
   if (!bit_is_set(state.speed_status, SPEED_HNORM_F)) {
     stateCalcHorizontalSpeedNorm_f();
   }
-  return &state.h_speed_norm_f;
+  return state.h_speed_norm_f;
 }
 
 /// Get dir of horizontal ground speed (float).
-static inline float *stateGetHorizontalSpeedDir_f(void)
+static inline float stateGetHorizontalSpeedDir_f(void)
 {
   if (!bit_is_set(state.speed_status, SPEED_HDIR_F)) {
     stateCalcHorizontalSpeedDir_f();
   }
-  return &state.h_speed_dir_f;
+  return state.h_speed_dir_f;
 }
 /** @}*/
 
@@ -1233,9 +1233,9 @@ static inline void stateSetHorizontalWindspeed_i(struct Int32Vect2 *h_windspeed)
 }
 
 /// Set airspeed (int).
-static inline void stateSetAirspeed_i(int32_t *airspeed)
+static inline void stateSetAirspeed_i(int32_t airspeed)
 {
-  state.airspeed_i = *airspeed;
+  state.airspeed_i = airspeed;
   /* clear bits for all airspeed representations and only set the new one */
   ClearBit(state.wind_air_status, AIRSPEED_F);
   SetBit(state.wind_air_status, AIRSPEED_I);
@@ -1251,27 +1251,27 @@ static inline void stateSetHorizontalWindspeed_f(struct FloatVect2 *h_windspeed)
 }
 
 /// Set airspeed (float).
-static inline void stateSetAirspeed_f(float *airspeed)
+static inline void stateSetAirspeed_f(float airspeed)
 {
-  state.airspeed_f = *airspeed;
+  state.airspeed_f = airspeed;
   /* clear bits for all airspeed representations and only set the new one */
   ClearBit(state.wind_air_status, AIRSPEED_I);
   SetBit(state.wind_air_status, AIRSPEED_F);
 }
 
 /// Set angle of attack in radians (float).
-static inline void stateSetAngleOfAttack_f(float *aoa)
+static inline void stateSetAngleOfAttack_f(float aoa)
 {
-  state.angle_of_attack_f = *aoa;
+  state.angle_of_attack_f = aoa;
   /* clear bits for all AOA representations and only set the new one */
   /// @todo no integer yet
   SetBit(state.wind_air_status, AOA_F);
 }
 
 /// Set sideslip angle in radians (float).
-static inline void stateSetSideslip_f(float *sideslip)
+static inline void stateSetSideslip_f(float sideslip)
 {
-  state.sideslip_f = *sideslip;
+  state.sideslip_f = sideslip;
   /* clear bits for all sideslip representations and only set the new one */
   /// @todo no integer yet
   SetBit(state.wind_air_status, SIDESLIP_F);
@@ -1289,12 +1289,12 @@ static inline struct Int32Vect2 *stateGetHorizontalWindspeed_i(void)
 }
 
 /// Get airspeed (int).
-static inline int32_t *stateGetAirspeed_i(void)
+static inline int32_t stateGetAirspeed_i(void)
 {
   if (!bit_is_set(state.wind_air_status, AIRSPEED_I)) {
     stateCalcAirspeed_i();
   }
-  return &state.airspeed_i;
+  return state.airspeed_i;
 }
 
 /// Get horizontal windspeed (float).
@@ -1307,30 +1307,30 @@ static inline struct FloatVect2 *stateGetHorizontalWindspeed_f(void)
 }
 
 /// Get airspeed (float).
-static inline float *stateGetAirspeed_f(void)
+static inline float stateGetAirspeed_f(void)
 {
   if (!bit_is_set(state.wind_air_status, AIRSPEED_F)) {
     stateCalcAirspeed_f();
   }
-  return &state.airspeed_f;
+  return state.airspeed_f;
 }
 
 /// Get angle of attack (float).
-static inline float *stateGetAngleOfAttack_f(void)
+static inline float stateGetAngleOfAttack_f(void)
 {
   ///  @todo only float for now
 //  if (!bit_is_set(state.wind_air_status, AOA_F))
 //    stateCalcAOA_f();
-  return &state.angle_of_attack_f;
+  return state.angle_of_attack_f;
 }
 
 /// Get sideslip (float).
-static inline float *stateGetSideslip_f(void)
+static inline float stateGetSideslip_f(void)
 {
   ///  @todo only float for now
 //  if (!bit_is_set(state.wind_air_status, SIDESLIP_F))
 //    stateCalcSideslip_f();
-  return &state.sideslip_f;
+  return state.sideslip_f;
 }
 
 /** @}*/

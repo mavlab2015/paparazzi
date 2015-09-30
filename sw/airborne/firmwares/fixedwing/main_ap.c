@@ -425,6 +425,10 @@ static inline void telecommand_task(void)
 
     /** Pitch is bounded between [-AUTO1_MAX_PITCH;AUTO1_MAX_PITCH] */
     h_ctl_pitch_setpoint = FLOAT_OF_PPRZ(fbw_state->channels[RADIO_PITCH], 0., AUTO1_MAX_PITCH);
+#if H_CTL_YAW_LOOP && defined RADIO_YAW
+    /** Yaw is bounded between [-AUTO1_MAX_YAW_RATE;AUTO1_MAX_YAW_RATE] */
+    h_ctl_yaw_rate_setpoint = FLOAT_OF_PPRZ(fbw_state->channels[RADIO_YAW], 0., AUTO1_MAX_YAW_RATE);
+#endif
   } /** Else asynchronously set by \a h_ctl_course_loop() */
 
   /** In AUTO1, throttle comes from RADIO_THROTTLE
@@ -587,8 +591,13 @@ void attitude_loop(void)
   v_ctl_throttle_slew();
   ap_state->commands[COMMAND_THROTTLE] = v_ctl_throttle_slewed;
   ap_state->commands[COMMAND_ROLL] = -h_ctl_aileron_setpoint;
-
   ap_state->commands[COMMAND_PITCH] = h_ctl_elevator_setpoint;
+#if H_CTL_YAW_LOOP && defined COMMAND_YAW
+  ap_state->commands[COMMAND_YAW] = h_ctl_rudder_setpoint;
+#endif
+#if H_CTL_CL_LOOP && defined COMMAND_CL
+  ap_state->commands[COMMAND_CL] = h_ctl_flaps_setpoint;
+#endif
 
 #if defined MCU_SPI_LINK || defined MCU_UART_LINK || defined MCU_CAN_LINK
   link_mcu_send();
@@ -662,7 +671,7 @@ void monitor_task(void)
   kill_throttle |= launch && (dist2_to_home > Square(KILL_MODE_DISTANCE));
 
   if (!autopilot_flight_time &&
-      *stateGetHorizontalSpeedNorm_f() > MIN_SPEED_FOR_TAKEOFF) {
+      stateGetHorizontalSpeedNorm_f() > MIN_SPEED_FOR_TAKEOFF) {
     autopilot_flight_time = 1;
     launch = TRUE; /* Not set in non auto launch */
 #if DOWNLINK
@@ -680,7 +689,7 @@ void event_task_ap(void)
 
 #ifndef SINGLE_MCU
   /* for SINGLE_MCU done in main_fbw */
-  /* event functions for mcu peripherals, like i2c, uart, etc.. */
+  /* event functions for mcu peripherals: i2c, usb_serial.. */
   mcu_event();
 #endif /* SINGLE_MCU */
 
@@ -690,7 +699,7 @@ void event_task_ap(void)
 
 #ifdef InsEvent
   TODO("calling InsEvent, remove me..")
-  InsEvent(NULL);
+  InsEvent();
 #endif
 
 #if USE_GPS

@@ -177,7 +177,7 @@ void ahrs_dcm_update_gps(struct GpsState *gps_s)
   static float last_gps_speed_3d = 0;
 
 #if USE_GPS
-  if (gps_s->fix == GPS_FIX_3D) {
+  if (gps_s->fix >= GPS_FIX_3D) {
     ahrs_dcm.gps_age = 0;
     ahrs_dcm.gps_speed = gps_s->speed_3d / 100.;
 
@@ -530,7 +530,6 @@ void ahrs_dcm_set_body_to_imu_quat(struct FloatQuat *q_b2i)
 
   if (!ahrs_dcm.is_aligned) {
     /* Set ltp_to_imu so that body is zero */
-    memcpy(&ahrs_dcm.ltp_to_imu_euler, orientationGetEulers_f(&ahrs_dcm.body_to_imu),
-           sizeof(struct FloatEulers));
+    ahrs_dcm.ltp_to_imu_euler = *orientationGetEulers_f(&ahrs_dcm.body_to_imu);
   }
 }

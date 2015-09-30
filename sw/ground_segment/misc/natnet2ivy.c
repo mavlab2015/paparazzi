@@ -40,7 +40,7 @@
 #include <time.h>
 
 #include "std.h"
-#include "fms/fms_network.h"
+#include "arch/linux/udp_socket.h"
 #include "math/pprz_geodetic_double.h"
 #include "math/pprz_algebra_double.h"
 
@@ -55,7 +55,7 @@ char *natnet_multicast_addr     = "239.255.42.99";
 uint16_t natnet_cmd_port        = 1510;
 uint16_t natnet_data_port       = 1511;
 uint8_t natnet_major            = 2;
-uint8_t natnet_minor            = 5;
+uint8_t natnet_minor            = 7;
 
 /** Ivy Bus default */
 #ifdef __APPLE__
@@ -67,6 +67,7 @@ char *ivy_bus                   = "127.255.255.255:2010";
 /** Sample frequency and derevitive defaults */
 uint32_t freq_transmit          = 30;     ///< Transmitting frequency in Hz
 uint16_t min_velocity_samples   = 4;      ///< The amount of position samples needed for a valid velocity
+bool small_packets              = FALSE;
 
 /** Connection timeout when not receiving **/
 #define CONNECTION_TIMEOUT          .5
@@ -115,7 +116,7 @@ struct Aircraft {
 struct Aircraft aircrafts[MAX_RIGIDBODIES];                  ///< Mapping from rigid body ID to aircraft ID
 
 /** Natnet socket connections */
-struct FmsNetwork *natnet_data, *natnet_cmd;
+struct UdpSocket natnet_data, natnet_cmd;
 
 /** Tracking location LTP and angle offset from north */
 struct LtpDef_d tracking_ltp;       ///< The tracking system LTP definition
@@ -205,9 +206,9 @@ void natnet_parse(unsigned char *in) {
       memcpy(&old_rigid, &rigidBodies[j], sizeof(struct RigidBody));
 
       memcpy(&rigidBodies[j].id, ptr, 4); ptr += 4;
-      memcpy(&rigidBodies[j].x, ptr, 4); ptr += 4;   //x --> X
+      memcpy(&rigidBodies[j].y, ptr, 4); ptr += 4;   //x --> Y
       memcpy(&rigidBodies[j].z, ptr, 4); ptr += 4;   //y --> Z
-      memcpy(&rigidBodies[j].y, ptr, 4); ptr += 4;   //z --> Y
+      memcpy(&rigidBodies[j].x, ptr, 4); ptr += 4;   //z --> X
       memcpy(&rigidBodies[j].qx, ptr, 4); ptr += 4;  //qx --> QX
       memcpy(&rigidBodies[j].qz, ptr, 4); ptr += 4;  //qy --> QZ
       memcpy(&rigidBodies[j].qy, ptr, 4); ptr += 4;  //qz --> QY
@@ -293,6 +294,14 @@ void natnet_parse(unsigned char *in) {
         // Mean marker error
         memcpy(&rigidBodies[j].error, ptr, 4); ptr += 4;
         printf_natnet("Mean marker error: %3.8f\n", rigidBodies[j].error);
+      }
+
+      // 2.6 and later
+      if( ((natnet_major == 2)&&(natnet_minor >= 6)) || (natnet_major > 2) || (natnet_major == 0) )
+      {
+          // params
+          short params = 0; memcpy(&params, ptr, 2); ptr += 2;
+//           bool bTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
       }
     } // next rigid body
 
@@ -452,8 +461,8 @@ gboolean timeout_transmit_callback(gpointer data) {
     struct DoubleEulers orient_eulers;
 
     // Add the Optitrack angle to the x and y positions
-    pos.x = cos(tracking_offset_angle) * rigidBodies[i].x + sin(tracking_offset_angle) * rigidBodies[i].y;
-    pos.y = sin(tracking_offset_angle) * rigidBodies[i].x - cos(tracking_offset_angle) * rigidBodies[i].y;
+    pos.x = cos(tracking_offset_angle) * rigidBodies[i].x - sin(tracking_offset_angle) * rigidBodies[i].y;
+    pos.y = sin(tracking_offset_angle) * rigidBodies[i].x + cos(tracking_offset_angle) * rigidBodies[i].y;
     pos.z = rigidBodies[i].z;
 
     // Convert the position to ecef and lla based on the Optitrack LTP
@@ -471,8 +480,8 @@ gboolean timeout_transmit_callback(gpointer data) {
       rigidBodies[i].vel_z = rigidBodies[i].vel_z / sample_time;
 
       // Add the Optitrack angle to the x and y velocities
-      speed.x = cos(tracking_offset_angle) * rigidBodies[i].vel_x + sin(tracking_offset_angle) * rigidBodies[i].vel_y;
-      speed.y = sin(tracking_offset_angle) * rigidBodies[i].vel_x - cos(tracking_offset_angle) * rigidBodies[i].vel_y;
+      speed.x = cos(tracking_offset_angle) * rigidBodies[i].vel_x - sin(tracking_offset_angle) * rigidBodies[i].vel_y;
+      speed.y = sin(tracking_offset_angle) * rigidBodies[i].vel_x + cos(tracking_offset_angle) * rigidBodies[i].vel_y;
       speed.z = rigidBodies[i].vel_z;
 
       // Conver the speed to ecef based on the Optitrack LTP
@@ -487,7 +496,7 @@ gboolean timeout_transmit_callback(gpointer data) {
     double_eulers_of_quat(&orient_eulers, &orient);
 
     // Calculate the heading by adding the Natnet offset angle and normalizing it
-    double heading = -orient_eulers.psi-tracking_offset_angle;
+    double heading = -orient_eulers.psi+90.0/57.6 - tracking_offset_angle; //the optitrack axes are 90 degrees rotated wrt ENU
     NormRadAngle(heading);
 
     printf_debug("[%d -> %d]Samples: %d\t%d\t\tTiming: %3.3f latency\n", rigidBodies[i].id, aircrafts[rigidBodies[i].id].ac_id
@@ -496,21 +505,50 @@ gboolean timeout_transmit_callback(gpointer data) {
       rigidBodies[i].x, rigidBodies[i].y, rigidBodies[i].z,
       rigidBodies[i].ecef_vel.x, rigidBodies[i].ecef_vel.y, rigidBodies[i].ecef_vel.z);
 
-    // Transmit the REMOTE_GPS packet on the ivy bus
-    IvySendMsg("0 REMOTE_GPS %d %d %d %d %d %d %d %d %d %d %d %d %d %d", aircrafts[rigidBodies[i].id].ac_id,
-      rigidBodies[i].nMarkers,                //uint8 Number of markers (sv_num)
-      (int)(ecef_pos.x*100.0),                //int32 ECEF X in CM
-      (int)(ecef_pos.y*100.0),                //int32 ECEF Y in CM
-      (int)(ecef_pos.z*100.0),                //int32 ECEF Z in CM
-      (int)(DegOfRad(lla_pos.lat)*1e7),       //int32 LLA latitude in deg*1e7
-      (int)(DegOfRad(lla_pos.lon)*1e7),       //int32 LLA longitude in deg*1e7
-      (int)(rigidBodies[i].z*1000.0),         //int32 LLA altitude in mm above elipsoid
-      (int)(rigidBodies[i].z*1000.0),         //int32 HMSL height above mean sea level in mm
-      (int)(rigidBodies[i].ecef_vel.x*100.0), //int32 ECEF velocity X in cm/s
-      (int)(rigidBodies[i].ecef_vel.y*100.0), //int32 ECEF velocity Y in cm/s
-      (int)(rigidBodies[i].ecef_vel.z*100.0), //int32 ECEF velocity Z in cm/s
-      0,
-      (int)(heading*10000000.0));             //int32 Course in rad*1e7
+    // Transmit the REMOTE_GPS packet on the ivy bus (either small or big)
+    if(small_packets) {
+      /* The GPS messages are most likely too large to be send over either the datalink
+       * The local position is an int32 and the 10 LSBs of the x and y axis are compressed into 
+       * a single integer. The z axis is considered unsigned and only the latter 10 LSBs are
+       * used.
+       */
+      uint32_t pos_xyz = (((uint32_t)(pos.x*100.0)) & 0x3FF) << 22; // bits 31-22 x position in cm
+      pos_xyz |= (((uint32_t)(pos.y*100.0)) & 0x3FF) << 12; // bits 21-12 y position in cm
+      pos_xyz |= (((uint32_t)(pos.z*100.0)) & 0x3FF) << 2; // bits 11-2 z position in cm
+      // bits 1 and 0 are free
+
+      // printf("ENU Pos: %u (%.2f, %.2f, %.2f)\n", pos_xyz, pos.x, pos.y, pos.z);
+
+      uint32_t speed_xy = (((uint32_t)(speed.x*100.0)) & 0x3FF) << 22; // bits 31-22 speed x in cm/s
+      speed_xy |= (((uint32_t)(speed.x*100.0)) & 0x3FF) << 12; // bits 21-12 speed y in cm/s
+      speed_xy |= (((uint32_t)(heading*100.0)) & 0x3FF) << 2; // bits 11-2 heading in rad*1e2 (The heading is already subsampled)
+      // bits 1 and 0 are free
+
+      // printf("ENU Vel: %u (%.2f, %.2f, 0.0)\n", speed_xy, speed.x, speed.y);
+
+      // printf("Heading: %.2f\n", heading);
+
+      IvySendMsg("0 REMOTE_GPS_SMALL %d %d %d %d", aircrafts[rigidBodies[i].id].ac_id, // uint8 rigid body ID (1 byte)
+        (uint8_t)rigidBodies[i].nMarkers, // status (1 byte)
+        pos_xyz, //uint32 ENU X, Y and Z in CM (4 bytes)
+        speed_xy); //uint32 ENU velocity X, Y in cm/s and heading in rad*1e2 (4 bytes)   
+    }
+    else {
+      IvySendMsg("0 REMOTE_GPS %d %d %d %d %d %d %d %d %d %d %d %d %d %d", aircrafts[rigidBodies[i].id].ac_id,
+        rigidBodies[i].nMarkers,                //uint8 Number of markers (sv_num)
+        (int)(ecef_pos.x*100.0),                //int32 ECEF X in CM
+        (int)(ecef_pos.y*100.0),                //int32 ECEF Y in CM
+        (int)(ecef_pos.z*100.0),                //int32 ECEF Z in CM
+        (int)(lla_pos.lat*10000000.0),          //int32 LLA latitude in rad*1e7
+        (int)(lla_pos.lon*10000000.0),          //int32 LLA longitude in rad*1e7
+        (int)(rigidBodies[i].z*1000.0),         //int32 LLA altitude in mm above elipsoid
+        (int)(rigidBodies[i].z*1000.0),         //int32 HMSL height above mean sea level in mm
+        (int)(rigidBodies[i].ecef_vel.x*100.0), //int32 ECEF velocity X in m/s
+        (int)(rigidBodies[i].ecef_vel.y*100.0), //int32 ECEF velocity Y in m/s
+        (int)(rigidBodies[i].ecef_vel.z*100.0), //int32 ECEF velocity Z in m/s
+        0,
+        (int)(heading*10000000.0));             //int32 Course in rad*1e7
+    }
 
     // Reset the velocity differentiator if we calculated the velocity
     if(rigidBodies[i].nVelocitySamples >= min_velocity_samples) {
@@ -534,7 +572,7 @@ static gboolean sample_data(GIOChannel *chan, GIOCondition cond, gpointer data) 
   static int bytes_data = 0;
 
   // Keep on reading until we have the whole packet
-  bytes_data += network_read(natnet_data, buffer_data, MAX_PACKETSIZE);
+  bytes_data += udp_socket_recv(&natnet_data, buffer_data, MAX_PACKETSIZE);
 
   // Parse NatNet data
   if(bytes_data >= 2 && bytes_data >= buffer_data[1]) {
@@ -567,7 +605,8 @@ void print_help(char* filename) {
     "   -offset_angle <degree>    Tracking system angle offset compared to the North in degrees\n\n"
 
     "   -tf <freq>                Transmit frequency to the ivy bus in hertz (60)\n"
-    "   -vel_samples <samples>    Minimum amount of samples for the velocity differentiator (4)\n\n"
+    "   -vel_samples <samples>    Minimum amount of samples for the velocity differentiator (4)\n"
+    "   -small                    Send small packets instead of bigger (FALSE)\n\n"
 
     "   -ivy_bus <address:port>   Ivy bus address and port (127.255.255.255:2010)\n";
   fprintf(stderr, usage, filename);
@@ -689,6 +728,10 @@ static void parse_options(int argc, char** argv) {
 
       min_velocity_samples = atoi(argv[++i]);
     }
+    // Set to use small packets
+    else if(strcmp(argv[i], "-small") == 0) {
+      small_packets = TRUE;
+    }
 
     // Set the ivy bus
     else if(strcmp(argv[i], "-ivy_bus") == 0) {
@@ -717,10 +760,10 @@ int main(int argc, char** argv)
 {
   // Set the default tracking system position and angle
   struct EcefCoor_d tracking_ecef;
-  tracking_ecef.x = 3924304;
-  tracking_ecef.y = 300360;
-  tracking_ecef.z = 5002162;
-  tracking_offset_angle = 123.0 / 57.6;
+  tracking_ecef.x = 3924332;
+  tracking_ecef.y = 300362;
+  tracking_ecef.z = 5002197;
+  tracking_offset_angle = 33.0 / 57.6;
   ltp_def_from_ecef_d(&tracking_ltp, &tracking_ecef);
 
   // Parse the options from cmdline
@@ -729,13 +772,13 @@ int main(int argc, char** argv)
 
   // Create the network connections
   printf_debug("Starting NatNet listening (multicast address: %s, data port: %d, version: %d.%d)\n", natnet_multicast_addr, natnet_data_port, natnet_major, natnet_minor);
-  natnet_data = network_new("", -1, natnet_data_port, 0); // Only receiving
-  network_subscribe_multicast(natnet_data, natnet_multicast_addr);
-  network_set_recvbuf(natnet_data, 0x100000); // 1MB
+  udp_socket_create(&natnet_data, "", -1, natnet_data_port, 0); // Only receiving
+  udp_socket_subscribe_multicast(&natnet_data, natnet_multicast_addr);
+  udp_socket_set_recvbuf(&natnet_data, 0x100000); // 1MB
 
   printf_debug("Starting NatNet command socket (server address: %s, command port: %d)\n", natnet_addr, natnet_cmd_port);
-  natnet_cmd = network_new(natnet_addr, natnet_cmd_port, 0, 1);
-  network_set_recvbuf(natnet_cmd, 0x100000); // 1MB
+  udp_socket_create(&natnet_cmd, natnet_addr, natnet_cmd_port, 0, 1);
+  udp_socket_set_recvbuf(&natnet_cmd, 0x100000); // 1MB
 
   // Create the Ivy Client
   GMainLoop *ml =  g_main_loop_new(NULL, FALSE);
@@ -747,7 +790,7 @@ int main(int argc, char** argv)
     freq_transmit, min_velocity_samples);
   g_timeout_add(1000/freq_transmit, timeout_transmit_callback, NULL);
 
-  GIOChannel *sk = g_io_channel_unix_new(natnet_data->socket_in);
+  GIOChannel *sk = g_io_channel_unix_new(natnet_data.sockfd);
   g_io_add_watch(sk, G_IO_IN | G_IO_NVAL | G_IO_HUP,
                  sample_data, NULL);
 
