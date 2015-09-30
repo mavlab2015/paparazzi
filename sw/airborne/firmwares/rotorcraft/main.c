@@ -46,12 +46,8 @@
 #include "subsystems/actuators/motor_mixing.h"
 #endif
 
-#if USE_IMU
 #include "subsystems/imu.h"
-#endif
-#if USE_GPS
 #include "subsystems/gps.h"
-#endif
 
 #if USE_BARO_BOARD
 #include "subsystems/sensors/baro.h"
@@ -124,34 +120,10 @@ int main(void)
 {
   main_init();
 
-#if LIMIT_EVENT_POLLING
-  /* Limit main loop frequency to 1kHz.
-   * This is a kludge until we can better leverage threads and have real events.
-   * Without this limit the event flags will constantly polled as fast as possible,
-   * resulting on 100% cpu load on boards with an (RT)OS.
-   * On bare metal boards this is not an issue, as you have nothing else running anyway.
-   */
-  uint32_t t_begin = 0;
-  uint32_t t_diff = 0;
-  while (1) {
-    t_begin = get_sys_time_usec();
-
-    handle_periodic_tasks();
-    main_event();
-
-    /* sleep remaining time to limit to 1kHz */
-    t_diff = get_sys_time_usec() - t_begin;
-    if (t_diff < 1000) {
-      sys_time_usleep(1000 - t_diff);
-    }
-  }
-#else
   while (1) {
     handle_periodic_tasks();
     main_event();
   }
-#endif
-
   return 0;
 }
 #endif /* SITL */
@@ -174,9 +146,7 @@ STATIC_INLINE void main_init(void)
 #if USE_BARO_BOARD
   baro_init();
 #endif
-#if USE_IMU
   imu_init();
-#endif
 #if USE_AHRS_ALIGNER
   ahrs_aligner_init();
 #endif
@@ -214,10 +184,8 @@ STATIC_INLINE void main_init(void)
   baro_tid = sys_time_register_timer(1. / BARO_PERIODIC_FREQUENCY, NULL);
 #endif
 
-#if USE_IMU
   // send body_to_imu from here for now
   AbiSendMsgBODY_TO_IMU_QUAT(1, orientationGetQuat_f(&imu.body_to_imu));
-#endif
 }
 
 STATIC_INLINE void handle_periodic_tasks(void)
@@ -250,9 +218,7 @@ STATIC_INLINE void handle_periodic_tasks(void)
 STATIC_INLINE void main_periodic(void)
 {
 
-#if USE_IMU
   imu_periodic();
-#endif
 
   //FIXME: temporary hack, remove me
 #ifdef InsPeriodic
@@ -266,12 +232,12 @@ STATIC_INLINE void main_periodic(void)
   SetActuatorsFromCommands(commands, autopilot_mode);
 
   if (autopilot_in_flight) {
-    RunOnceEvery(PERIODIC_FREQUENCY, autopilot_flight_time++);
-  }
-
+    RunOnceEvery(PERIODIC_FREQUENCY, { autopilot_flight_time++;
 #if defined DATALINK || defined SITL
-  RunOnceEvery(PERIODIC_FREQUENCY, datalink_time++);
+                                       datalink_time++;
 #endif
+                                     });
+  }
 
   RunOnceEvery(10, LED_PERIODIC());
 }
@@ -339,7 +305,7 @@ STATIC_INLINE void failsafe_check(void)
 
 STATIC_INLINE void main_event(void)
 {
-  /* event functions for mcu peripherals: i2c, usb_serial.. */
+  /* event functions for mcu peripherals, like i2c, uart, etc.. */
   mcu_event();
 
   DatalinkEvent();
@@ -348,14 +314,7 @@ STATIC_INLINE void main_event(void)
     RadioControlEvent(autopilot_on_rc_frame);
   }
 
-#if USE_IMU
   ImuEvent();
-#endif
-
-#ifdef InsEvent
-  TODO("calling InsEvent, remove me..")
-  InsEvent();
-#endif
 
 #if USE_BARO_BOARD
   BaroEvent();

@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="MPPT" dir="energy">
+<module name="MPPT">
   <doc>
     <description>
       Maximum Power Point Tracker

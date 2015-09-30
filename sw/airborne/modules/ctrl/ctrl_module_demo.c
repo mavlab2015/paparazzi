@@ -77,11 +77,6 @@ void ctrl_module_run(bool_t in_flight)
 ////////////////////////////////////////////////////////////////////
 // Call our controller
 // Implement own Horizontal loops
-void guidance_h_module_init(void)
-{
-  ctrl_module_init();
-}
-
 void guidance_h_module_enter(void)
 {
   ctrl_module_init();
@@ -100,11 +95,6 @@ void guidance_h_module_run(bool_t in_flight)
 {
   // Call full inner-/outerloop / horizontal-/vertical controller:
   ctrl_module_run(in_flight);
-}
-
-void guidance_v_module_init(void)
-{
-  // initialization of your custom vertical controller goes here
 }
 
 // Implement own Vertical loops

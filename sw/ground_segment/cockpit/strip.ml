@@ -56,8 +56,7 @@ type strip_param = {
   max_bat : float;
   alt_shift_plus_plus : float;
   alt_shift_plus : float;
-  alt_shift_minus : float;
-  icons_theme : string }
+  alt_shift_minus : float; }
 
 
 let agl_max = 150.
@@ -280,7 +279,7 @@ let add = fun config strip_param (strips:GPack.box) ->
   List.iter (fun (b, icon) ->
     b#remove b#child;
     try
-      let pixbuf = GdkPixbuf.from_file (Env.get_gcs_icon_path strip_param.icons_theme icon) in
+      let pixbuf = GdkPixbuf.from_file (Env.gcs_icons_path // icon) in
       ignore (GMisc.image ~pixbuf ~packing:b#add ())
     with
         exc ->

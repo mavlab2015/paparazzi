@@ -1,6 +1,6 @@
 <!DOCTYPE settings SYSTEM "settings.dtd">
 
-<settings target="test_settings">
+<settings>
   <dl_settings>
     <dl_settings NAME="Group1">
 

@@ -47,33 +47,25 @@
 #define XBEE 2
 #define SUPERBITRF 3
 #define W5100 4
-#define BLUEGIGA 5
 
-/** Flag provided to control calls to ::dl_parse_msg. NOT used in this module*/
 EXTERN bool_t dl_msg_available;
+/** Flag provided to control calls to ::dl_parse_msg. NOT used in this module*/
 
-/** time in seconds since last datalink message was received */
 EXTERN uint16_t datalink_time;
-
-/** number of datalink/uplink messages received */
-EXTERN uint16_t datalink_nb_msgs;
 
 #define MSG_SIZE 128
 EXTERN uint8_t dl_buffer[MSG_SIZE]  __attribute__((aligned));
 
-/** Should be called when chars are available in dl_buffer */
 EXTERN void dl_parse_msg(void);
+/** Should be called when chars are available in dl_buffer */
 
 /** Check for new message and parse */
-static inline void DlCheckAndParse(void)
-{
-  if (dl_msg_available) {
-    datalink_time = 0;
-    datalink_nb_msgs++;
-    dl_parse_msg();
-    dl_msg_available = FALSE;
+#define DlCheckAndParse() {   \
+    if (dl_msg_available) {      \
+      dl_parse_msg();            \
+      dl_msg_available = FALSE;  \
+    }                            \
   }
-}
 
 #if defined DATALINK && DATALINK == PPRZ
 
@@ -100,13 +92,6 @@ static inline void DlCheckAndParse(void)
 
 #define DatalinkEvent() {                       \
     SuperbitRFCheckAndParse();                  \
-    DlCheckAndParse();                          \
-  }
-
-#elif defined DATALINK && DATALINK == BLUEGIGA
-
-#define DatalinkEvent() {                       \
-    BlueGigaCheckAndParse(DOWNLINK_DEVICE, pprz_tp);   \
     DlCheckAndParse();                          \
   }
 

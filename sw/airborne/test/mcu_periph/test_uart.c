@@ -37,6 +37,7 @@ int main(void)
     if (sys_time_check_and_ack_timer(0)) {
       main_periodic();
     }
+    uart_event();
   }
 
   return 0;
@@ -53,19 +54,19 @@ static inline void main_periodic(void)
   char ch;
 
 #if USE_UART1
-  uart_put_byte(&uart1, 'a');
+  uart_transmit(&uart1, 'a');
 #endif
 #if USE_UART2
-  uart_put_byte(&uart2, 'b');
+  uart_transmit(&uart2, 'b');
 #endif
 #if USE_UART3
-  uart_put_byte(&uart3, 'c');
+  uart_transmit(&uart3, 'c');
 #endif
 #if USE_UART4
-  uart_put_byte(&uart4, 'd');
+  uart_transmit(&uart4, 'd');
 #endif
 #if USE_UART5
-  uart_put_byte(&uart5, 'e');
+  uart_transmit(&uart5, 'e');
 #endif
 
   LED_OFF(1);

@@ -52,13 +52,11 @@ bool_t mission_point_of_lla(struct EnuCoor_f *point, struct LlaCoor_i *lla)
   struct EnuCoor_i tmp_enu_point_i;
   enu_of_lla_point_i(&tmp_enu_point_i, &state.ned_origin_i, lla);
   struct EnuCoor_f tmp_enu_point_f;
-  // result of enu_of_lla_point_i is in cm, convert to float in m
-  VECT3_SMUL(tmp_enu_point_f, tmp_enu_point_i, 0.01);
+  ENU_FLOAT_OF_BFP(tmp_enu_point_f, tmp_enu_point_i);
 
   //Bound the new waypoint with max distance from home
-  struct FloatVect2 home;
-  home.x = waypoint_get_x(WP_HOME);
-  home.y = waypoint_get_y(WP_HOME);
+  struct EnuCoor_f home;
+  ENU_FLOAT_OF_BFP(home, waypoints[WP_HOME]);
   struct FloatVect2 vect_from_home;
   VECT2_DIFF(vect_from_home, tmp_enu_point_f, home);
   //Saturate the mission wp not to overflow max_dist_from_home

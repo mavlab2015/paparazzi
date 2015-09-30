@@ -140,7 +140,7 @@ static void accel_cb(uint8_t sender_id __attribute__((unused)),
                      uint32_t stamp __attribute__((unused)),
                      struct Int32Vect3 *accel)
 {
-  ins_finv_accel = *accel;
+  memcpy(&ins_finv_accel, accel, sizeof(struct Int32Vect3));
 }
 
 static void mag_cb(uint8_t sender_id __attribute__((unused)),
@@ -170,7 +170,7 @@ static void body_to_imu_cb(uint8_t sender_id __attribute__((unused)),
 
 static void geo_mag_cb(uint8_t sender_id __attribute__((unused)), struct FloatVect3 *h)
 {
-  ins_float_inv.mag_h = *h;
+  memcpy(&ins_float_inv.mag_h, h, sizeof(struct FloatVect3));
 }
 
 static void gps_cb(uint8_t sender_id __attribute__((unused)),

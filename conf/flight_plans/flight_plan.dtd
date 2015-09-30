@@ -77,8 +77,7 @@ height CDATA #IMPLIED>
 
 <!ATTLIST sector
 name CDATA #REQUIRED
-color CDATA #IMPLIED
-type CDATA #IMPLIED>
+color CDATA #IMPLIED>
 
 <!ATTLIST corner
 name CDATA #REQUIRED>

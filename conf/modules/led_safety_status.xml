@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="led_safety_status" dir="light">
+<module name="led_safety_status">
   <doc>
     <description>
       LED safety indicator.

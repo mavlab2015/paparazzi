@@ -26,7 +26,6 @@
  *
  */
 
-#include <stdint.h>
 #include "firmwares/fixedwing/autopilot.h"
 
 #include "state.h"
@@ -108,10 +107,6 @@ static void send_bat(struct transport_tx *trans, struct link_device *dev)
 {
   int16_t amps = (int16_t)(current / 10);
   int16_t e = energy;
-  // prevent overflow
-  if (fabs(energy) >= INT16_MAX) {
-    e = INT16_MAX;
-  }
   pprz_msg_send_BAT(trans, dev, AC_ID,
                     &v_ctl_throttle_slewed, &vsupply, &amps,
                     &autopilot_flight_time, (uint8_t *)(&kill_throttle),
@@ -121,9 +116,6 @@ static void send_bat(struct transport_tx *trans, struct link_device *dev)
 static void send_energy(struct transport_tx *trans, struct link_device *dev)
 {
   uint16_t e = energy;
-  if (fabs(energy) >= INT16_MAX) {
-    e = INT16_MAX;
-  }
   float vsup = ((float)vsupply) / 10.0f;
   float curs = ((float)current) / 1000.0f;
   float power = vsup * curs;
@@ -152,14 +144,13 @@ static void send_desired(struct transport_tx *trans, struct link_device *dev)
 static void send_airspeed(struct transport_tx *trans __attribute__((unused)),
                           struct link_device *dev __attribute__((unused)))
 {
-  float airspeed = stateGetAirspeed_f();
 #if USE_AIRSPEED
   pprz_msg_send_AIRSPEED(trans, dev, AC_ID,
-                         &airspeed, &v_ctl_auto_airspeed_setpoint,
+                         stateGetAirspeed_f(), &v_ctl_auto_airspeed_setpoint,
                          &v_ctl_auto_airspeed_controlled, &v_ctl_auto_groundspeed_setpoint);
 #else
   float zero = 0;
-  pprz_msg_send_AIRSPEED(trans, dev, AC_ID, &airspeed, &zero, &zero, &zero);
+  pprz_msg_send_AIRSPEED(trans, dev, AC_ID, stateGetAirspeed_f(), &zero, &zero, &zero);
 #endif
 }
 #endif /* PERIODIC_TELEMETRY */

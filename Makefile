@@ -67,7 +67,6 @@ TMTC=sw/ground_segment/tmtc
 GENERATORS=$(PAPARAZZI_SRC)/sw/tools/generators
 JOYSTICK=sw/ground_segment/joystick
 EXT=sw/ext
-TOOLS=sw/tools
 
 #
 # build some stuff in subdirs
@@ -165,14 +164,11 @@ sim_static: libpprz
 
 ext:
 	$(MAKE) -C $(EXT)
-	$(MAKE) -C $(TOOLS)/bluegiga_usb_dongle
 
 #
 # make misc subdirs
 #
 subdirs: $(SUBDIRS)
-
-$(MISC): ext
 
 $(SUBDIRS):
 	$(MAKE) -C $@
@@ -315,12 +311,7 @@ test: test_math test_examples
 
 # compiles all aircrafts in conf_tests.xml
 test_examples: all
-	CONF_XML=conf/conf_tests.xml prove tests/aircrafts/
-
-test_all_confs: all
-	$(Q)$(eval $CONFS:=$(shell ./find_confs.py))
-	@echo "************\nFound $(words $($CONFS)) config files: $($CONFS)"
-	$(Q)$(foreach conf,$($CONFS),echo "\n************\nTesting all aircrafts in conf: $(conf)\n************" && (CONF_XML=$(conf) prove tests/aircrafts/ || echo "failed $(conf)" >> TEST_ALL_CONFS_FAILED);) test -f TEST_ALL_CONFS_FAILED && cat TEST_ALL_CONFS_FAILED && rm -f TEST_ALL_CONFS_FAILED && exit 1
+	CONF_XML=conf/conf_tests.xml prove tests/examples/
 
 # run some math tests that don't need whole paparazzi to be built
 test_math:
@@ -336,4 +327,4 @@ test_sim: all
 subdirs $(SUBDIRS) conf ext libpprz multimon cockpit cockpit.opt tmtc tmtc.opt generators\
 static sim_static lpctools commands \
 clean cleanspaces ab_clean dist_clean distclean dist_clean_irreversible \
-test test_examples test_math test_sim test_all_confs
+test test_examples test_math test_sim

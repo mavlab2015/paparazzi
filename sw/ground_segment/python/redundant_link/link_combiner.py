@@ -31,7 +31,7 @@ from ivy.std_api import *
 
 PPRZ_HOME = os.getenv("PAPARAZZI_HOME")
 sys.path.append(PPRZ_HOME + "/sw/lib/python")
-from pprz_msg import messages_xml_map
+import messages_xml_map
 
 class Circular_Buffer:
     def __init__(self, size):
@@ -220,7 +220,7 @@ class Link_Combiner:
 
 
 def main():
-    messages_xml_map.parse_messages()
+    messages_xml_map.ParseMessages()
 
 
     #Command line options

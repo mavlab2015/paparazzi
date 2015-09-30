@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="max7456" dir="display">
+<module name="max7456" dir="max7456">
   <doc>
     <description>MAX7456 driver (SPI)</description>
   </doc>

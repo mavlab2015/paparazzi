@@ -12,5 +12,3 @@ BOARD_CFG = \"boards/pc_sim.h\"
 
 $(TARGET).ARCHDIR = $(ARCH)
 
-MODEM_HOST ?= 127.0.0.1
-

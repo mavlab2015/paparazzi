@@ -23,7 +23,6 @@
 
 #include "mcu.h"
 #include "mcu_periph/sys_time.h"
-#define DATALINK_C
 #include "subsystems/datalink/downlink.h"
 #include "subsystems/radio_control.h"
 

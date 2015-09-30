@@ -44,7 +44,6 @@ struct GpsNmea {
   uint8_t gps_nb_ovrn;        ///< number if incomplete nmea-messages
   char msg_buf[NMEA_MAXLEN];  ///< buffer for storing one nmea-line
   int msg_len;
-  uint8_t status;             ///< line parser status
 };
 
 extern struct GpsNmea gps_nmea;
@@ -73,11 +72,13 @@ static inline void GpsEvent(void)
     nmea_configure();
     return;
   }
-  while (dev->char_available(dev->periph)) {
-    nmea_parse_char(dev->get_byte(dev->periph));
-    if (gps_nmea.msg_available) {
-      gps_nmea_msg();
+  if (dev->char_available(dev->periph)) {
+    while (dev->char_available(dev->periph)) {
+      nmea_parse_char(dev->get_byte(dev->periph));
     }
+  }
+  if (gps_nmea.msg_available) {
+    gps_nmea_msg();
   }
 }
 

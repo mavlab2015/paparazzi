@@ -25,10 +25,8 @@
 
 #define BOARD_BEBOP
 
-#include "peripherals/video_device.h"
-
 /** uart connected to GPS internally */
-#define UART1_DEV /dev/ttyPA1
+#define UART1_DEV "/dev/ttyPA1"
 
 /* Default actuators driver */
 #define DEFAULT_ACTUATORS "boards/bebop/actuators.h"
@@ -36,28 +34,10 @@
 #define ActuatorsDefaultInit() ActuatorsBebopInit()
 #define ActuatorsDefaultCommit() ActuatorsBebopCommit()
 
-/* Cameras */
-extern struct video_config_t bottom_camera;
-extern struct video_config_t front_camera;
 
 /* by default activate onboard baro */
 #ifndef USE_BARO_BOARD
 #define USE_BARO_BOARD 1
-#endif
-
-/* The ADC from the sonar */
-#if USE_ADC0
-#define ADC0_ID             0
-#define ADC0_CHANNELS       2
-#define ADC0_CHANNELS_CNT   1
-#define ADC0_BUF_LENGTH     8192
-#endif
-
-/* The SPI from the sonar */
-#if USE_SPI0
-#define SPI0_MODE           0
-#define SPI0_BITS_PER_WORD  8
-#define SPI0_MAX_SPEED_HZ   320000
 #endif
 
 #endif /* CONFIG_BEBOP */

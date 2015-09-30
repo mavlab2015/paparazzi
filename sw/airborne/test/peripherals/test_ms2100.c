@@ -23,7 +23,6 @@
 #include BOARD_CONFIG
 #include "mcu.h"
 #include "mcu_periph/sys_time.h"
-#define DATALINK_C
 #include "subsystems/datalink/downlink.h"
 #include "peripherals/ms2100.h"
 #include "led.h"

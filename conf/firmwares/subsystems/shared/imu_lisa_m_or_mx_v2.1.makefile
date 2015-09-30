@@ -4,7 +4,6 @@
 # difference is that the orientation of the chips is bit different and we need
 # to compensate for that.
 #
-# Use <define name="ASPIRIN_2_DISABLE_MAG value="TRUE"/> to disable the mag.
 #
 # required xml:
 #  <section name="IMU" prefix="IMU_">

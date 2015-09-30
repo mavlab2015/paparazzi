@@ -45,7 +45,15 @@ ACINCLUDE = $(PAPARAZZI_HOME)/var/$(AIRCRAFT)
 CAML_CFLAGS = -I $(shell $(OCAMLC) -where)
 
 
-all : gaia sitl.cma
+all : gaia sitl.cma simhitl
+
+fg.so : fg.o
+	@echo BUILD $@
+	$(Q)$(CC) -shared -o $@ $^
+
+simhitl : fg.so $(SIMHCMO) simhitl.cmo $(LIBPPRZCMA)
+	@echo OL $@
+	$(Q)$(OCAMLC) $(INCLUDES) -o $@ $(LINKPKG) gtkInit.cmo $<
 
 sitl.cma : fg.o $(SIMSCMO) $(LIBPPRZCMA)
 	@echo OL $@

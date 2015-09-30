@@ -20,18 +20,17 @@
  *
  */
 
-/** @file follow.c
- *  @brief Follow a certain AC ID.
- * Only for rotorcraft firmware.
+/** \file follow.c
+ *  \brief Follow a certain AC ID
+ *
  */
 
 #include "multi/follow.h"
-#include "generated/airframe.h"
 #include "generated/flight_plan.h"
-
-#include "subsystems/navigation/waypoints.h"
+#include "generated/airframe.h"
 
 #include "state.h"
+#include "navigation.h"
 #include "messages.h"
 #include "dl_protocol.h"
 
@@ -74,5 +73,5 @@ void follow_change_wp(unsigned char *buffer)
   // TODO: Remove the angle to the north
 
   // Move the waypoint
-  waypoint_set_enu_i(FOLLOW_WAYPOINT_ID, &enu);
+  VECT3_COPY(waypoints[FOLLOW_WAYPOINT_ID], enu);
 }

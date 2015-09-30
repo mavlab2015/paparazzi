@@ -144,6 +144,7 @@ static inline void main_event_task(void)
 
 void dl_parse_msg(void)
 {
+  datalink_time = 0;
   uint8_t msg_id = dl_buffer[1];
   switch (msg_id) {
 

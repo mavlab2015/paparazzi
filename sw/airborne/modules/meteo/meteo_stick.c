@@ -54,27 +54,6 @@
 #define MS_DIFF_PRESSURE_SCALE 1.0f
 #endif
 
-// Test if pressure sensor is configured and/or should send ABI message
-#ifdef MS_PRESSURE_SLAVE_IDX
-#ifndef USE_MS_PRESSURE
-#define USE_MS_PRESSURE TRUE
-#endif
-#endif
-
-// Test if diff pressure sensor is configured and/or should send ABI message
-#ifdef MS_DIFF_PRESSURE_SLAVE_IDX
-#ifndef USE_MS_DIFF_PRESSURE
-#define USE_MS_DIFF_PRESSURE TRUE
-#endif
-#endif
-
-// Test if temperature sensor is configured and/or should send ABI message
-#ifdef MS_TEMPERATURE_SLAVE_IDX
-#ifndef USE_MS_TEMPERATURE
-#define USE_MS_TEMPERATURE TRUE
-#endif
-#endif
-
 // Test if EEPROM slave index is configured
 // if not, don't use EEPROM
 #ifndef MS_EEPROM_SLAVE_IDX
@@ -122,10 +101,6 @@ static inline float get_temp(uint32_t raw)
 
 static float pitot_offset;
 static int pitot_counter;
-// number of measures for averaging initial offset
-#define MS_PITOT_COUNTER 20
-// filtering coefficient (0 no filter, 1 constant value)
-#define MS_PITOT_FILTER 0.6
 
 static inline float get_diff(uint32_t raw)
 {
@@ -273,9 +248,8 @@ void meteo_stick_init(void)
   eeprom25AA256_init(&meteo_stick.eeprom, &(MS_SPI_DEV), MS_EEPROM_SLAVE_IDX);
 #endif
 
-  // Number of measurements before setting pitot offset
-  pitot_counter = MS_PITOT_COUNTER;
-  meteo_stick.reset_dp_offset = FALSE;
+  // Number of measurements before setting pitor offset
+  pitot_counter = 10;
 
 #if LOG_MS
   log_ptu_started = FALSE;
@@ -372,12 +346,6 @@ void meteo_stick_periodic(void)
 #if SEND_MS
   meteo_stick_send_data();
 #endif
-
-  // Check if DP offset reset is required
-  if (meteo_stick.reset_dp_offset) {
-    pitot_counter = MS_PITOT_COUNTER;
-    meteo_stick.reset_dp_offset = FALSE;
-  }
 }
 
 /** Event function
@@ -398,9 +366,7 @@ void meteo_stick_event(void)
   // send absolute pressure data over ABI as soon as available
   if (meteo_stick.pressure.data_available) {
     meteo_stick.current_pressure = get_pressure(meteo_stick.pressure.data);
-#if USE_MS_PRESSURE
     AbiSendMsgBARO_ABS(METEO_STICK_SENDER_ID, meteo_stick.current_pressure);
-#endif
     meteo_stick.pressure.data_available = FALSE;
   }
 #endif
@@ -409,22 +375,15 @@ void meteo_stick_event(void)
   // send differential pressure data over ABI as soon as available
   if (meteo_stick.diff_pressure.data_available) {
     if (pitot_counter > 0) {
-      if (pitot_counter == MS_PITOT_COUNTER) {
-        // set initial value
-        pitot_offset = meteo_stick.diff_pressure.data;
-      } else {
-        pitot_offset = pitot_offset * MS_PITOT_FILTER + (1.0f - MS_PITOT_FILTER) * meteo_stick.diff_pressure.data;
-      }
       pitot_counter--;
+      if (pitot_counter == 0) {
+        pitot_offset = meteo_stick.diff_pressure.data;
+      }
     }
-    else {
-#if USE_MS_DIFF_PRESSURE
-      float diff = get_diff(meteo_stick.diff_pressure.data);
-      AbiSendMsgBARO_DIFF(METEO_STICK_SENDER_ID, diff);
-#endif
-      meteo_stick.current_airspeed = get_pitot(meteo_stick.diff_pressure.data);
-      meteo_stick.diff_pressure.data_available = FALSE;
-    }
+    float diff = get_diff(meteo_stick.diff_pressure.data);
+    AbiSendMsgBARO_DIFF(METEO_STICK_SENDER_ID, diff);
+    meteo_stick.current_airspeed = get_pitot(meteo_stick.diff_pressure.data);
+    meteo_stick.diff_pressure.data_available = FALSE;
   }
 #endif
 
@@ -432,9 +391,7 @@ void meteo_stick_event(void)
   // send temperature data over ABI as soon as available
   if (meteo_stick.temperature.data_available) {
     meteo_stick.current_temperature = get_temp(meteo_stick.temperature.data);
-#if USE_MS_TEMPERATURE
     AbiSendMsgTEMPERATURE(METEO_STICK_SENDER_ID, meteo_stick.current_temperature);
-#endif
     meteo_stick.temperature.data_available = FALSE;
   }
 #endif

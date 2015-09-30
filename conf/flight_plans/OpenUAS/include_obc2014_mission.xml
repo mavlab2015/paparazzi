@@ -52,6 +52,8 @@ TESTS:
 
 //Set Generic options
     #include "autopilot.h"
+//Enable AHRS Health test functions
+    #include "subsystems/ahrs.h"
 //Enable advanced electrical power functions
     #include "subsystems/electrical.h"
 //Enable datalink tests
@@ -72,7 +74,7 @@ TESTS:
     #include "generated/airframe.h"
 
 // Completly replace with onboard recon copmpter interface
-    #ifdef DC_AUTOSHOOT_PERIOD
+    #ifdef DC_AUTOSHOOT_QUARTERSEC_PERIOD
     //TODO make shooting distance not periodic
     #define LINE_START_FUNCTION dc_autoshoot = DC_AUTOSHOOT_PERIODIC;
     #define LINE_STOP_FUNCTION dc_autoshoot = DC_AUTOSHOOT_STOP;
@@ -184,7 +186,7 @@ TST-3 = -26° 35' 23.2" * 151° 50' 45.9"
       <!-- IDEA Close the hatch so not able to insert payload before there is a 3D fix , however maybe not so handy anyhow since we need to wat be fre we can insert-->
       <!--  <set value="NavDropCloseHatch" var="unit"/> -->
       <!-- if no valid fix or gps accuracy> 15m or no AHRS , it a no-go wait-->
-      <while cond="!GpsFixValid() || gps.pacc > 1500 || !(stateIsAttitudeValid())"/>
+      <while cond="!GpsFixValid() || gps.pacc > 1500 || !(ahrs.status == AHRS_RUNNING)"/>
     </block>
 
 <!-- *********** Set the ground reference height and the home position *********** -->

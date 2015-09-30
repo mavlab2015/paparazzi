@@ -1,7 +1,6 @@
 /*
  * Driver for a Amsys Differential Presure Sensor I2C
  * AMS 5812-0003-D
- * AMS 5812-0001-D
  *
  * Copyright (C) 2010 The Paparazzi Team
  *

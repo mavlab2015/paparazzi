@@ -22,13 +22,6 @@
 
 # General ocaml compiling tools and pprz lib
 
-# error if PAPARAZZI_SRC is not set and trying to compile
-ifneq ($(MAKECMDGOALS),clean)
-ifeq ($(PAPARAZZI_SRC),)
-  $(error PAPARAZZI_SRC not set, please set it manually or invoke make from the toplevel paparazzi dir)
-endif
-endif
-
 OCAML = ocaml
 OCAMLC = ocamlfind ocamlc
 OCAMLOPT = ocamlfind ocamlopt
@@ -42,5 +35,4 @@ XLIBPPRZCMXA = $(XLIBPPRZCMA:.cma=.cmxa)
 OCAMLDLL = -dllpath $(LIBPPRZDIR)
 OCAMLXDLL = -dllpath $(LIBPPRZDIR)
 
-OCAMLPATH:=$(shell echo $(LIBPPRZDIR):$(OCAMLPATH))
-export OCAMLPATH
+export OCAMLPATH=$(LIBPPRZDIR):$OCAMLPATH

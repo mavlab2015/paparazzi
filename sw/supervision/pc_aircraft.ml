@@ -217,8 +217,6 @@ let first_word = fun s ->
   with
     Not_found -> s
 
-(** Test if an element is available for the current target *)
-
 (** Get list of targets of an airframe *)
 let get_targets_list = fun ac_xml ->
   let firmwares = List.filter (fun x -> ExtXml.tag_is x "firmware") (Xml.children ac_xml) in
@@ -227,8 +225,6 @@ let get_targets_list = fun ac_xml ->
 
 (** Parse Airframe File for Targets **)
 let parse_ac_targets = fun target_combo ac_file (log:string->unit) ->
-  (* remember last target *)
-  let last_target = Gtk_tools.combo_value target_combo in
   (* Clear ComboBox *)
   let (store, column) = Gtk_tools.combo_model target_combo in
   store#clear ();
@@ -243,7 +239,7 @@ let parse_ac_targets = fun target_combo ac_file (log:string->unit) ->
       Gtk_tools.add_to_combo target_combo "sim"
     end;
     let combo_box = Gtk_tools.combo_widget target_combo in
-    Gtk_tools.select_in_combo target_combo last_target
+    combo_box#set_active 0
   with _ -> log (sprintf "Error while parsing targets from file %s\n" ac_file)
 
 (* Parse AC file for flash mode *)
@@ -318,7 +314,7 @@ let ac_combo_handler = fun gui (ac_combo:Gtk_tools.combo) target_combo flash_com
         | Tree t ->
           ignore (Gtk_tools.clear_tree t);
           let names = Str.split regexp_space (value a) in
-          List.iter (Gtk_tools.add_to_tree t) names;
+          List.iter (fun n -> Gtk_tools.add_to_tree t n) names;
       ) ac_files;
       let ac_id = ExtXml.attrib aircraft "ac_id"
       and gui_color = ExtXml.attrib_or_default aircraft "gui_color" "white" in
@@ -405,15 +401,6 @@ let ac_combo_handler = fun gui (ac_combo:Gtk_tools.combo) target_combo flash_com
   (* A/C id *)
   ignore(gui#entry_ac_id#connect#changed ~callback:(fun () -> save_callback gui ac_combo tree_set tree_set_mod ()));
 
-  let callback = fun _ ->
-    update_params (Gtk_tools.combo_value ac_combo);
-    save_callback gui ac_combo tree_set tree_set_mod () in
-  (* refresh button *)
-  ignore(gui#button_refresh#connect#clicked ~callback);
-  (* update with build and upload button *)
-  ignore(gui#button_build#connect#clicked ~callback);
-  ignore(gui#button_upload#connect#clicked ~callback);
-
   (* Conf *)
   List.iter (fun (name, subdir, label, button_browse, button_edit, editor, button_remove) ->
     (* editor button callback *)
@@ -437,7 +424,7 @@ let ac_combo_handler = fun gui (ac_combo:Gtk_tools.combo) target_combo flash_com
             let names = String.concat " " names in
             l#set_text names
         | Tree t ->
-            List.iter (Gtk_tools.add_to_tree t) names
+            List.iter (fun n -> Gtk_tools.add_to_tree t n) names
         );
         save_callback gui ac_combo tree_set tree_set_mod ();
         let ac_name = Gtk_tools.combo_value ac_combo in

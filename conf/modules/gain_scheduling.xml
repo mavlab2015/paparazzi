@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="gain_scheduling" dir="ctrl">
+<module name="gain_scheduling">
   <doc>
     <description>
       Gain set interpolation.

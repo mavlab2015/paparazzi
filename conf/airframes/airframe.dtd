@@ -98,8 +98,7 @@ name CDATA #REQUIRED
 value CDATA #IMPLIED
 unit CDATA #IMPLIED
 code_unit CDATA #IMPLIED
-integer CDATA #IMPLIED
-type CDATA #IMPLIED>
+integer CDATA #IMPLIED>
 
 <!ATTLIST configure
 name CDATA #REQUIRED

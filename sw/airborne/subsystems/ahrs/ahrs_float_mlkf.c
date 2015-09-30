@@ -99,7 +99,8 @@ void ahrs_mlkf_set_body_to_imu_quat(struct FloatQuat *q_b2i)
 
   if (!ahrs_mlkf.is_aligned) {
     /* Set ltp_to_imu so that body is zero */
-    ahrs_mlkf.ltp_to_imu_quat = *orientationGetQuat_f(&ahrs_mlkf.body_to_imu);
+    memcpy(&ahrs_mlkf.ltp_to_imu_quat, orientationGetQuat_f(&ahrs_mlkf.body_to_imu),
+           sizeof(struct FloatQuat));
   }
 }
 
@@ -234,7 +235,7 @@ static inline void update_state(const struct FloatVect3 *i_expected, struct Floa
 
   /* converted expected measurement from inertial to body frame */
   struct FloatVect3 b_expected;
-  float_quat_vmult(&b_expected, &ahrs_mlkf.ltp_to_imu_quat, i_expected);
+  float_quat_vmult(&b_expected, &ahrs_mlkf.ltp_to_imu_quat, (struct FloatVect3 *)i_expected);
 
   // S = HPH' + JRJ
   float H[3][6] = {{           0., -b_expected.z,  b_expected.y, 0., 0., 0.},
@@ -303,7 +304,7 @@ static inline void update_state_heading(const struct FloatVect3 *i_expected,
 
   /* converted expected measurement from inertial to body frame */
   struct FloatVect3 b_expected;
-  float_quat_vmult(&b_expected, &ahrs_mlkf.ltp_to_imu_quat, i_expected);
+  float_quat_vmult(&b_expected, &ahrs_mlkf.ltp_to_imu_quat, (struct FloatVect3 *)i_expected);
 
   /* set roll/pitch errors to zero to only correct heading */
   struct FloatVect3 i_h_2d = {i_expected->y, -i_expected->x, 0.f};
@@ -370,7 +371,7 @@ static inline void reset_state(void)
   struct FloatQuat q_tmp;
   float_quat_comp(&q_tmp, &ahrs_mlkf.ltp_to_imu_quat, &ahrs_mlkf.gibbs_cor);
   float_quat_normalize(&q_tmp);
-  ahrs_mlkf.ltp_to_imu_quat = q_tmp;
+  memcpy(&ahrs_mlkf.ltp_to_imu_quat, &q_tmp, sizeof(ahrs_mlkf.ltp_to_imu_quat));
   float_quat_identity(&ahrs_mlkf.gibbs_cor);
 
 }

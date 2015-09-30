@@ -18,10 +18,6 @@
 <!ELEMENT strip_button EMPTY>
 <!ELEMENT key_press EMPTY>
 
-<!ATTLIST settings
-target CDATA #IMPLIED
->
-
 <!ATTLIST dl_settings
 name CDATA #IMPLIED
 >
