@@ -61,7 +61,8 @@ bool_t nps_bypass_ins;
 #error "NPS_COMMANDS_NB does not match MOTOR_MIXING_NB_MOTOR!"
 #endif
 
-void nps_autopilot_init(enum NpsRadioControlType type_rc, int num_rc_script, char* rc_dev) {
+void nps_autopilot_init(enum NpsRadioControlType type_rc, int num_rc_script, char *rc_dev)
+{
   autopilot.launch = TRUE;
   autopilot.datalink_enabled = TRUE;
 
@@ -75,21 +76,25 @@ void nps_autopilot_init(enum NpsRadioControlType type_rc, int num_rc_script, cha
 
 }
 
-void nps_autopilot_run_systime_step( void ) {
+void nps_autopilot_run_systime_step(void)
+{
   sys_tick_handler();
 }
 
 #include <stdio.h>
 #include "subsystems/gps.h"
 
-void nps_autopilot_run_step(double time) {
+void nps_autopilot_run_step(double time)
+{
 
   nps_electrical_run_step(time);
 
+#if RADIO_CONTROL && !RADIO_CONTROL_TYPE_DATALINK
   if (nps_radio_control_available(time)) {
     radio_control_feed();
     main_event();
   }
+#endif
 
   if (nps_sensors_gyro_available()) {
     imu_feed_gyro_accel();
@@ -135,8 +140,9 @@ void nps_autopilot_run_step(double time) {
   handle_periodic_tasks();
 
   /* scale final motor commands to 0-1 for feeding the fdm */
-  for (uint8_t i=0; i < NPS_COMMANDS_NB; i++)
-    autopilot.commands[i] = (double)motor_mixing.commands[i]/MAX_PPRZ;
+  for (uint8_t i = 0; i < NPS_COMMANDS_NB; i++) {
+    autopilot.commands[i] = (double)motor_mixing.commands[i] / MAX_PPRZ;
+  }
 
   // hack to reset datalink_time, since we don't use actual dl_parse_msg
   if (autopilot.datalink_enabled) {
@@ -145,7 +151,8 @@ void nps_autopilot_run_step(double time) {
 }
 
 
-void sim_overwrite_ahrs(void) {
+void sim_overwrite_ahrs(void)
+{
 
   struct FloatQuat quat_f;
   QUAT_COPY(quat_f, fdm.ltp_to_body_quat);
@@ -157,7 +164,8 @@ void sim_overwrite_ahrs(void) {
 
 }
 
-void sim_overwrite_ins(void) {
+void sim_overwrite_ins(void)
+{
 
   struct NedCoor_f ltp_pos;
   VECT3_COPY(ltp_pos, fdm.ltpprz_pos);

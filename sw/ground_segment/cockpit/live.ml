@@ -111,7 +111,8 @@ type aircraft = {
   mutable last_unix_time : float;
   mutable airspeed : float;
   mutable version : string;
-  mutable last_gps_acc : gps_acc_level
+  mutable last_gps_acc : gps_acc_level;
+  mutable last_bat_warn_time : float
 }
 
 let list_separator = Str.regexp ","
@@ -410,6 +411,14 @@ let get_icon_and_track_size = fun af_xml ->
     | x -> (x, !track_size)
   with _ -> (firmware_name, !track_size)
 
+let get_icons_theme = fun af_xml ->
+  try
+    let gcs_section = ExtXml.child af_xml ~select:(fun x -> Xml.attrib x "name" = "GCS") "section" in
+    let fvalue = fun name default ->
+      try ExtXml.attrib (ExtXml.child gcs_section ~select:(fun x -> ExtXml.attrib x "name" = name) "define") "value" with _ -> default in
+    fvalue "ICONS_THEME" Env.gcs_default_icons_theme
+  with _ -> Env.gcs_default_icons_theme
+
 let key_press_event = fun keys do_action ev ->
   try
     let (modifiers, action) = List.assoc (GdkEvent.Key.keyval ev) keys in
@@ -440,7 +449,9 @@ let create_ac = fun alert (geomap:G.widget) (acs_notebook:GPack.notebook) (strip
   (** Get the airframe file *)
   let af_url = Pprz.string_assoc "airframe" config in
   let af_file =  Http.file_of_url af_url in
-  let af_xml = ExtXml.parse_file af_file in
+  (* do not check dtd if it is a http url *)
+  let via_http = Str.string_match (Str.regexp "http") af_url 0 in
+  let af_xml = ExtXml.parse_file ~noprovedtd:via_http af_file in
 
   (** Get an alternate speech name if available *)
   let speech_name = get_speech_name af_xml name in
@@ -499,10 +510,12 @@ let create_ac = fun alert (geomap:G.widget) (acs_notebook:GPack.notebook) (strip
   (** Add a strip *)
   let min_bat, max_bat = get_bat_levels af_xml in
   let alt_shift_plus_plus, alt_shift_plus, alt_shift_minus = get_alt_shift af_xml in
+  let icons_theme = get_icons_theme af_xml in
   let param = { Strip.color = color; min_bat = min_bat; max_bat = max_bat;
                 alt_shift_plus_plus = alt_shift_plus_plus;
                 alt_shift_plus = alt_shift_plus;
-                alt_shift_minus = alt_shift_minus; } in
+                alt_shift_minus = alt_shift_minus;
+                icons_theme = icons_theme; } in
   (*let strip = Strip.add config color min_bat max_bat in*)
   let strip = Strip.add config param strips in
   strip#connect (fun () -> select_ac acs_notebook ac_id);
@@ -552,14 +565,14 @@ let create_ac = fun alert (geomap:G.widget) (acs_notebook:GPack.notebook) (strip
         try (* Is it an icon ? *)
           let icon = Xml.attrib block "strip_icon" in
           let b = GButton.button () in
-          let pixbuf = GdkPixbuf.from_file (Env.gcs_icons_path // icon) in
+          let pixbuf = GdkPixbuf.from_file (Env.get_gcs_icon_path icons_theme icon) in
           ignore (GMisc.image ~pixbuf ~packing:b#add ());
 
       (* Drag for Drop *)
           let papget = Papget_common.xml "goto_block" "button"
             [ "block_name", block_name;
               "ac_id", ac_id;
-              "icon", icon] in
+              "icon", icons_theme // icon] in
           Papget_common.dnd_source b#coerce papget;
 
       (* Associates the label as a tooltip *)
@@ -635,7 +648,7 @@ let create_ac = fun alert (geomap:G.widget) (acs_notebook:GPack.notebook) (strip
   let dl_settings_page =
     try
       let xml_settings = Xml.children (ExtXml.child settings_xml "dl_settings") in
-      let settings_tab = new Page_settings.settings ~visible xml_settings dl_setting_callback ac_id (fun group x -> strip#add_widget ~group x) in
+      let settings_tab = new Page_settings.settings ~visible xml_settings dl_setting_callback ac_id icons_theme (fun group x -> strip#add_widget ~group x) in
 
       (** Connect key shortcuts *)
       let key_press = fun ev ->
@@ -698,7 +711,8 @@ let create_ac = fun alert (geomap:G.widget) (acs_notebook:GPack.notebook) (strip
              dl_values = [||]; last_unix_time = 0.;
              airspeed = 0.;
              version = "";
-             last_gps_acc = GPS_NO_ACC
+             last_gps_acc = GPS_NO_ACC;
+             last_bat_warn_time = 0.
            } in
   Hashtbl.add aircrafts ac_id ac;
   select_ac acs_notebook ac_id;
@@ -1280,7 +1294,7 @@ let listen_flight_params = fun geomap auto_center_new_ac alert alt_graph ->
         match ap_mode with
             "AUTO2" | "NAV" -> ok_color
           | "AUTO1" | "R_RCC" | "A_RCC" | "ATT_C" | "R_ZH" | "A_ZH" | "HOVER" | "HOV_C" | "H_ZH" | "MODULE" -> "#10F0E0"
-          | "MANUAL" | "RATE" | "ATT" | "RC_D" | "CF" | "FWD" -> warning_color
+          | "MANUAL" | "RATE" | "ATT" | "RC_D" | "CF" | "FWD" | "FLIP" -> warning_color
           | _ -> alert_color in
       ac.strip#set_color "AP" color;
     end;
@@ -1290,7 +1304,7 @@ let listen_flight_params = fun geomap auto_center_new_ac alert alt_graph ->
       then status_filter_mode
       else Pprz.string_assoc "gps_mode" vs in
     ac.strip#set_label "GPS" gps_mode;
-    ac.strip#set_color "GPS" (if gps_mode<>"3D" then alert_color else ok_color);
+    ac.strip#set_color "GPS" (if gps_mode<>"3D" && gps_mode<>"DGPS" && gps_mode<>"RTK" then alert_color else ok_color);
     let ft =
       sprintf "%02d:%02d:%02d" (flight_time / 3600) ((flight_time / 60) mod 60) (flight_time mod 60) in
     ac.strip#set_label "flight_time" ft;
@@ -1322,7 +1336,8 @@ let listen_waypoint_moved = fun () ->
     try
       let w = ac.fp_group#get_wp wp_id in
       w#set_ground_alt ground_alt;
-      w#set ~altitude ~update:true geo
+      w#set ~altitude ~update:true geo;
+      ac.fp_group#update_sectors w#name
     with
         Not_found -> () (* Silently ignore unknown waypoints *)
   in
@@ -1331,7 +1346,11 @@ let listen_waypoint_moved = fun () ->
 let get_alert_bat_low = fun a _sender vs ->
   let ac = get_ac vs in
   let level = Pprz.string_assoc "level" vs in
-  log_and_say a ac.ac_name (sprintf "%s, %s %s" ac.ac_speech_name "BAT LOW" level)
+  let unix_time = Unix.gettimeofday() in
+  if unix_time > (ac.last_bat_warn_time +. 10.) then begin
+    log_and_say a ac.ac_name (sprintf "%s, %s %s" ac.ac_speech_name "BAT LOW" level);
+    ac.last_bat_warn_time <- unix_time
+  end
 
 let listen_alert = fun a ->
   alert_bind "BAT_LOW" (get_alert_bat_low a)

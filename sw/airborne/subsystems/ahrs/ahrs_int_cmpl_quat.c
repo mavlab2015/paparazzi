@@ -366,8 +366,9 @@ void ahrs_icq_update_accel(struct Int32Vect3 *accel, float dt)
 }
 
 
-void ahrs_icq_update_mag(struct Int32Vect3 *mag, float dt)
+void ahrs_icq_update_mag(struct Int32Vect3 *mag __attribute__((unused)), float dt __attribute__((unused)))
 {
+#if USE_MAGNETOMETER
   // check if we had at least one propagation since last update
   if (ahrs_icq.mag_cnt == 0) {
     return;
@@ -379,6 +380,7 @@ void ahrs_icq_update_mag(struct Int32Vect3 *mag, float dt)
 #endif
   // reset mag propagation counter
   ahrs_icq.mag_cnt = 0;
+#endif
 }
 
 void ahrs_icq_set_mag_gains(void)
@@ -512,7 +514,7 @@ static inline void ahrs_icq_update_mag_2d(struct Int32Vect3 *mag, float dt)
 void ahrs_icq_update_gps(struct GpsState *gps_s __attribute__((unused)))
 {
 #if AHRS_GRAVITY_UPDATE_COORDINATED_TURN && USE_GPS
-  if (gps_s->fix == GPS_FIX_3D) {
+  if (gps_s->fix >= GPS_FIX_3D) {
     ahrs_icq.ltp_vel_norm = SPEED_BFP_OF_REAL(gps_s->speed_3d / 100.);
     ahrs_icq.ltp_vel_norm_valid = TRUE;
   } else {
@@ -523,7 +525,7 @@ void ahrs_icq_update_gps(struct GpsState *gps_s __attribute__((unused)))
 #if AHRS_USE_GPS_HEADING && USE_GPS
   // got a 3d fix, ground speed > AHRS_HEADING_UPDATE_GPS_MIN_SPEED (default 5.0 m/s)
   // and course accuracy is better than 10deg
-  if (gps_s->fix == GPS_FIX_3D &&
+  if (gps_s->fix >= GPS_FIX_3D &&
       gps_s->gspeed >= (AHRS_HEADING_UPDATE_GPS_MIN_SPEED * 100) &&
       gps_s->cacc <= RadOfDeg(10 * 1e7)) {
 
@@ -651,7 +653,6 @@ void ahrs_icq_set_body_to_imu_quat(struct FloatQuat *q_b2i)
 
   if (!ahrs_icq.is_aligned) {
     /* Set ltp_to_imu so that body is zero */
-    memcpy(&ahrs_icq.ltp_to_imu_quat, orientationGetQuat_i(&ahrs_icq.body_to_imu),
-           sizeof(struct Int32Quat));
+    ahrs_icq.ltp_to_imu_quat = *orientationGetQuat_i(&ahrs_icq.body_to_imu);
   }
 }

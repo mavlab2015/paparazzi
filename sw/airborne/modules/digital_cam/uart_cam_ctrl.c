@@ -140,7 +140,7 @@ void digital_cam_uart_init(void)
 void digital_cam_uart_periodic(void)
 {
   // Common DC Periodic task
-  dc_periodic_4Hz();
+  dc_periodic();
 }
 
 
@@ -157,8 +157,8 @@ void dc_send_command(uint8_t cmd)
       dc_shot_msg.data.phi = stateGetNedToBodyEulers_i()->phi;
       dc_shot_msg.data.theta = stateGetNedToBodyEulers_i()->theta;
       dc_shot_msg.data.psi = stateGetNedToBodyEulers_i()->psi;
-      dc_shot_msg.data.vground = *stateGetHorizontalSpeedNorm_i();
-      dc_shot_msg.data.course = *stateGetHorizontalSpeedDir_i();
+      dc_shot_msg.data.vground = stateGetHorizontalSpeedNorm_i();
+      dc_shot_msg.data.course = stateGetHorizontalSpeedDir_i();
       dc_shot_msg.data.groundalt = POS_BFP_OF_REAL(state.alt_agl_f);
 
       MoraHeader(MORA_SHOOT, MORA_SHOOT_MSG_SIZE);

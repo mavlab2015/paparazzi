@@ -40,6 +40,16 @@
 #include "lib/vision/lucas_kanade.h"
 #include "lib/vision/fast_rosten.h"
 
+#include "size_divergence.h"
+#include "linear_flow_fit.h"
+
+// What methods are run to determine divergence, lateral flow, etc.
+// SIZE_DIV looks at line sizes and only calculates divergence
+#define SIZE_DIV 1
+// LINEAR_FIT makes a linear optical flow field fit and extracts a lot of information:
+// relative velocities in x, y, z (divergence / time to contact), the slope of the surface, and the surface roughness.
+#define LINEAR_FIT 1
+
 // Camera parameters (defaults are from an ARDrone 2)
 #ifndef OPTICFLOW_FOV_W
 #define OPTICFLOW_FOV_W 0.89360857702
@@ -144,6 +154,12 @@ void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h)
  */
 void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_t *state, struct image_t *img, struct opticflow_result_t *result)
 {
+  // variables for size_divergence:
+  float size_divergence; int n_samples;
+
+  // variables for linear flow fit:
+  float error_threshold; int n_iterations_RANSAC, n_samples_RANSAC, success_fit; struct linear_flow_fit_info fit_info;
+
   // Update FPS for information
   result->fps = 1 / (timeval_diff(&opticflow->prev_timestamp, &img->ts) / 1000.);
   memcpy(&opticflow->prev_timestamp, &img->ts, sizeof(struct timeval));
@@ -161,7 +177,7 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   // Corner detection
   // *************************************************************************************
 
-  // FAST corner detection (TODO: non fixed threashold)
+  // FAST corner detection (TODO: non fixed threshold)
   struct point_t *corners = fast9_detect(img, opticflow->fast9_threshold, opticflow->fast9_min_distance,
                                          20, 20, &result->corner_cnt);
 
@@ -201,6 +217,34 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   image_show_flow(img, vectors, result->tracked_cnt, opticflow->subpixel_factor);
 #endif
 
+  // Estimate size divergence:
+  if (SIZE_DIV) {
+    n_samples = 100;
+    size_divergence = get_size_divergence(vectors, result->tracked_cnt, n_samples);
+    result->div_size = size_divergence;
+  } else {
+    result->div_size = 0.0f;
+  }
+  if (LINEAR_FIT) {
+    // Linear flow fit (normally derotation should be performed before):
+    error_threshold = 10.0f;
+    n_iterations_RANSAC = 20;
+    n_samples_RANSAC = 5;
+    success_fit = analyze_linear_flow_field(vectors, result->tracked_cnt, error_threshold, n_iterations_RANSAC, n_samples_RANSAC, img->w, img->h, &fit_info);
+
+    if (!success_fit) {
+      fit_info.divergence = 0.0f;
+      fit_info.surface_roughness = 0.0f;
+    }
+
+    result->divergence = fit_info.divergence;
+    result->surface_roughness = fit_info.surface_roughness;
+  } else {
+    result->divergence = 0.0f;
+    result->surface_roughness = 0.0f;
+  }
+
+
   // Get the median flow
   qsort(vectors, result->tracked_cnt, sizeof(struct flow_t), cmp_flow);
   if (result->tracked_cnt == 0) {
@@ -232,8 +276,8 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   opticflow->prev_theta = state->theta;
 
   // Velocity calculation
-  result->vel_x = -result->flow_der_x * result->fps / opticflow->subpixel_factor * img->w / OPTICFLOW_FX;
-  result->vel_y =  result->flow_der_y * result->fps / opticflow->subpixel_factor * img->h / OPTICFLOW_FY;
+  result->vel_x = -result->flow_der_x * result->fps * state->agl / opticflow->subpixel_factor * img->w / OPTICFLOW_FX;
+  result->vel_y =  result->flow_der_y * result->fps * state->agl / opticflow->subpixel_factor * img->h / OPTICFLOW_FY;
 
   // *************************************************************************************
   // Next Loop Preparation
@@ -270,3 +314,5 @@ static int cmp_flow(const void *a, const void *b)
   const struct flow_t *b_p = (const struct flow_t *)b;
   return (a_p->flow_x * a_p->flow_x + a_p->flow_y * a_p->flow_y) - (b_p->flow_x * b_p->flow_x + b_p->flow_y * b_p->flow_y);
 }
+
+

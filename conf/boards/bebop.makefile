@@ -29,7 +29,10 @@ GPS_PORT           ?= UART1
 GPS_BAUD           ?= B230400
 
 # handle linux signals by hand
-$(TARGET).CFLAGS += -DUSE_LINUX_SIGNAL
+$(TARGET).CFLAGS += -DUSE_LINUX_SIGNAL -D_GNU_SOURCE
+
+# board specific init function
+$(TARGET).srcs +=  $(SRC_BOARD)/board.c
 
 # Compile the video specific parts
 $(TARGET).srcs +=  $(SRC_BOARD)/video.c
@@ -37,6 +40,9 @@ $(TARGET).srcs +=  $(SRC_BOARD)/video.c
 # Link static (Done for GLIBC)
 $(TARGET).CFLAGS += -DLINUX_LINK_STATIC
 $(TARGET).LDFLAGS += -static
+
+# limit main loop to 1kHz so ap doesn't need 100% cpu
+#$(TARGET).CFLAGS += -DLIMIT_EVENT_POLLING
 
 # -----------------------------------------------------------------------
 

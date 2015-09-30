@@ -9,6 +9,7 @@
       <!-- AUX1 -->
       <define name="DC_SHUTTER_GPIO" value="GPIOA,GPIO7"/>
     </load>
+    <load name="nav_survey_rectangle_rotorcraft.xml"/>
   </modules>
 
   <firmware name="rotorcraft">
@@ -48,13 +49,9 @@
     <define name="TRIM_ROLL" value="0"/>
     <define name="TRIM_PITCH" value="0"/>
     <define name="TRIM_YAW" value="0"/>
-    <define name="NB_MOTOR" value="4"/>
-    <define name="SCALE" value="256"/>
+
     <!-- FRONT CW, RIGHT CCW, BACK CW, LEFT CCW -->
-    <define name="ROLL_COEF"  value="{    0, -256,    0,  256}"/>
-    <define name="PITCH_COEF" value="{  256,    0, -256,    0}"/>
-    <define name="YAW_COEF"   value="{ -256,  256, -256,  256}"/>
-    <define name="THRUST_COEF" value="{ 256,  256,  256,  256}"/>
+    <define name="TYPE" value="QUAD_PLUS"/>
   </section>
 
   <section name="ACTUATORS_MKK" prefix="ACTUATORS_MKK_">
@@ -215,7 +212,7 @@
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <define name="MAX_BANK" value="30" unit="deg"/>
     <define name="PGAIN" value="50"/>
-    <define name="DGAIN" value="80"/>
+    <define name="DGAIN" value="140"/>
     <define name="IGAIN" value="20"/>
     <define name="NGAIN" value="0"/>
     <!-- feedforward -->
@@ -265,9 +262,9 @@
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
-    <define name="ACTUATOR_NAMES"  value="{&quot;front_motor&quot;, &quot;right_motor&quot;, &quot;back_motor&quot;, &quot;left_motor&quot;}"/>
-    <define name="JSBSIM_MODEL" value="&quot;simple_quad&quot;"/>
-    <define name="SENSORS_PARAMS" value="&quot;nps_sensors_params_default.h&quot;"/>
+    <define name="ACTUATOR_NAMES"  value="front_motor, right_motor, back_motor, left_motor" type="string[]"/>
+    <define name="JSBSIM_MODEL" value="simple_quad" type="string"/>
+    <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
   </section>
 
 </airframe>

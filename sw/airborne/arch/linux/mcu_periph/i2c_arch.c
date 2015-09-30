@@ -52,14 +52,16 @@ bool_t i2c_submit(struct i2c_periph *p, struct i2c_transaction *t)
 {
   int file = (int)p->reg_addr;
 
-  // Set the slave address
-  ioctl(file, I2C_SLAVE, t->slave_addr);
+  // Set the slave address, converted to 7 bit
+  ioctl(file, I2C_SLAVE, t->slave_addr >> 1);
 
   // Switch the different transaction types
   switch (t->type) {
       // Just transmitting
     case I2CTransTx:
       if (write(file, (uint8_t *)t->buf, t->len_w) < 0) {
+        /* if write failed, increment error counter queue_full_cnt */
+        p->errors->queue_full_cnt++;
         t->status = I2CTransFailed;
         return TRUE;
       }
@@ -67,6 +69,8 @@ bool_t i2c_submit(struct i2c_periph *p, struct i2c_transaction *t)
       // Just reading
     case I2CTransRx:
       if (read(file, (uint8_t *)t->buf, t->len_r) < 0) {
+        /* if read failed, increment error counter ack_fail_cnt */
+        p->errors->ack_fail_cnt++;
         t->status = I2CTransFailed;
         return TRUE;
       }
@@ -75,6 +79,8 @@ bool_t i2c_submit(struct i2c_periph *p, struct i2c_transaction *t)
     case I2CTransTxRx:
       if (write(file, (uint8_t *)t->buf, t->len_w) < 0 ||
           read(file, (uint8_t *)t->buf, t->len_r) < 0) {
+        /* if write/read failed, increment error counter miss_start_stop_cnt */
+        p->errors->miss_start_stop_cnt++;
         t->status = I2CTransFailed;
         return TRUE;
       }

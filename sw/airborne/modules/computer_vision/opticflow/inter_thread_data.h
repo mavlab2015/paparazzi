@@ -42,6 +42,11 @@ struct opticflow_result_t {
 
   float vel_x;            ///< The velocity in the x direction
   float vel_y;            ///< The velocity in the y direction
+
+  float div_size;         ///< Divergence as determined with the size_divergence script
+
+  float surface_roughness; ///< Surface roughness as determined with a linear optical flow fit
+  float divergence;       ///< Divergence as determined with a linear flow fit
 };
 
 /* The state of the drone when it took an image */
@@ -52,3 +57,5 @@ struct opticflow_state_t {
 };
 
 #endif
+
+
