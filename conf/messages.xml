@@ -184,8 +184,19 @@
     <field name="segment_north_2" type="float" unit="m"/>
   </message>
 
-  <!-- ID 23 is free -->
-  <!-- ID 24 is free -->
+  <message name="VECTORNAV_INFO" id="23">
+    <field name="timestamp" 	type="float" 	unit="s"/>
+    <field name="chksm_error" 	type="uint32"/>
+    <field name="hdr_error" 	type="uint32"/>
+    <field name="counter" type="uint16"/>
+    <field name="ins_status" type="uint8" values="NoTracking|OutOfSpecs|OK"/>
+    <field name="ins_err" type="uint8"/>
+    <field name="YprU1" 	type="float" 	unit="deg"/>
+    <field name="YprU2" 	type="float" 	unit="deg"/>
+    <field name="YprU3" 	type="float" 	unit="deg"/>
+  </message>
+
+  <!--24 is free -->
 
   <message name="SVINFO" id="25">
     <field name="chn" type="uint8"/>
@@ -582,9 +593,9 @@
     <field name="alt" type="float" unit="m"/>
   </message>
 
-  <message name="AOA_ADC" id="69">
-    <field name="adcVal" type="uint16"/>
-    <field name="AOA" type="float" unit="rad"/>
+  <message name="AOA" id="69">
+    <field name="raw" type="uint32"/>
+    <field name="angle" type="float" unit="rad" alt_unit="deg"/>
   </message>
 
   <message name="XTEND_RSSI" id="70">
@@ -1253,7 +1264,7 @@
     <field name="carrot_east"   type="int32" alt_unit="m" alt_unit_coef="0.0039063"/>
     <field name="carrot_north"  type="int32" alt_unit="m" alt_unit_coef="0.0039063"/>
     <field name="carrot_up"     type="int32" alt_unit="m" alt_unit_coef="0.0039063"/>
-    <field name="carrot_psi"    type="int32" alt_unit="deg" alt_unit_coef="0.0000546"/>
+    <field name="carrot_psi"    type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="thrust"        type="int32"/>
     <field name="flight_time"   type="uint16" unit="s"/>
   </message>
@@ -1337,7 +1348,7 @@
     <field name="tow"     type="uint32"/>
     <field name="pdop"    type="uint16"/>
     <field name="numsv"   type="uint8"/>
-    <field name="fix"     type="uint8" values="NONE|UKN1|UKN2|3D"/>
+    <field name="fix"     type="uint8" values="NONE|NA|2D|3D|DGPS|RTK"/>
   </message>
 
   <message name="AHRS_EULER_INT" id="156">
@@ -1867,8 +1878,7 @@
   </message>
 
   <message name="INFO_MSG" id="215">
-    <!--field name="msg" type="char[]"/-->
-    <field name="msg" type="uint8"/>
+    <field name="msg" type="char[]"/>
   </message>
 
   <message name="STAB_ATTITUDE_INDI" id="216">
@@ -1949,7 +1959,6 @@
     <field name="t" type="uint32"/>
   </message>
 
-
   <message name="OPTIC_FLOW_EST" id="228">
     <field name="fps"         type="float"/>
     <field name="corner_cnt"  type="uint16"/>
@@ -1961,10 +1970,13 @@
     <field name="flow_der_y"  type="int16" unit="subpixels"/>
     <field name="vel_x"       type="float" unit="cm/s"/>
     <field name="vel_y"       type="float" unit="cm/s"/>
+    <field name="div_size"    type="float" unit="1/s"/>
+    <field name="surface_roughness"    type="float" unit="1/s"/>
+    <field name="divergence"    type="float" unit="1/s"/>
+    -->
     <field name="cmd_phi"     type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="cmd_theta"   type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="cmd_psi"   type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
-    -->
     <field name="marker_count"      type="uint16"/>
     <field name="no_marker_count"      type="uint16"/>
     <field name="landing_count"      type="uint16"/>
@@ -1973,7 +1985,7 @@
     <field name="deviation_y"         type="int32"/>
     <field name="qr_result"         type="uint8"/>
     <field name="flower_type"         type="uint8"/>
-  </message>
+</message>
 
   <!--229 is free -->
 
@@ -2449,6 +2461,13 @@
     <field name="yaw"         type="int8"/>
   </message>
 
+  <message name="REMOTE_GPS_SMALL" id="54" link="broadcasted">
+    <field name="ac_id"   type="uint8"/>
+    <field name="numsv"   type="uint8"/>
+    <field name="pos_xyz"  type="uint32" unit="cm">bits 31-22 x position in cm : bits 21-12 y position in cm : bits 11-2 z position in cm : bits 1 and 0 are free</field>
+    <field name="speed_xy"  type="uint32" unit="cm/s">bits 31-22 speed x in cm/s : bits 21-12 speed y in cm/s : bits 11-2 heading in rad*1e2 : bits 1 and 0 are free</field>
+  </message>
+
   <message name="REMOTE_GPS" id="55" link="broadcasted">
     <field name="ac_id"   type="uint8"/>
     <field name="numsv"   type="uint8"/>
@@ -2520,6 +2539,12 @@
    <field name="ac_id" type="uint8"/>
    <field name="tilt" type="int8"/>
    <field name="pan" type="int8"/>
+ </message>
+
+ <message name="GPS_INJECT" id="153" link="forwarded">
+   <field name="ac_id" type="uint8"/>
+   <field name="packet_id" type="uint8"/>
+   <field name="data" type="uint8[]"/>
  </message>
 
 </msg_class>
@@ -2599,7 +2624,7 @@
     <field name="lat_mode" type="string" values="MANUAL|ROLL_RATE|ROLL|COURSE"/>
     <field name="horiz_mode" type="string" values="WAYPOINT|ROUTE|CIRCLE"/>
     <field name="gaz_mode" type="string" values="MANUAL|THROTTLE|CLIMB|ALT"/>
-    <field name="gps_mode" type="string" values="NOFIX|DRO|2D|3D|GPSDRO"/>
+    <field name="gps_mode" type="string" values="NOFIX|NA|2D|3D|DGPS|RTK"/>
     <field name="kill_mode" type="string" values="OFF|ON"/>
     <field name="flight_time" type="uint32" />
     <field name="state_filter_mode" type="string" values="UNKNOWN|INIT|ALIGN|OK|GPS_LOST|IMU_LOST|COV_ERR|IR_CONTRAST|ERROR"/>
