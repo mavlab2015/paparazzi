@@ -29,10 +29,14 @@
 #include "zbar.h"
 #include <stdio.h>
 
+#ifndef DOWNLINK
+#define DOWNLINK TRUE
+#endif
+
 void qrcode_init(void)
 {
 	// TODO: add qrscan to the list of image processing tasks in viewvideo
-  cv_add(qrscan);
+  //cv_add(qrscan);
 }
 
 // Telemetry
@@ -41,11 +45,15 @@ void qrcode_init(void)
 
 zbar_image_scanner_t *scanner = 0;
 
+uint8_t qr_complete;
+uint8_t int_data;
+
 uint8_t qrscan(struct image_t *img)
 {
-  uint8_t int_data = 0;
   int i, j;
+  
   //printf("SCAN START!\n");
+  
   // Create the JPEG encoded image
   struct image_t gray;
   image_create(&gray, img->w, img->h, IMAGE_GRAYSCALE);
@@ -87,18 +95,35 @@ uint8_t qrscan(struct image_t *img)
     // do something useful with results
     zbar_symbol_type_t typ = zbar_symbol_get_type(symbol);
     char *data = (char *)zbar_symbol_get_data(symbol);
-       
+    
+    if(strlen(data) > 0)
+    {
+    	qr_complete = 1;
+    	int_data = atoi(data);
+    }   
+    
     /*printf("decoded %s symbol \"%s\"\n",
           zbar_get_symbol_name(typ), data);*/
-  int_data = atoi(data);
-  
-  //printf("int_data = %i\n", int_data);
-/*#if DOWNLINK
-    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(data), data);
-  #endif*/
-  }
 
+  //printf("int_data = %i\n", int_data);
+
+  #if DOWNLINK
+    	DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(data), data);
+  #endif
+  
+  }
+  #if DOWNLINK
+  	if (qr_complete != 1)
+  	{
+	    	char dummy[19] = "No QR Code detected";
+	    	DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(dummy), dummy);
+    	}
+  #endif
+  
+  
 // clean up
   zbar_image_destroy(image);
   //zbar_image_scanner_destroy(scanner);
+  
+  return int_data;
 }

@@ -31,13 +31,13 @@
     <!-- remove the gps_ubx_ucenter module if you use the sirf gps (flight recorder) -->
     <!--load name="gps_ubx_ucenter.xml"/-->
     <load name="send_imu_mag_current.xml"/>
-    <load name="air_data.xml">
+    <load name="air_data.xml"/>
     <load name="uart_drop.xml"/>
     <load name="cv_qrcode.xml"/>
 
     <!--load name="geo_mag.xml"/-->
     <!--load name="logger_file.xml"/-->
-    <!--
+
     <load name="cv_combine_IMAV2015.xml">
     	<define name="VH_M" value="5"/>
         <define name="VH_m" value="3" />
@@ -64,9 +64,7 @@
         
         <define name="OPTICFLOW_DEBUG" value="FALSE"/>
     </load>
-    -->
-    <load name="cv_combine_IMAV2015.xml"/>
-    
+
     <load name="opticflow_hover_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="200"/>
         <define name="VISION_PHI_IGAIN" value="15" />

@@ -31,8 +31,8 @@
 
 #include "std.h"
 #include "inter_thread_data_IMAV2015.h"
-#include "lib/vision/image.h"
-#include "lib/v4l/v4l2.h"
+#include "modules/computer_vision/lib/vision/image.h"
+#include "modules/computer_vision/lib/v4l/v4l2.h"
 #include "modules/guidance_opticflow/guidance_opticflow_hover_IMAV2015.h"
 
 struct opticflow_t {
