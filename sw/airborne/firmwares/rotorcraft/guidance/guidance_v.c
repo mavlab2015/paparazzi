@@ -259,18 +259,6 @@ void guidance_v_mode_changed(uint8_t new_mode)
 #if GUIDANCE_V_MODE_MODULE_SETTING == GUIDANCE_V_MODE_MODULE
     case GUIDANCE_V_MODE_MODULE:
       guidance_v_module_enter();     // Default
-      
-      //////////////////////////////////////////////////
-      /////////     Seong addition starts     //////////
-      //////////////////////////////////////////////////
-      /*
-      alt_reached = 0;
-      init_done = 0;
-     */
-      
-      //////////////////////////////////////////////////
-      /////////     Seong addition starts     //////////
-      //////////////////////////////////////////////////
       break;
 #endif
 
@@ -350,50 +338,6 @@ void guidance_v_run(bool_t in_flight)
 #if GUIDANCE_V_MODE_MODULE_SETTING == GUIDANCE_V_MODE_MODULE
     case GUIDANCE_V_MODE_MODULE:
       guidance_v_module_run(in_flight);    // Default
-      
-      //////////////////////////////////////////////////
-      /////////     Seong addition starts     //////////
-      //////////////////////////////////////////////////
-	/*
-	if (init_done == 0)
-	{
-		if (stabilization_cmd[COMMAND_THRUST] < 3000)   //3000 (3500) for AR Drone 2 (heavy bat), 2000 for bebop
-		{
-			stabilization_cmd[COMMAND_THRUST] += 2;
-		} 
-		else
-		init_done = 1;
-	}
-	else
-	{
-		if (stateGetPositionNed_i()->z < -320)  // -256 means 1m
-		{
-		alt_reached = 1;
-		}
-		
-		guidance_v_z_sp = -320;
-      		guidance_v_z_sum_err = 0;
-      		GuidanceVSetRef(guidance_v_z_sp, 0, 0);
-      		
-		guidance_v_zd_sp = 0;
-		gv_update_ref_from_z_sp(guidance_v_z_sp);
-		run_hover_loop(in_flight);
-	
-		if (alt_reached == 1)
-		{
-
-			stabilization_cmd[COMMAND_THRUST] = guidance_v_delta_t;
-		}
-		else
-		stabilization_cmd[COMMAND_THRUST] = 8000; // 8000 (8800) for AR Drone 2 (heavy bat), 6500 for bebop
-	}
-
-        */
-        	
-        
-      //////////////////////////////////////////////////
-      /////////     Seong addition ends..     //////////
-      //////////////////////////////////////////////////
       break;
 #endif
 

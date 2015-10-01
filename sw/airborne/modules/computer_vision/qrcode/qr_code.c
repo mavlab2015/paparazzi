@@ -24,7 +24,7 @@
  */
 
 #include "qr_code.h"
-#include "cv.h"
+#include "modules/computer_vision/cv.h"
 
 #include "zbar.h"
 #include <stdio.h>

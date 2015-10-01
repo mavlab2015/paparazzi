@@ -31,25 +31,43 @@
     <!-- remove the gps_ubx_ucenter module if you use the sirf gps (flight recorder) -->
     <!--load name="gps_ubx_ucenter.xml"/-->
     <load name="send_imu_mag_current.xml"/>
-    <load name="air_data.xml"/>
+    <load name="air_data.xml">
     <load name="uart_drop.xml"/>
     <load name="cv_qrcode.xml"/>
 
     <!--load name="geo_mag.xml"/-->
     <!--load name="logger_file.xml"/-->
-    <!--load name = "cv_opticflow.xml">
-        <define name="VISION_PHI_PGAIN" value="400"/>
-        <define name="VISION_PHI_IGAIN" value="20" />
-        <define name="VISION_PHI_DGAIN" value="20" />
-        <define name="VISION_THETA_PGAIN" value="400"/>
-        <define name="VISION_THETA_IGAIN" value="20"/>
-        <define name="VISION_THETA_DGAIN" value="20" />
-        <define name="VISION_DESIRED_VX" value="0"/>
-        <define name="VISION_DESIRED_VY" value="0"/>
-    </load-->
-    
-
+    <!--
     <load name="cv_combine_IMAV2015.xml">
+    	<define name="VH_M" value="5"/>
+        <define name="VH_m" value="3" />
+        <define name="VH_t" value="10"/>
+        <define name="VH_RADIUS" value="10"/>
+        <define name="VH_IN" value="3"/>
+        
+        <define name="VH_LINE_W" value="2"/>
+        <define name="VH_LINE_THR" value="130"/>
+        
+        <define name="RED_Y_MIN" value="120"/>
+        <define name="RED_Y_MAX" value="220" />
+        <define name="RED_U_MIN" value="0"/>
+        <define name="RED_U_MAX" value="120"/>
+        <define name="RED_V_MIN" value="160"/>
+        <define name="RED_V_MAX" value="255" />
+        <define name="BLUE_Y_MIN" value="55" />
+        <define name="BLUE_Y_MAX" value="130" />
+        <define name="BLUE_U_MIN" value="150" />
+        <define name="BLUE_U_MAX" value="255" />
+        <define name="BLUE_V_MIN" value="0" />
+        <define name="BLUE_V_MAX" value="255" />
+        <define name="COUNTER_TRESH" value="2000"/>
+        
+        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
+    </load>
+    -->
+    <load name="cv_combine_IMAV2015.xml"/>
+    
+    <load name="opticflow_hover_IMAV2015.xml">
     	<define name="VISION_PHI_PGAIN" value="200"/>
         <define name="VISION_PHI_IGAIN" value="15" />
         <define name="VISION_PHI_DGAIN" value="15" />
@@ -81,12 +99,6 @@
         <define name="VH_VEL_SAT" value="15"/>
         <define name="VH_ERR" value="10"/>
         
-        <define name="VH_M" value="5"/>
-        <define name="VH_m" value="3" />
-        <define name="VH_t" value="10"/>
-        <define name="VH_RADIUS" value="10"/>
-        <define name="VH_IN" value="3"/>
-        
         <define name="VH_LINE_FOLLOW" value="FALSE"/>
         <define name="VH_LINE_PHI_PGAIN" value="450"/>
         <define name="VH_LINE_THETA_PGAIN" value="150"/>
@@ -96,9 +108,6 @@
         <define name="VH_LINE_ALT_SECOND" value="-300"/>
         <define name="VH_LINE_NO_COUNT" value="200"/>
         
-        <define name="VH_LINE_W" value="2"/>
-        <define name="VH_LINE_THR" value="130"/>
-        
         <define name="VH_FLOWER_MODE" value="FALSE"/>
         <define name="VH_FLOWER_NO_MARKER_COUNT" value="30"/>
         <define name="VH_RIGHT_FORWARD_VX" value="0.8"/>
@@ -106,22 +115,6 @@
         <define name="VH_LEFT_FORWARD_VX" value="-0.8"/>
         <define name="VH_LEFT_FORWARD_VY" value="0.8"/>
         <define name="VH_SERVO_COUNT" value="3"/>
-        
-        <define name="RED_Y_MIN" value="120"/>
-        <define name="RED_Y_MAX" value="220" />
-        <define name="RED_U_MIN" value="0"/>
-        <define name="RED_U_MAX" value="120"/>
-        <define name="RED_V_MIN" value="160"/>
-        <define name="RED_V_MAX" value="255" />
-        <define name="BLUE_Y_MIN" value="55" />
-        <define name="BLUE_Y_MAX" value="130" />
-        <define name="BLUE_U_MIN" value="150" />
-        <define name="BLUE_U_MAX" value="255" />
-        <define name="BLUE_V_MIN" value="0" />
-        <define name="BLUE_V_MAX" value="255" />
-        <define name="COUNTER_TRESH" value="2000"/>
-        
-        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
     </load>
 
   </modules>

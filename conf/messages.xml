@@ -1973,10 +1973,11 @@
     <field name="div_size"    type="float" unit="1/s"/>
     <field name="surface_roughness"    type="float" unit="1/s"/>
     <field name="divergence"    type="float" unit="1/s"/>
-    -->
+    
     <field name="cmd_phi"     type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="cmd_theta"   type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
     <field name="cmd_psi"   type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
+    -->
     <field name="marker_count"      type="uint16"/>
     <field name="no_marker_count"      type="uint16"/>
     <field name="landing_count"      type="uint16"/>

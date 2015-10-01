@@ -30,7 +30,6 @@
 
 // Include opticflow calculator and stabilization loops
 #include "combine/opticflow_calculator_IMAV2015.h"
-#include "combine/stabilization_opticflow_IMAV2015.h"
 
 // Needed for settings
 extern struct opticflow_t opticflow;

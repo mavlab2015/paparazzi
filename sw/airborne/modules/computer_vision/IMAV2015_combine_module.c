@@ -46,6 +46,10 @@
 #endif
 PRINT_CONFIG_VAR(OPTICFLOW_AGL_ID)
 
+#ifndef OPTICFLOW_SENDER_ID
+#define OPTICFLOW_SENDER_ID 1
+#endif
+
 /* The video device */
 #ifndef OPTICFLOW_DEVICE
 #define OPTICFLOW_DEVICE /dev/video2      ///< The video device
@@ -97,9 +101,8 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
                                &opticflow_result.flow_y, &opticflow_result.flow_der_x,
                                &opticflow_result.flow_der_y, &opticflow_result.vel_x,
                                &opticflow_result.vel_y,
-                               &opticflow_stab.cmd.phi, 
-                               &opticflow_stab.cmd.theta, 
-                               &opticflow_stab.cmd.psi, */
+                               &opticflow_result.div_size,
+                               &opticflow_result.surface_roughness, &opticflow_result.divergence, */
                                &opticflow_stab.marker_count, 
                                &opticflow_stab.no_marker_count,
                                &opticflow_stab.landing_count,
@@ -142,7 +145,7 @@ void opticflow_module_init(void)
 #endif
 
   /* Try to initialize the video device */
-  opticflow_dev = v4l2_init(STRINGIFY(OPTICFLOW_DEVICE), OPTICFLOW_DEVICE_SIZE, OPTICFLOW_DEVICE_BUFFERS);
+  opticflow_dev = v4l2_init(STRINGIFY(OPTICFLOW_DEVICE), OPTICFLOW_DEVICE_SIZE, OPTICFLOW_DEVICE_BUFFERS, V4L2_PIX_FMT_UYVY);
   if (opticflow_dev == NULL) {
     printf("[opticflow_module] Could not initialize the video device\n");
   }
@@ -165,7 +168,23 @@ void opticflow_module_run(void)
 
   // Update the stabilization loops on the current calculation
   if (opticflow_got_result) {
-    stabilization_opticflow_update(&opticflow_result, &opticflow_state);
+    //stabilization_opticflow_update(&opticflow_result, &opticflow_state);
+    
+    uint32_t now_ts = get_sys_time_usec();
+    uint8_t quality = opticflow_result.divergence; // FIXME, scale to some quality measure 0-255
+    AbiSendMsgOPTICAL_FLOW(OPTICFLOW_SENDER_ID, now_ts,
+                           opticflow_result.flow_x,
+                           opticflow_result.flow_y,
+                           opticflow_result.flow_der_x,
+                           opticflow_result.flow_der_x,
+                           quality,
+                           opticflow_state.agl);
+    if (opticflow_result.tracked_cnt > 0) {
+      AbiSendMsgVELOCITY_ESTIMATE(OPTICFLOW_SENDER_ID, now_ts,
+                                  opticflow_result.vel_x,
+                                  opticflow_result.vel_y,
+                                  0.0f);
+    }
     opticflow_got_result = FALSE;
   }
   pthread_mutex_unlock(&opticflow_mutex);
