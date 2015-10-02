@@ -66,10 +66,25 @@ PRINT_CONFIG_MSG("OPTICFLOW_DEVICE_SIZE = " _SIZE_HELPER(OPTICFLOW_DEVICE_SIZE))
 
 /* The video device buffers (the amount of V4L2 buffers) */
 #ifndef OPTICFLOW_DEVICE_BUFFERS
-#define OPTICFLOW_DEVICE_BUFFERS 10       ///< The video device buffers (the amount of V4L2 buffers)
+#define OPTICFLOW_DEVICE_BUFFERS 15       ///< The video device buffers (the amount of V4L2 buffers)
 #endif
-PRINT_CONFIG_VAR(VIEWVIDEO_DEVICE_BUFFERS)
+PRINT_CONFIG_VAR(OPTICFLOW_DEVICE_BUFFERS)
 
+// Downsize factor for video stream
+#ifndef VIEWVIDEO_DOWNSIZE_FACTOR
+#define VIEWVIDEO_DOWNSIZE_FACTOR 1
+#endif
+PRINT_CONFIG_VAR(VIEWVIDEO_DOWNSIZE_FACTOR)
+
+// From 0 to 99 (99=high)
+#ifndef VIEWVIDEO_QUALITY_FACTOR
+#define VIEWVIDEO_QUALITY_FACTOR 70
+#endif
+PRINT_CONFIG_VAR(VIEWVIDEO_QUALITY_FACTOR)
+
+#if OPTICFLOW_DEBUG
+	struct UdpSocket video_sock;
+#endif
 
 /* The main opticflow variables */
 struct opticflow_t opticflow;                      ///< Opticflow calculations
@@ -153,6 +168,11 @@ void opticflow_module_init(void)
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, "OPTIC_FLOW_EST", opticflow_telem_send);
 #endif
+
+
+#if OPTICFLOW_DEBUG
+  udp_socket_create(&video_sock, STRINGIFY(VIEWVIDEO_HOST), VIEWVIDEO_PORT_OUT, -1, VIEWVIDEO_BROADCAST);
+#endif
 }
 
 /**
@@ -232,15 +252,20 @@ static void *opticflow_module_calc(void *data __attribute__((unused)))
     printf("[opticflow_module] Could not start capture of the camera\n");
     return 0;
   }
+  
+  #if OPTICFLOW_DEBUG 
+  	// Resize image if needed
+	struct image_t img_small;
+	image_create(&img_small,
+	       opticflow_dev->w / VIEWVIDEO_DOWNSIZE_FACTOR,
+	       opticflow_dev->h / VIEWVIDEO_DOWNSIZE_FACTOR,
+	       IMAGE_YUV422);
 
-#if OPTICFLOW_DEBUG
-  // Create a new JPEG image
-  struct image_t img_jpeg;
-  image_create(&img_jpeg, opticflow_dev->w, opticflow_dev->h, IMAGE_JPEG);
-  struct UdpSocket video_sock;
-  udp_socket_create(&video_sock, STRINGIFY(VIEWVIDEO_HOST), VIEWVIDEO_PORT_OUT, -1, VIEWVIDEO_BROADCAST);
-#endif
-
+	// Create the JPEG encoded image
+	struct image_t img_jpeg;
+	image_create(&img_jpeg, img_small.w, img_small.h, IMAGE_JPEG);
+  #endif
+  	
   /* Main loop of the optical flow calculation */
   while (TRUE) {
     // Try to fetch an image
@@ -264,25 +289,36 @@ static void *opticflow_module_calc(void *data __attribute__((unused)))
     pthread_mutex_unlock(&opticflow_mutex);
     
 #if OPTICFLOW_DEBUG
-    jpeg_encode_image(&img, &img_jpeg, 70, FALSE);
-    rtp_frame_send(
-      //&VIEWVIDEO_DEV,
-      &video_sock,          // UDP device
-      &img_jpeg,
-      0,                        // Format 422
-      70, // Jpeg-Quality
-      0,                        // DRI Header
-      0                         // 90kHz time increment
-    );
+	if (VIEWVIDEO_DOWNSIZE_FACTOR != 1) 
+	{
+		image_yuv422_downsample(&img, &img_small, VIEWVIDEO_DOWNSIZE_FACTOR);
+		jpeg_encode_image(&img_small, &img_jpeg, VIEWVIDEO_QUALITY_FACTOR, FALSE);
+	} 
+	else 
+	{
+		jpeg_encode_image(&img, &img_jpeg, VIEWVIDEO_QUALITY_FACTOR, FALSE);
+	}
+
+	// Send image with RTP
+	rtp_frame_send(
+	&video_sock,              // UDP socket
+	&img_jpeg,
+	0,                        // Format 422
+	VIEWVIDEO_QUALITY_FACTOR, // Jpeg-Quality
+	0,                        // DRI Header
+	0    // 90kHz time increment
+	);
 #endif
 
     // Free the image
     v4l2_image_free(opticflow_dev, &img);
   }
-
+  
 #if OPTICFLOW_DEBUG
-  image_free(&img_jpeg);
+	image_free(&img_jpeg);
+	image_free(&img_small);
 #endif
+  return 0;
 }
 
 /**

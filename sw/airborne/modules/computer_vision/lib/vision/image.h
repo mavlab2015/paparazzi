@@ -80,43 +80,4 @@ int32_t image_multiply(struct image_t *img_a, struct image_t *img_b, struct imag
 void image_show_points(struct image_t *img, struct point_t *points, uint16_t points_cnt);
 void image_show_flow(struct image_t *img, struct flow_t *vectors, uint16_t points_cnt, uint8_t subpixel_factor);
 void image_draw_line(struct image_t *img, struct point_t *from, struct point_t *to);
-
-/////////////////////////////////////
-/////                          //////
-/////  Seong Addition starts.. //////
-/////                          //////
-/////////////////////////////////////
-
-struct centroid_deviation_t
-{
-	float x;
-	float y;
-};
-
-struct centroid_deviation_t image_centroid(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, uint8_t v_M);
-
-struct marker_deviation_t
-{
-	int32_t x;
-	int32_t y;
-	uint16_t inlier;
-};
-
-struct marker_deviation_t marker(struct image_t *input, struct image_t *output, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN);
-struct marker_deviation_t marker2(struct image_t *input, uint8_t M, uint8_t m, uint8_t t, uint8_t radius, uint8_t IN);
-
-struct line_deviation_t
-{
-	int32_t x;
-	int32_t y;
-	uint16_t inlier;
-};
-
-struct line_deviation_t line_follow(struct image_t *input, struct image_t *output, uint8_t w, uint8_t th);
-struct line_deviation_t line_follow2(struct image_t *input, uint8_t w, uint8_t th);
-/////////////////////////////////////
-/////                          //////
-/////  Seong Addition ends..   //////
-/////                          //////
-/////////////////////////////////////
 #endif

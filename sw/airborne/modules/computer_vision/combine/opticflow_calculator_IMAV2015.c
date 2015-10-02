@@ -40,6 +40,9 @@
 #include "lib/vision/lucas_kanade.h"
 #include "lib/vision/fast_rosten.h"
 #include "modules/computer_vision/qrcode/qr_code.h"
+#include "modules/computer_vision/combine/cv_function/marker_finder.h"
+#include "modules/computer_vision/combine/cv_function/line_finder.h"
+#include "modules/computer_vision/combine/cv_function/centroid_finder.h"
 
 // Camera parameters (defaults are from an ARDrone 2)
 #ifndef OPTICFLOW_FOV_W
@@ -194,9 +197,9 @@ PRINT_CONFIG_VAR(VISION_LINE_THR)
 
 uint8_t flower_color=0;
 
-struct centroid_deviation_t centroid_deviation;
 struct marker_deviation_t marker_deviation;
 struct line_deviation_t line_deviation;
+struct centroid_deviation_t centroid_deviation;
 
 /* Initialize the default settings for the vision algorithm */
 struct visionhover_param_t visionhover_param = {

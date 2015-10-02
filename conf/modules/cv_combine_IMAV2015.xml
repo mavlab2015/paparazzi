@@ -114,7 +114,6 @@
     <file name="fast_rosten.c" dir="modules/computer_vision/lib/vision"/>
     <file name="lucas_kanade.c" dir="modules/computer_vision/lib/vision"/>
     
-<!--
     <raw>
       VIEWVIDEO_HOST        ?= $(MODEM_HOST)
       VIEWVIDEO_PORT_OUT    ?= 5000
@@ -126,11 +125,8 @@
       else
         ap.CFLAGS += $(VIEWVID_CFLAGS) -DVIEWVIDEO_USE_NC
       endif
-
-      ap.CFLAGS += -DGUIDANCE_V_MODE_MODULE_SETTING=GUIDANCE_V_MODE_MODULE
-      ap.CFLAGS += -DGUIDANCE_H_MODE_MODULE_SETTING=GUIDANCE_H_MODE_MODULE
     </raw>
--->
+
 
   </makefile>
 

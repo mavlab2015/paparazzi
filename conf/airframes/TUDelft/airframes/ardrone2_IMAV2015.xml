@@ -62,7 +62,7 @@
         <define name="BLUE_V_MAX" value="255" />
         <define name="COUNTER_TRESH" value="2000"/>
         
-        <define name="OPTICFLOW_DEBUG" value="FALSE"/>
+        <define name="OPTICFLOW_DEBUG" value="TRUE"/>
     </load>
 
     <load name="opticflow_hover_IMAV2015.xml">
