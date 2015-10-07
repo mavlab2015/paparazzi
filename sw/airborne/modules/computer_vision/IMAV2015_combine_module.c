@@ -112,11 +112,11 @@ static void opticflow_telem_send(struct transport_tx *trans, struct link_device 
   pthread_mutex_lock(&opticflow_mutex);
   pprz_msg_send_OPTIC_FLOW_EST(trans, dev, AC_ID,
                                &opticflow_result.fps, &opticflow_result.corner_cnt,
-                               &opticflow_result.tracked_cnt, /*&opticflow_result.flow_x,
+                               &opticflow_result.tracked_cnt, &opticflow_result.flow_x,
                                &opticflow_result.flow_y, &opticflow_result.flow_der_x,
                                &opticflow_result.flow_der_y, &opticflow_result.vel_x,
                                &opticflow_result.vel_y,
-                               &opticflow_result.div_size,
+                               /*&opticflow_result.div_size,
                                &opticflow_result.surface_roughness, &opticflow_result.divergence, */
                                &opticflow_stab.marker_count, 
                                &opticflow_stab.no_marker_count,
@@ -201,9 +201,14 @@ void opticflow_module_run(void)
                            opticflow_state.agl);
     if (opticflow_result.tracked_cnt > 0) {
       AbiSendMsgVELOCITY_ESTIMATE(OPTICFLOW_SENDER_ID, now_ts,
+                                  opticflow_state.agl,
                                   opticflow_result.vel_x,
                                   opticflow_result.vel_y,
-                                  0.0f);
+                                  opticflow_result.inlier,
+                                  opticflow_result.deviation_x,
+                                  opticflow_result.deviation_y,
+                                  opticflow_result.qr_result,
+                                  opticflow_result.flower_type);
     }
     opticflow_got_result = FALSE;
   }

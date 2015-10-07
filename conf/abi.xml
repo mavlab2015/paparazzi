@@ -65,11 +65,24 @@
       <field name="dist" type="float">Distance to ground</field>
     </message>
 
+<!--
     <message name="VELOCITY_ESTIMATE" id="12">
       <field name="stamp" type="uint32_t" unit="us"/>
       <field name="x" type="float" unit="m/s"/>
       <field name="y" type="float" unit="m/s"/>
       <field name="z" type="float" unit="m/s"/>
+    </message>
+-->
+    <message name="VELOCITY_ESTIMATE" id="12">
+      <field name="stamp" type="uint32_t" unit="us"/>
+      <field name="agl" type="float" unit="m"/>
+      <field name="vel_x" type="float" unit="m/s"/>
+      <field name="vel_y" type="float" unit="m/s"/>
+      <field name="inlier" type="uint16_t" unit="-"/>
+      <field name="deviation_x" type="int32_t" unit="pix"/>
+      <field name="deviation_y" type="int32_t" unit="pix"/>
+      <field name="qr_result" type="uint8_t" unit="-"/>
+      <field name="flower_type" type="uint8_t" unit="m/s"/>
     </message>
 
   </msg_class>
