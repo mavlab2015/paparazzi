@@ -106,6 +106,11 @@ PRINT_CONFIG_VAR(OPTICFLOW_FAST9_THRESHOLD)
 #endif
 PRINT_CONFIG_VAR(OPTICFLOW_FAST9_MIN_DISTANCE)
 
+#ifndef OPTICFLOW_ALPHA
+#define OPTICFLOW_ALPHA 0
+#endif
+PRINT_CONFIG_VAR(OPTICFLOW_ALPHA)
+
 // Vision algorithm input parameters
 #ifndef VH_M
 #define VH_M 8
@@ -255,8 +260,8 @@ void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h)
   opticflow->got_first_img = FALSE;
   opticflow->prev_phi = 0.0;
   opticflow->prev_theta = 0.0;
-  opticflow->prev_deviation_x = 0.0;
-  opticflow->prev_deviation_y = 0.0;
+  opticflow->prev_vel_x = 0.0;
+  opticflow->prev_vel_y = 0.0;
   
   /* Set the default values */
   opticflow->max_track_corners = OPTICFLOW_MAX_TRACK_CORNERS;
@@ -268,6 +273,8 @@ void opticflow_calc_init(struct opticflow_t *opticflow, uint16_t w, uint16_t h)
   opticflow->fast9_adaptive = OPTICFLOW_FAST9_ADAPTIVE;
   opticflow->fast9_threshold = OPTICFLOW_FAST9_THRESHOLD;
   opticflow->fast9_min_distance = OPTICFLOW_FAST9_MIN_DISTANCE;
+  
+  opticflow->alpha = OPTICFLOW_ALPHA;
 }
 
 /**
@@ -394,7 +401,14 @@ void opticflow_calc_frame(struct opticflow_t *opticflow, struct opticflow_state_
   // Velocity calculation
   result->vel_x = -result->flow_der_x * result->fps * state->agl/ opticflow->subpixel_factor * img->w / OPTICFLOW_FX;
   result->vel_y =  result->flow_der_y * result->fps * state->agl/ opticflow->subpixel_factor * img->h / OPTICFLOW_FY;
-
+  
+  // Apply 1st order low pass filter (Exponentially weighted moving average filter)
+  float alpha = opticflow->alpha;
+  result->vel_x = alpha * opticflow->prev_vel_x + (1-alpha) * result->vel_x;
+  result->vel_y = alpha * opticflow->prev_vel_y + (1-alpha) * result->vel_y;
+  opticflow->prev_vel_x = result->vel_x;
+  opticflow->prev_vel_y = result->vel_y;
+  
   // *************************************************************************************
   // Next Loop Preparation
   // *************************************************************************************

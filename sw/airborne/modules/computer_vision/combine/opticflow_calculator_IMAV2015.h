@@ -53,8 +53,8 @@ struct opticflow_t {
   uint8_t fast9_threshold;          ///< FAST9 corner detection threshold
   uint16_t fast9_min_distance;      ///< Minimum distance in pixels between corners
   
-  float prev_deviation_x;
-  float prev_deviation_y;
+  float prev_vel_x;
+  float prev_vel_y;
   float alpha;
 };
 
